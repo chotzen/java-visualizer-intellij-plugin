@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.jetbrains.intellij' version '0.4.1'
+    id 'org.jetbrains.intellij' version '0.4.21'
 }
 
 group 'com.aegamesi'
@@ -15,11 +15,14 @@ repositories {
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     compile group: 'org.json', name: 'json', version: '20180813'
+    compile files("${System.getProperty('java.home')}/../lib/tools.jar")
 }
 
+
 intellij {
-    version '2018.3.2'
-    sandboxDirectory = "${System.properties['user.home']}/Library/Caches/IntelliJIdea2018.3/plugins-sandbox/"
+    version '2020.1.2'
+    plugins 'java'
+    sandboxDirectory = "${System.properties['user.home']}/Library/Caches/IntelliJIdea2019.2/plugins-sandbox/"
     updateSinceUntilBuild false
 }
 
