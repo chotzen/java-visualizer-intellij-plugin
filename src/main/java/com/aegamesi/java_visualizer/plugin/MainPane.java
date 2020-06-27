@@ -1,9 +1,12 @@
 package com.aegamesi.java_visualizer.plugin;
 
 import com.aegamesi.java_visualizer.model.ExecutionTrace;
+import com.aegamesi.java_visualizer.model.Frame;
+import com.aegamesi.java_visualizer.model.Value;
 import com.aegamesi.java_visualizer.ui.VisualizationPanel;
 import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.ui.components.JBScrollPane;
+import edu.caltech.cms.intelliviz.graph.graph.GraphCanvas;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -12,7 +15,7 @@ import java.awt.BorderLayout;
 
 class MainPane extends JPanel {
 	private JLabel placeholderLabel;
-	private VisualizationPanel viz;
+	private GraphCanvas viz;
 
     private final float[] ZOOM_LEVELS = {0.25f, 0.333f, 0.5f, 0.666f, 0.75f, 0.8f, 0.9f, 1.0f, 1.1f, 1.25f, 1.5f, 1.75f, 2.0f, 2.5f, 3.0f, 4.0f};
 
@@ -27,7 +30,7 @@ class MainPane extends JPanel {
 	void setTrace(ExecutionTrace trace) {
 		if (viz == null) {
 			remove(placeholderLabel);
-			viz = new VisualizationPanel();
+			viz = new GraphCanvas();
             viz.setScale(getZoom());
 			JBScrollPane scrollPane = new JBScrollPane(viz);
 			scrollPane.setBorder(null);
@@ -35,6 +38,7 @@ class MainPane extends JPanel {
 			revalidate();
 		}
 		viz.setTrace(trace);
+
 	}
 
     void zoom(int direction) {

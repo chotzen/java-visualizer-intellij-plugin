@@ -22,6 +22,7 @@ import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugSession;
 import com.intellij.xdebugger.XDebugSessionListener;
 import com.sun.jdi.ThreadReference;
+import edu.caltech.cms.intelliviz.graph.graph.GraphCanvas;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.event.AncestorEvent;
@@ -30,7 +31,7 @@ public class JavaVisualizerManager implements XDebugSessionListener {
 	private static final String CONTENT_ID = "aegamesi.JavaVisualizerContent2";
 
 	static final String PROPERTY_KEY_BASE = "java_visualizer.";
-	static final String KEY_ZOOM = PROPERTY_KEY_BASE + "zoom";
+	public static final String KEY_ZOOM = PROPERTY_KEY_BASE + "zoom";
 
 	private XDebugSession debugSession;
 	private Content content;
