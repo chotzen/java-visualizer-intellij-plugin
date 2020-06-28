@@ -1,4 +1,4 @@
-package edu.caltech.cms.intelliviz.graph.graph;
+package edu.caltech.cms.intelliviz.graph;
 
 import java.awt.*;
 import java.awt.geom.Point2D;

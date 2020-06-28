@@ -1,11 +1,8 @@
-package edu.caltech.cms.intelliviz.graph.graph;
+package edu.caltech.cms.intelliviz.graph;
 
 import com.aegamesi.java_visualizer.model.*;
 import com.aegamesi.java_visualizer.model.Frame;
-import com.aegamesi.java_visualizer.plugin.JavaVisualizerManager;
-import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.ui.JBColor;
-import jdk.nashorn.internal.ir.ObjectNode;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,8 +16,9 @@ public class GraphCanvas extends JPanel {
 
     private double scale = 1.0;
 
-    private HashMap<Long, INode> nodes;
-    private ArrayList<GraphEdge> edges;
+    public HashMap<Long, INode> nodes;
+    public ArrayList<GraphEdge> edges;
+
     private INode selected;
     private Cursor curCursor;
 
@@ -35,7 +33,7 @@ public class GraphCanvas extends JPanel {
         this.nodes = new HashMap<>();
         this.edges = new ArrayList<>();
 
-        setBackground(JBColor.WHITE);
+        setBackground(Color.WHITE);
         setVisible(true);
         addMouseListener(new MyMouseListener());
         addMouseMotionListener(new MyMouseMotionListener());
@@ -224,33 +222,5 @@ public class GraphCanvas extends JPanel {
 }
 
 /*
-    HashMap<String, String> fields = new HashMap<>();
-        fields.put("size", "1");
-                fields.put("anotherAttr", "fifty");
-                String[] names = {"Class Name One", "Longer Class Name Two", "Short", "Class"};
-                for (int i = 0; i < 3; i++) {
-        nodes.add(new ClassNode(100 + 100 * i, 100, names[i], fields));
-        }
-        nodes.add(new PrimitiveArrayNode(100, 300, new String[]{"\"Longer String\"", "2", "3"}));
-        nodes.add(new ObjectArrayNode(100, 400, 5));
 
-        // Need to figure out a better way of doing this, probably.
-        for (int i = 1; i <= 3; i++) {
-        GraphEdge ge = new GraphEdge(nodes.get(4), nodes.get(i), "[" + (i-1) + "]");
-        edges.add(ge);
-        ((ObjectArrayNode)nodes.get(4)).pointers[i-1] = ge;
-        }
-
-
-        PrimitiveMapNode pmn = new PrimitiveMapNode(400, 200);
-        pmn.data = fields;
-        nodes.add(pmn);
-
-        ObjectMapNode omn = new ObjectMapNode(400, 300);
-        HashMap<String, GraphEdge> omnEdges = new HashMap<>();
-        omnEdges.put("thing1", new GraphEdge(omn, nodes.get(0), "[thing1]"));
-        omnEdges.put("thing2", new GraphEdge(omn, nodes.get(1), "[thing2]"));
-        omn.data = omnEdges;
-        nodes.add(omn);
-        edges.addAll(omnEdges.values());
 */

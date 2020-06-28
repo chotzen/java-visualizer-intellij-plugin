@@ -1,12 +1,9 @@
 package com.aegamesi.java_visualizer.plugin;
 
 import com.aegamesi.java_visualizer.model.ExecutionTrace;
-import com.aegamesi.java_visualizer.model.Frame;
-import com.aegamesi.java_visualizer.model.Value;
-import com.aegamesi.java_visualizer.ui.VisualizationPanel;
 import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.ui.components.JBScrollPane;
-import edu.caltech.cms.intelliviz.graph.graph.GraphCanvas;
+import edu.caltech.cms.intelliviz.graph.GraphCanvas;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;

@@ -1,29 +1,33 @@
-package edu.caltech.cms.intelliviz.graph.graph;
+package edu.caltech.cms.intelliviz.graph;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
-public class PrimitiveMapNode implements INode {
+public class ObjectMapNode implements INode {
 
     private double x, y;
     private double width, height;
-    public Map<String, String> data;
+    public Map<String, GraphEdge> data;
+    private Map<GraphEdge, Integer> rowMap;
 
     private static final Color headerColor = Color.WHITE;
-    private static final Color lowerColor = Color.decode("#C8FAD8");
+    private static final Color lowerColor = Color.decode("#FAF1C8");
 
     private static final int TEXT_PADDING = 4;
     private static final int MIN_COL_WIDTH = 40;
+    private static final int POINTER_COL_WIDTH = 40;
     private static final int ROW_HEIGHT = 30;
 
     private static final Font font = new Font("SanSerif", Font.BOLD | Font.ITALIC, 12);
 
-    public PrimitiveMapNode(double x, double y) {
+    public ObjectMapNode(double x, double y) {
         this.x = x;
         this.y = y;
+        rowMap = new HashMap<GraphEdge, Integer>();
     }
 
     @Override
@@ -48,14 +52,15 @@ public class PrimitiveMapNode implements INode {
         g2d.setFont(font);
         g.setStroke(new BasicStroke(1));
         int keyWidth = calculateMinWidth(data.keySet(), g2d.getFontMetrics());
-        int valWidth = calculateMinWidth(data.values(), g2d.getFontMetrics());
-        this.width = keyWidth + valWidth;
+        this.width = keyWidth + POINTER_COL_WIDTH;
         this.height = (data.size() + 1) * ROW_HEIGHT;
 
-        drawRow(g2d, 0, "Key", "Value", keyWidth, valWidth, headerColor);
+        drawRow(g2d, 0, "Key", "Value", keyWidth, POINTER_COL_WIDTH, headerColor);
         int row = 1;
+        rowMap.clear();
         for (String s : data.keySet()) {
-            drawRow(g2d, row, s, data.get(s), keyWidth, valWidth, lowerColor);
+            drawRow(g2d, row, s, "", keyWidth, POINTER_COL_WIDTH, lowerColor);
+            rowMap.put(data.get(s), row);
             row++;
         }
     }
@@ -107,6 +112,7 @@ public class PrimitiveMapNode implements INode {
 
     @Override
     public Point2D getOrigin(GraphEdge edge) {
-        return new Point2D.Double(this.x + this.width, this.y + this.height / 2);
+        int row = rowMap.get(edge);
+        return new Point2D.Double(x + this.width - POINTER_COL_WIDTH / 2d, y + ROW_HEIGHT * (row + 0.5));
     }
 }

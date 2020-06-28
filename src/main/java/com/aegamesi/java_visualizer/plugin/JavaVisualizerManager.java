@@ -22,7 +22,6 @@ import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugSession;
 import com.intellij.xdebugger.XDebugSessionListener;
 import com.sun.jdi.ThreadReference;
-import edu.caltech.cms.intelliviz.graph.graph.GraphCanvas;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.event.AncestorEvent;
