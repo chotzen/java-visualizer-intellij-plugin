@@ -2,7 +2,6 @@ package edu.caltech.cms.intelliviz.graph;
 
 import com.aegamesi.java_visualizer.model.*;
 import com.aegamesi.java_visualizer.model.Frame;
-import com.intellij.ui.JBColor;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,6 +15,7 @@ public class GraphCanvas extends JPanel {
 
     private double scale = 1.0;
 
+    public ArrayList<VariableNode> variables;
     public HashMap<Long, INode> nodes;
     public ArrayList<GraphEdge> edges;
     public ArrayList<StackFrame> stackFrames;
@@ -31,6 +31,7 @@ public class GraphCanvas extends JPanel {
     public GraphCanvas() {
         super();
 
+        this.variables = new ArrayList<>();
         this.nodes = new HashMap<>();
         this.edges = new ArrayList<>();
         this.stackFrames = new ArrayList<>();
@@ -56,6 +57,9 @@ public class GraphCanvas extends JPanel {
     private void refreshUI() {
         nodes.clear(); // TODO: preserve nodes that didn't get deleted, probably by their ID
         edges.clear();
+        variables.clear();
+        stackFrames.clear();
+
         removeAll();
 
         buildUI();
@@ -75,12 +79,13 @@ public class GraphCanvas extends JPanel {
             System.out.println(v);
             System.out.println(fr.locals.get(v).toString());
             if (fr.locals.get(v).type == Value.Type.REFERENCE) {
-                renderNode(trace.heap.get(fr.locals.get(v).reference));
+                this.variables.add(new VariableNode(0, 0, v, renderNode(trace.heap.get(fr.locals.get(v).reference))));
                 trace.recursivelyPrint(0, trace.heap.get(fr.locals.get(v).reference));
             }
             System.out.println();
         }
         System.out.println();
+        setPreferredSize(new Dimension((int) (500 * scale), (int) (500 * scale)));
     }
 
     public INode renderNode(HeapEntity ent) {
@@ -157,6 +162,7 @@ public class GraphCanvas extends JPanel {
     public void paint(Graphics g) {
         g.clearRect(0, 0, this.getWidth(), this.getHeight());
         Graphics2D g2D = (Graphics2D) g;
+        g2D.scale(scale, scale);
         for (INode gNode : nodes.values()) {
             gNode.draw(g2D);
         }
@@ -166,6 +172,9 @@ public class GraphCanvas extends JPanel {
         for (StackFrame sf : stackFrames) {
             sf.draw(g2D, 0, 500);
         }
+        for (VariableNode n : variables) {
+            n.draw(g2D);
+        }
         if (curCursor != null) {
             setCursor(curCursor);
         }
@@ -173,20 +182,24 @@ public class GraphCanvas extends JPanel {
     }
 
     private INode getNodeInCursor(double x, double y) {
-        INode result = null;
         for (INode g : nodes.values()) {
             if (g.contains(x, y))
-                result = g;
+                return g;
         }
-        return result;
+
+        for (VariableNode g : variables) {
+            if (g.contains(x, y))
+                return g;
+        }
+        return null;
     }
 
     class MyMouseListener extends MouseAdapter {
         public void mousePressed(MouseEvent e) {
-            selected = getNodeInCursor(e.getX(), e.getY());
+            selected = getNodeInCursor(e.getX()/scale, e.getY()/scale);
             GraphCanvas.this.repaint();
-            x1 = e.getX();
-            y1 = e.getY();
+            x1 = e.getX() / scale;
+            y1 = e.getY() / scale;
         }
 
         public void mouseReleased(MouseEvent e) {
@@ -209,8 +222,8 @@ public class GraphCanvas extends JPanel {
     class MyMouseMotionListener extends MouseMotionAdapter {
         public void mouseDragged(MouseEvent e) {
             if (selected != null) {
-                double x2 = e.getX();
-                double y2 = e.getY();
+                double x2 = e.getX() / scale;
+                double y2 = e.getY() / scale;
                 selected.setPos(selected.getX() + x2 - x1, selected.getY() + y2 - y1);
                 x1 = x2;
                 y1 = y2;
@@ -219,7 +232,7 @@ public class GraphCanvas extends JPanel {
         }
 
         public void mouseMoved(MouseEvent e) {
-            if (getNodeInCursor( e.getX(), e.getY()) != null) {
+            if (getNodeInCursor( e.getX() / scale, e.getY() / scale) != null) {
                 curCursor = Cursor
                         .getPredefinedCursor(Cursor.HAND_CURSOR);
             } else {
@@ -229,7 +242,3 @@ public class GraphCanvas extends JPanel {
         }
     }
 }
-
-/*
-
-*/
