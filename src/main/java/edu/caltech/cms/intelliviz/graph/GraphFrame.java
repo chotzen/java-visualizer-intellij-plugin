@@ -44,6 +44,7 @@ public class GraphFrame extends JFrame {
         omn.data = omnEdges;
         canvas.nodes.put(6L, omn);
         canvas.edges.addAll(omnEdges.values());
+
         setVisible(true);
     }
 

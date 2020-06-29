@@ -18,11 +18,12 @@ public class GraphCanvas extends JPanel {
 
     public HashMap<Long, INode> nodes;
     public ArrayList<GraphEdge> edges;
+    public ArrayList<StackFrame> stackFrames;
 
     private INode selected;
     private Cursor curCursor;
 
-    private ExecutionTrace trace;
+    public ExecutionTrace trace;
 
 
     private double x1, y1;
@@ -32,6 +33,7 @@ public class GraphCanvas extends JPanel {
 
         this.nodes = new HashMap<>();
         this.edges = new ArrayList<>();
+        this.stackFrames = new ArrayList<>();
 
         setBackground(Color.WHITE);
         setVisible(true);
@@ -63,18 +65,22 @@ public class GraphCanvas extends JPanel {
     }
 
     private void buildUI() {
-        for (Frame fr : trace.frames) {
-            System.out.println("=== Frame: " + fr.name + " ===");
-            for (String v : fr.locals.keySet()) {
-                System.out.println(fr.locals.get(v).toString());
-                if (fr.locals.get(v).type == Value.Type.REFERENCE) {
-                    renderNode(trace.heap.get(fr.locals.get(v).reference));
-                    trace.recursivelyPrint(0, trace.heap.get(fr.locals.get(v).reference));
-                }
-                System.out.println();
+        for (int i = this.trace.frames.size() - 1; i >= 0; i--) {
+            this.stackFrames.add(new StackFrame(this.trace.heap, this.trace.frames.get(i),
+                    this.trace.frames.size() - i, i != this.trace.frames.size() - 1));
+        }
+
+        Frame fr = this.trace.frames.get(0);
+        for (String v : fr.locals.keySet()) {
+            System.out.println(v);
+            System.out.println(fr.locals.get(v).toString());
+            if (fr.locals.get(v).type == Value.Type.REFERENCE) {
+                renderNode(trace.heap.get(fr.locals.get(v).reference));
+                trace.recursivelyPrint(0, trace.heap.get(fr.locals.get(v).reference));
             }
             System.out.println();
         }
+        System.out.println();
     }
 
     public INode renderNode(HeapEntity ent) {
@@ -142,8 +148,8 @@ public class GraphCanvas extends JPanel {
                 this.nodes.put(obj.id, cn);
                 return cn;
             case PRIMITIVE:
-            default:
                 System.out.println("WE FOUND A PRIMITIVE!!! IMPLEMENT IT!!!");
+            default:
                 return null;
         }
     }
@@ -156,6 +162,9 @@ public class GraphCanvas extends JPanel {
         }
         for (GraphEdge edge : edges) {
             edge.draw(g2D);
+        }
+        for (StackFrame sf : stackFrames) {
+            sf.draw(g2D, 0, 500);
         }
         if (curCursor != null) {
             setCursor(curCursor);
