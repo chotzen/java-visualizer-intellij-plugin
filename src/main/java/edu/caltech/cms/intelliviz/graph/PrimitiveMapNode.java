@@ -3,6 +3,7 @@ package edu.caltech.cms.intelliviz.graph;
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
@@ -108,5 +109,10 @@ public class PrimitiveMapNode implements INode {
     @Override
     public Point2D getOrigin(GraphEdge edge) {
         return new Point2D.Double(this.x + this.width, this.y + this.height / 2);
+    }
+
+    @Override
+    public ArrayList<GraphEdge> getChildren() {
+        return new ArrayList<GraphEdge>();
     }
 }

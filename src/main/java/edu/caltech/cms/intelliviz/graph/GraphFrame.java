@@ -26,11 +26,11 @@ public class GraphFrame extends JFrame {
         canvas.nodes.put(4L, new ObjectArrayNode(100, 400, 5));
 
         // Need to figure out a better way of doing this, probably.
-        for (int i = 1; i <= 3; i++) {
+        /*for (int i = 1; i <= 3; i++) {
             GraphEdge ge = new GraphEdge(canvas.nodes.get(4L), canvas.nodes.get((long)i), "[" + (i-1) + "]");
             canvas.edges.add(ge);
             ((ObjectArrayNode)canvas.nodes.get(4L)).pointers[i-1] = ge;
-        }
+        } */
 
 
         PrimitiveMapNode pmn = new PrimitiveMapNode(400, 200);

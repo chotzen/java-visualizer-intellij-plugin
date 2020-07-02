@@ -109,4 +109,9 @@ public class PrimitiveArrayNode implements INode {
     public Point2D getOrigin(GraphEdge edge) {
         return new Point2D.Double(this.x + this.width, this.y + BOX_HEIGHT / 2d);
     }
+
+    @Override
+    public ArrayList<GraphEdge> getChildren() {
+        return new ArrayList<>();
+    }
 }

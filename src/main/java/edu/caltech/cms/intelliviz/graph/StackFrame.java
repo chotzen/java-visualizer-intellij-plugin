@@ -36,8 +36,7 @@ public class StackFrame {
                 this.displayString += heap.get(ref).label;
             } else {
                 String[] s = fr.locals.get(key).toString().split("\\.");
-                this.displayString += s[s.length - 1]
-                ;
+                this.displayString += s[s.length - 1];
             }
 
             if (iter.hasNext()) {

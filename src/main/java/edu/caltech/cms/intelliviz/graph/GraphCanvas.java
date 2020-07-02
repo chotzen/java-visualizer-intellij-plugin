@@ -8,6 +8,7 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -25,11 +26,14 @@ public class GraphCanvas extends JPanel {
 
     public ExecutionTrace trace;
 
+    private Graphics grRef;
+
 
     private double x1, y1;
 
     public GraphCanvas() {
         super();
+        this.grRef = getGraphics();
 
         this.variables = new ArrayList<>();
         this.nodes = new HashMap<>();
@@ -72,20 +76,35 @@ public class GraphCanvas extends JPanel {
         for (int i = this.trace.frames.size() - 1; i >= 0; i--) {
             this.stackFrames.add(new StackFrame(this.trace.heap, this.trace.frames.get(i),
                     this.trace.frames.size() - i, i != this.trace.frames.size() - 1));
+
         }
 
+        Point2D origin = this.stackFrames.get(this.stackFrames.size() - 1).getOrigin(0);
+        int primId = -1;
+
         Frame fr = this.trace.frames.get(0);
+        GraphVisualizationAlgorithm layout = new GraphVisualizationAlgorithm(origin.getX(), origin.getY());
         for (String v : fr.locals.keySet()) {
-            System.out.println(v);
-            System.out.println(fr.locals.get(v).toString());
+            System.out.println(fr.locals.get(v).type);
             if (fr.locals.get(v).type == Value.Type.REFERENCE) {
-                this.variables.add(new VariableNode(0, 0, v, renderNode(trace.heap.get(fr.locals.get(v).reference))));
-                trace.recursivelyPrint(0, trace.heap.get(fr.locals.get(v).reference));
+                VariableNode var = new VariableNode(0, 0, v, renderNode(trace.heap.get(fr.locals.get(v).reference)));
+                this.variables.add(var);
+            } else {
+                PrimitiveNode node = new PrimitiveNode(0, 0, fr.locals.get(v).toString());
+                VariableNode var = new VariableNode(0, 0, v, node);
+                this.variables.add(var);
+                System.out.println(v);
+                this.nodes.put((long) primId, node);
+                primId--;
             }
-            System.out.println();
         }
-        System.out.println();
-        setPreferredSize(new Dimension((int) (500 * scale), (int) (500 * scale)));
+        this.paintImmediately(0, 0, 1000, 1000);
+
+        for (VariableNode v: this.variables) {
+            layout.layoutVariable(v);
+        }
+        double height = layout.getMax_y();
+        setPreferredSize(new Dimension((int) (500 * scale), (int) (height * scale)));
     }
 
     public INode renderNode(HeapEntity ent) {
@@ -95,16 +114,14 @@ public class GraphCanvas extends JPanel {
                 HeapList heapList = (HeapList)ent;
                 // Reference list
                 if (heapList.items.size() > 0 && heapList.items.get(0).type == Value.Type.REFERENCE) {
-                    ObjectArrayNode oan = new ObjectArrayNode(100, 100, 3);
+                    ObjectArrayNode oan = new ObjectArrayNode(100, 100, heapList.items.size());
                     this.nodes.put(heapList.id, oan);
-                    GraphEdge[] pointers = new GraphEdge[heapList.items.size()];
                     for (int i = 0; i < heapList.items.size(); i++) { // Assume that if the first item's a reference, all the items are.
                         INode ref = renderNode(trace.heap.get(heapList.items.get(i).reference));
                         GraphEdge ge = new GraphEdge(oan, ref, "[" + i + "]");
-                        pointers[i] = ge;
+                        oan.addPointer(ge);
                         edges.add(ge);
                     }
-                    oan.pointers = pointers;
                     return oan;
                 } else {
                     String[] vals = new String[heapList.items.size()];
@@ -128,6 +145,7 @@ public class GraphCanvas extends JPanel {
                     }
                     omn.data = vals;
                     this.nodes.put(heapMap.id, omn);
+                    omn.draw((Graphics2D) grRef);
                     return omn;
                 } else { // do a primitive map
                     PrimitiveMapNode pmn = new PrimitiveMapNode(100, 100);
@@ -145,15 +163,21 @@ public class GraphCanvas extends JPanel {
                 ClassNode cn = new ClassNode(100, 100, obj.label, fields);
                 for (String key : obj.fields.keySet()) {
                     if (obj.fields.get(key).type == Value.Type.REFERENCE) {
-                        this.edges.add(new GraphEdge(cn, renderNode(this.trace.heap.get(obj.fields.get(key).reference)), key));
+                        GraphEdge edge = new GraphEdge(cn, renderNode(this.trace.heap.get(obj.fields.get(key).reference)), key);
+                        cn.addPointer(edge);
+                        this.edges.add(edge);
                     } else {
                         fields.put(key, obj.fields.get(key).toString());
                     }
                 }
                 this.nodes.put(obj.id, cn);
+                cn.init();
                 return cn;
             case PRIMITIVE:
-                System.out.println("WE FOUND A PRIMITIVE!!! IMPLEMENT IT!!!");
+                HeapPrimitive prim = (HeapPrimitive)ent;
+                PrimitiveNode pn = new PrimitiveNode(100, 100, prim.value.toString());
+                this.nodes.put(prim.id, pn);
+                return pn;
             default:
                 return null;
         }
@@ -164,10 +188,19 @@ public class GraphCanvas extends JPanel {
         Graphics2D g2D = (Graphics2D) g;
         g2D.scale(scale, scale);
         for (INode gNode : nodes.values()) {
-            gNode.draw(g2D);
+            // render nodes whose source edges should be in front
+            if (gNode instanceof ObjectMapNode || gNode instanceof ObjectArrayNode) {
+                gNode.draw(g2D);
+            }
         }
         for (GraphEdge edge : edges) {
             edge.draw(g2D);
+        }
+        for (INode gNode : nodes.values()) {
+            // Render nodes whose source edges should be behind
+            if (!(gNode instanceof ObjectMapNode || gNode instanceof ObjectArrayNode)) {
+                gNode.draw(g2D);
+            }
         }
         for (StackFrame sf : stackFrames) {
             sf.draw(g2D, 0, 500);

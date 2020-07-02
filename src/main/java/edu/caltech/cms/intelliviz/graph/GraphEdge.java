@@ -28,8 +28,14 @@ public class GraphEdge {
         g.draw(line);
 
         // Render label
-        
-        label.draw(g, (origin.getX() + destPt.getX()) / 2, (origin.getY() + destPt.getY()) / 2);
+
+        if (this.source instanceof ClassNode) {
+            Point2D originProj = getCenterTargetingProjection(this.source, destPt.getX(), destPt.getY());
+            label.draw(g, (originProj.getX() + destPt.getX()) / 2, (originProj.getY() + destPt.getY()) / 2);
+
+        } else {
+            label.draw(g, (origin.getX() + destPt.getX()) / 2, (origin.getY() + destPt.getY()) / 2);
+        }
 
 
         // Render Arrow Head

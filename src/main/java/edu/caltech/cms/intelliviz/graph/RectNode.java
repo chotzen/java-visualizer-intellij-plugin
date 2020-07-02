@@ -4,6 +4,7 @@ package edu.caltech.cms.intelliviz.graph;
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
 
 public class RectNode implements INode {
 
@@ -66,4 +67,11 @@ public class RectNode implements INode {
     public Point2D getOrigin(GraphEdge edge) {
         return new Point2D.Double(this.x + getWidth() / 2, this.y + getHeight() / 2);
     }
+
+    @Override
+    public ArrayList<GraphEdge> getChildren() {
+        return null;
+    }
+
+
 }

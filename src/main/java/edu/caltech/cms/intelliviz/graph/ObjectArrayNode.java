@@ -10,7 +10,7 @@ public class ObjectArrayNode implements INode {
     private double x, y;
 
     private ArrayList<TextLabel> labels;
-    public GraphEdge[] pointers;
+    private ArrayList<GraphEdge> pointers;
     private double width;
     private int length;
     private int BOX_WIDTH = 30;
@@ -25,7 +25,7 @@ public class ObjectArrayNode implements INode {
     public ObjectArrayNode(double x, double y, int length) {
         this.x = x;
         this.y = y;
-        this.pointers = new GraphEdge[length];
+        this.pointers = new ArrayList<GraphEdge>();
         this.length = length;
         labels = new ArrayList<>();
         for (int i = 0; i < length; i++) {
@@ -33,6 +33,10 @@ public class ObjectArrayNode implements INode {
         }
 
         this.width = length * BOX_WIDTH;
+    }
+
+    public void addPointer(GraphEdge edge) {
+        this.pointers.add(edge);
     }
 
     @Override
@@ -91,11 +95,17 @@ public class ObjectArrayNode implements INode {
 
     @Override
     public Point2D getOrigin(GraphEdge edge) {
-        for (int i = 0; i < pointers.length; i++) {
-            if (edge.equals(pointers[i])) {
+        for (int i = 0; i < pointers.size(); i++) {
+            if (edge.equals(pointers.get(i))) {
                 return new Point2D.Double(x + (i + 0.5) * BOX_WIDTH, y + 0.5 * BOX_HEIGHT);
             }
         }
         return null;
     }
+
+    @Override
+    public ArrayList<GraphEdge> getChildren() {
+        return pointers;
+    }
+
 }

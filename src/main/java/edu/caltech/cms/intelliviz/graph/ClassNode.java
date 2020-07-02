@@ -3,6 +3,7 @@ package edu.caltech.cms.intelliviz.graph;
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -12,6 +13,7 @@ public class ClassNode implements INode {
     private double x, y, width, height;
     private String name;
     private HashMap<String, String> fields;
+    private ArrayList<GraphEdge> pointers;
 
     private Rectangle2D upper, lower;
 
@@ -30,6 +32,7 @@ public class ClassNode implements INode {
         this.y = y;
         this.name = name;
         this.fields = fields;
+        this.pointers = new ArrayList<>();
         upper = new Rectangle2D.Double(x, y, HEADER_HEIGHT, MIN_WIDTH);
         lower = new Rectangle2D.Double(x, y + HEADER_HEIGHT, HEADER_HEIGHT, MIN_WIDTH);
     }
@@ -64,6 +67,10 @@ public class ClassNode implements INode {
         lower.setFrame(x, y + HEADER_HEIGHT, this.width, this.fields.size() * HEADER_HEIGHT);
     }
 
+    public void init() {
+        this.height = (1 + this.fields.size()) * HEADER_HEIGHT;
+    }
+
     @Override
     public void draw(Graphics2D g) {
         // Draw Rectangles
@@ -89,7 +96,7 @@ public class ClassNode implements INode {
             int keyWidth = g.getFontMetrics().stringWidth(in);
             g.drawString(in, (int)(x + TEXT_PADDING), (int)(y + TEXT_PADDING + count * HEADER_HEIGHT + vertOffset));
             g.setFont(boldItalic);
-            g.drawString('"' + fields.get(k) + '"', (int)(x + TEXT_PADDING + keyWidth), (int)(y + TEXT_PADDING + count * HEADER_HEIGHT + vertOffset));
+            g.drawString(fields.get(k),  (int)(x + TEXT_PADDING + keyWidth), (int)(y + TEXT_PADDING + count * HEADER_HEIGHT + vertOffset));
             count++;
         }
 
@@ -127,6 +134,15 @@ public class ClassNode implements INode {
 
     @Override
     public Point2D getOrigin(GraphEdge edge) {
-        return new Point2D.Double(this.x + getWidth(), this.y + getHeight() / 2);
+        return new Point2D.Double(this.x + this.width / 2, this.y + this.height / 2);
+    }
+
+    @Override
+    public ArrayList<GraphEdge> getChildren() {
+        return pointers;
+    }
+
+    public void addPointer(GraphEdge e) {
+        this.pointers.add(e);
     }
 }

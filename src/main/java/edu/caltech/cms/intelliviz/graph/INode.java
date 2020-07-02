@@ -3,6 +3,7 @@ package edu.caltech.cms.intelliviz.graph;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
+import java.util.ArrayList;
 
 public interface INode {
     void setPos(double x, double y);
@@ -18,4 +19,6 @@ public interface INode {
     // Target and origin for edges
     Point2D getTarget(double originX, double originY);
     Point2D getOrigin(GraphEdge edge);
+
+    ArrayList<GraphEdge> getChildren();
 }

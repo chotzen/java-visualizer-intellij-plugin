@@ -3,6 +3,7 @@ package edu.caltech.cms.intelliviz.graph;
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
 
 public class VariableNode implements INode {
 
@@ -19,7 +20,7 @@ public class VariableNode implements INode {
     public VariableNode(double x, double y, String label, INode reference) {
         this.x = x;
         this.y = y;
-        this.label = label;
+        this.label = label + " =";
         this.reference = reference;
 
         // Guess height/width before first display tick
@@ -88,5 +89,10 @@ public class VariableNode implements INode {
     @Override
     public Point2D getOrigin(GraphEdge edge) {
         return new Point2D.Double(this.x + this.width + 3 * DD_PADDING, this.y - this.height / 4);
+    }
+
+    @Override
+    public ArrayList<GraphEdge> getChildren() {
+        return null;
     }
 }
