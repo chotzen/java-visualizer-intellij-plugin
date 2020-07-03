@@ -1,6 +1,7 @@
 package edu.caltech.cms.intelliviz.graph;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class GraphVisualizationAlgorithm {
 
@@ -10,6 +11,7 @@ public class GraphVisualizationAlgorithm {
     }
 
     private ArrayList<INode> beingHandled;
+    public HashMap<INode, ArrayList<GraphEdge>> tree;
     private static final int vSpace = 30;
     private static final int nodeSpace = 50;
     private static final int indent = 40;
@@ -32,6 +34,7 @@ public class GraphVisualizationAlgorithm {
         this.max_x = originX;
         this.max_y = originY;
         beingHandled = new ArrayList<>();
+        tree = new HashMap<>();
     }
 
     public void layoutVariable(VariableNode var)  {
@@ -48,10 +51,6 @@ public class GraphVisualizationAlgorithm {
 
 
     void layoutNode(INode upstream, INode node, LayoutBehavior layout, double offset) {
-        if (beingHandled.contains(node)) {
-            return;
-        }
-
         double last_x, last_y;
         if (!(upstream instanceof ObjectArrayNode || upstream instanceof ObjectMapNode)) {
             last_x = upstream.getOrigin(null).getX();
@@ -81,20 +80,24 @@ public class GraphVisualizationAlgorithm {
         }
 
         if (node.getChildren() != null) {
+            tree.put(node, new ArrayList<>());
             for (GraphEdge downstream : node.getChildren()) {
-                if (node instanceof ObjectArrayNode) { // force vertical layout for children of arrays
-                    layoutNode(downstream, LayoutBehavior.VERTICAL, bound);
-                } else if (node instanceof ObjectMapNode) { // force horizontal layout for children of maps
-                    layoutNode(downstream, LayoutBehavior.HORIZONTAL, bound);
-                } else {
-                    layoutNode(downstream, layout, bound);
-                }
-                // This is for when we're stacking children of a node, so we want the bound to be orthogonal to the
-                // layout direction.
-                if (layout == LayoutBehavior.HORIZONTAL) {
-                    bound += getSubgraphHeight(downstream.dest) + nodeSpace;
-                } else {
-                    bound += getSubgraphWidth(downstream.dest) + nodeSpace;
+                if (!beingHandled.contains(downstream.dest)) {
+                    tree.get(node).add(downstream);
+                    if (node instanceof ObjectArrayNode) { // force vertical layout for children of arrays
+                        layoutNode(downstream, LayoutBehavior.VERTICAL, bound);
+                    } else if (node instanceof ObjectMapNode) { // force horizontal layout for children of maps
+                        layoutNode(downstream, LayoutBehavior.HORIZONTAL, bound);
+                    } else {
+                        layoutNode(downstream, layout, bound);
+                    }
+                    // This is for when we're stacking children of a node, so we want the bound to be orthogonal to the
+                    // layout direction.
+                    if (layout == LayoutBehavior.HORIZONTAL) {
+                        bound += getSubgraphHeight(downstream.dest) + nodeSpace;
+                    } else {
+                        bound += getSubgraphWidth(downstream.dest) + nodeSpace;
+                    }
                 }
             }
         }

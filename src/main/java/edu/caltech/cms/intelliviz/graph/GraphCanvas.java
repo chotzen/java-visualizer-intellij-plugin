@@ -10,21 +10,25 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Stream;
 
 public class GraphCanvas extends JPanel {
 
     private double scale = 1.0;
 
-    public ArrayList<VariableNode> variables;
-    public HashMap<Long, INode> nodes;
-    public ArrayList<GraphEdge> edges;
-    public ArrayList<StackFrame> stackFrames;
+    private ArrayList<VariableNode> variables;
+    private HashMap<Long, INode> nodes;
+    private List<GraphEdge> edges;
+    private ArrayList<StackFrame> stackFrames;
+    private HashMap<INode, ArrayList<GraphEdge>> layoutTree;
 
-    private INode selected;
+    private List<INode> selected;
     private Cursor curCursor;
 
-    public ExecutionTrace trace;
+    private ExecutionTrace trace;
 
     private Graphics grRef;
 
@@ -105,6 +109,7 @@ public class GraphCanvas extends JPanel {
         }
         double height = layout.getMax_y();
         setPreferredSize(new Dimension((int) (500 * scale), (int) (height * scale)));
+        this.layoutTree = layout.tree;
     }
 
     public INode renderNode(HeapEntity ent) {
@@ -227,9 +232,21 @@ public class GraphCanvas extends JPanel {
         return null;
     }
 
+    private List<INode> getDownstreamNodes(INode head) {
+        List<INode> downstream = new ArrayList<>(Arrays.<INode>asList(layoutTree.get(head).stream().map((edge) -> edge.dest).toArray(INode[]::new)));
+        List<INode> further = new ArrayList<>();
+        for (INode n : downstream) {
+            further.addAll(getDownstreamNodes(n));
+        }
+        downstream.addAll(further);
+        return downstream;
+    }
+
     class MyMouseListener extends MouseAdapter {
         public void mousePressed(MouseEvent e) {
-            selected = getNodeInCursor(e.getX()/scale, e.getY()/scale);
+            INode n = getNodeInCursor(e.getX() / scale, e.getY() / scale);
+            selected = getDownstreamNodes(getNodeInCursor(e.getX()/scale, e.getY()/scale));
+            selected.add(n);
             GraphCanvas.this.repaint();
             x1 = e.getX() / scale;
             y1 = e.getY() / scale;
@@ -257,7 +274,9 @@ public class GraphCanvas extends JPanel {
             if (selected != null) {
                 double x2 = e.getX() / scale;
                 double y2 = e.getY() / scale;
-                selected.setPos(selected.getX() + x2 - x1, selected.getY() + y2 - y1);
+                for (INode n : selected) {
+                    n.setPos(n.getX() + x2 - x1, n.getY() + y2 - y1);
+                }
                 x1 = x2;
                 y1 = y2;
             }
