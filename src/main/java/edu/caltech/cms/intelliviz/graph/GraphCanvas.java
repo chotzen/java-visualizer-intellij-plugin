@@ -32,7 +32,6 @@ public class GraphCanvas extends JPanel {
 
     private Graphics grRef;
 
-
     private double x1, y1;
 
     public GraphCanvas() {
