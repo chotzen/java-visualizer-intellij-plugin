@@ -2,6 +2,7 @@ package edu.caltech.cms.intelliviz.graph;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
 
 public class GraphVisualizationAlgorithm {
 
@@ -11,6 +12,7 @@ public class GraphVisualizationAlgorithm {
     }
 
     private ArrayList<INode> beingHandled;
+    private Set<INode> nodesToIgnore;
     public HashMap<INode, ArrayList<GraphEdge>> tree;
     private static final int vSpace = 30;
     private static final int nodeSpace = 50;
@@ -28,12 +30,13 @@ public class GraphVisualizationAlgorithm {
     - do the vertical offset to the stackframes
      */
 
-    public GraphVisualizationAlgorithm(double originX, double originY) {
+    public GraphVisualizationAlgorithm(double originX, double originY, Set<INode> nodesToIgnore) {
         this.originX = originX;
         this.originY = originY;
         this.max_x = originX;
         this.max_y = originY;
         beingHandled = new ArrayList<>();
+        this.nodesToIgnore = nodesToIgnore;
         tree = new HashMap<>();
     }
 
@@ -55,6 +58,9 @@ public class GraphVisualizationAlgorithm {
         if (!(upstream instanceof ObjectArrayNode || upstream instanceof ObjectMapNode)) {
             last_x = upstream.getOrigin(null).getX();
             last_y = upstream.getOrigin(null).getY();
+        } else if (upstream instanceof ObjectMapNode) {
+            last_x = upstream.getX() + upstream.getHeight();
+            last_y = upstream.getY();
         } else {
             last_x = upstream.getX(); // this should probably be different, tbh
             last_y = upstream.getY();
@@ -72,27 +78,28 @@ public class GraphVisualizationAlgorithm {
             // this assumes that the upstream node is center-originating, which is true for ClassNodes.
             // other functionality to be implemented soon.
             if (layout == LayoutBehavior.VERTICAL) {
-                System.out.println(offset);
-                node.setPos(last_x + offset - node.getWidth() / 2, last_y + nodeSpace + upstream.getHeight() / 2);
+                System.out.println("offset " + offset);
+                node.setPos(last_x + offset, last_y + nodeSpace + upstream.getHeight() / 2);
             } else { // horizontal
-                node.setPos(last_x + nodeSpace + upstream.getWidth() / 2, last_y - node.getHeight() / 2 + offset);
+                System.out.println(last_x + " " + (nodeSpace + upstream.getWidth() / 2));
+                node.setPos(last_x + nodeSpace + upstream.getWidth() / 2, last_y  + offset);
             }
         }
 
-        if (node.getChildren() != null) {
-            tree.put(node, new ArrayList<>());
-            for (GraphEdge downstream : node.getChildren()) {
-                if (!beingHandled.contains(downstream.dest)) {
-                    tree.get(node).add(downstream);
-                    if (node instanceof ObjectArrayNode) { // force vertical layout for children of arrays
-                        layoutNode(downstream, LayoutBehavior.VERTICAL, bound);
-                    } else if (node instanceof ObjectMapNode) { // force horizontal layout for children of maps
-                        layoutNode(downstream, LayoutBehavior.HORIZONTAL, bound);
-                    } else {
-                        layoutNode(downstream, layout, bound);
-                    }
-                    // This is for when we're stacking children of a node, so we want the bound to be orthogonal to the
-                    // layout direction.
+        // Handle children
+        tree.put(node, new ArrayList<>());
+        for (GraphEdge downstream : node.getChildren()) {
+            System.out.println(downstream.label.toString());
+            if (!beingHandled.contains(downstream.dest) && !nodesToIgnore.contains(downstream.dest)) {
+                tree.get(node).add(downstream);
+                if (node instanceof ObjectArrayNode) { // force vertical layout for children of arrays
+                    layoutNode(downstream, LayoutBehavior.VERTICAL, bound);
+                    bound += getSubgraphWidth(downstream.dest) + nodeSpace;
+                } else if (node instanceof ObjectMapNode) { // force horizontal layout for children of maps
+                    layoutNode(downstream, LayoutBehavior.HORIZONTAL, bound);
+                    bound += getSubgraphHeight(downstream.dest) + nodeSpace;
+                } else {
+                    layoutNode(downstream, layout, bound);
                     if (layout == LayoutBehavior.HORIZONTAL) {
                         bound += getSubgraphHeight(downstream.dest) + nodeSpace;
                     } else {
@@ -115,10 +122,8 @@ public class GraphVisualizationAlgorithm {
 
     private double getSubgraphMaxY(INode node) {
         double max_y = node.getY() + node.getHeight();
-        if (node.getChildren() != null) {
-            for (GraphEdge edge : node.getChildren()) {
-                max_y = Math.max(max_y, getSubgraphMaxY(edge.dest));
-            }
+        for (GraphEdge edge : node.getChildren()) {
+            max_y = Math.max(max_y, getSubgraphMaxY(edge.dest));
         }
         return max_y;
     }
@@ -126,13 +131,20 @@ public class GraphVisualizationAlgorithm {
     private double getSubgraphMinY(INode node) {
         double min_y = node.getY();
         for (GraphEdge edge : node.getChildren()) {
-            min_y = Math.max(min_y, getSubgraphMinY(edge.dest));
+            min_y = Math.min(min_y, getSubgraphMinY(edge.dest));
         }
         return min_y;
     }
-
     private double getSubgraphWidth(INode node) {
         return getSubgraphMaxX(node) - getSubgraphMinX(node);
+    }
+
+    private double getSubgraphMaxX(INode node) {
+        double max_x = node.getX() + node.getWidth();
+        for (GraphEdge edge : node.getChildren()) {
+            max_x = Math.max(max_x, getSubgraphMaxX(edge.dest));
+        }
+        return max_x;
     }
 
     private double getSubgraphMinX(INode node) {
@@ -143,13 +155,6 @@ public class GraphVisualizationAlgorithm {
         return min_x;
     }
 
-    private double getSubgraphMaxX(INode node) {
-        double max_x = node.getY() + node.getHeight();
-        for (GraphEdge edge : node.getChildren()) {
-            max_x = Math.max(max_x, getSubgraphMaxX(edge.dest));
-        }
-        return max_x;
-    }
 
     public double getMax_y() {
         return this.max_y;

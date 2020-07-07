@@ -119,7 +119,6 @@ public class ObjectMapNode implements INode {
 
     @Override
     public ArrayList<GraphEdge> getChildren() {
-        // TODO
-        return null;
+        return new ArrayList<>(data.values());
     }
 }

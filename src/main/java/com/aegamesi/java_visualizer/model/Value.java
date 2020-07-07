@@ -4,6 +4,7 @@ import org.json.JSONArray;
 
 public class Value {
 	// primitive or reference
+	public boolean isArg = false;
 	public Type type;
 	public long longValue;
 	public double doubleValue;

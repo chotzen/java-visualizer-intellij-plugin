@@ -9,11 +9,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.geom.Point2D;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.stream.Stream;
 
 public class GraphCanvas extends JPanel {
 
@@ -25,14 +22,16 @@ public class GraphCanvas extends JPanel {
     private ArrayList<StackFrame> stackFrames;
     private HashMap<INode, ArrayList<GraphEdge>> layoutTree;
 
-    private List<INode> selected;
+    private Set<INode> selected;
     private Cursor curCursor;
 
     private ExecutionTrace trace;
 
     private Graphics grRef;
+    private double vertOffset = 0;
 
     private double x1, y1;
+    private boolean init = false;
 
     public GraphCanvas() {
         super();
@@ -76,17 +75,18 @@ public class GraphCanvas extends JPanel {
     }
 
     private void buildUI() {
+
+        // Initialize stack frames
+        // Vertical offset will be determined by layout and passed to draw() from this.vertOffset
         for (int i = this.trace.frames.size() - 1; i >= 0; i--) {
             this.stackFrames.add(new StackFrame(this.trace.heap, this.trace.frames.get(i),
                     this.trace.frames.size() - i, i != this.trace.frames.size() - 1));
 
         }
 
-        Point2D origin = this.stackFrames.get(this.stackFrames.size() - 1).getOrigin(0);
         int primId = -1;
 
         Frame fr = this.trace.frames.get(0);
-        GraphVisualizationAlgorithm layout = new GraphVisualizationAlgorithm(origin.getX(), origin.getY());
         for (String v : fr.locals.keySet()) {
             System.out.println(fr.locals.get(v).type);
             if (fr.locals.get(v).type == Value.Type.REFERENCE) {
@@ -101,27 +101,74 @@ public class GraphCanvas extends JPanel {
                 primId--;
             }
         }
+        init = false;
+
         this.paintImmediately(0, 0, 1000, 1000);
 
-        for (VariableNode v: this.variables) {
-            layout.layoutVariable(v);
+        while (!init) {
+            int i = 1;
         }
-        double height = layout.getMax_y();
+
+        // get downstream nodes
+        // layout "this" without nodes
+        // get the height and reset stackframes
+        // render other nodes below it
+
+        Set<INode> downstreamNodes = new HashSet<>();
+        VariableNode thisNode = null;
+        for (VariableNode v : this.variables) {
+            if (!v.name.equals("this")) {
+                downstreamNodes.addAll(findDownstreamNodes(v.reference));
+                downstreamNodes.add(v.reference);
+            } else {
+                thisNode = v;
+            }
+        }
+
+        HashMap<INode, ArrayList<GraphEdge>> tree = new HashMap<>();
+        if (thisNode != null) {
+            GraphVisualizationAlgorithm upperLayout = new GraphVisualizationAlgorithm(20, 20, downstreamNodes);
+            upperLayout.layoutVariable(thisNode);
+            tree.putAll(upperLayout.tree);
+            this.vertOffset = upperLayout.getMax_y();
+        }
+
+        Point2D origin = this.stackFrames.get(this.stackFrames.size() - 1).getOrigin((int)this.vertOffset);
+        GraphVisualizationAlgorithm lowerLayout = new GraphVisualizationAlgorithm(origin.getX(), origin.getY(), new HashSet<>());
+
+        for (VariableNode v: this.variables) {
+            if (!v.equals(thisNode)) {
+                lowerLayout.layoutVariable(v);
+            }
+        }
+
+        double height = lowerLayout.getMax_y();
         setPreferredSize(new Dimension((int) (500 * scale), (int) (height * scale)));
-        this.layoutTree = layout.tree;
+        tree.putAll(lowerLayout.tree);
+        this.layoutTree = tree;
     }
 
     public INode renderNode(HeapEntity ent) {
+        // if we already have an object, return it!
+        if (this.nodes.containsKey(ent.id)) {
+            return this.nodes.get(ent.id);
+        }
         switch (ent.type) {
             case LIST:
             case SET:
                 HeapList heapList = (HeapList)ent;
-                // Reference list
-                if (heapList.items.size() > 0 && heapList.items.get(0).type == Value.Type.REFERENCE) {
+                // Reference list (checks for at least one reference)
+                if (heapList.items.size() > 0 && heapList.items.stream().anyMatch(val -> val.type == Value.Type.REFERENCE)) {
                     ObjectArrayNode oan = new ObjectArrayNode(100, 100, heapList.items.size());
                     this.nodes.put(heapList.id, oan);
-                    for (int i = 0; i < heapList.items.size(); i++) { // Assume that if the first item's a reference, all the items are.
-                        INode ref = renderNode(trace.heap.get(heapList.items.get(i).reference));
+                    for (int i = 0; i < heapList.items.size(); i++) {
+                        INode ref;
+                        if (heapList.items.get(i).type == Value.Type.REFERENCE) {
+                            ref = renderNode(trace.heap.get(heapList.items.get(i).reference));
+                        } else {
+                            ref = new NullNode();
+                            this.nodes.put(getUniqueNegKey(), ref);
+                        }
                         GraphEdge ge = new GraphEdge(oan, ref, "[" + i + "]");
                         oan.addPointer(ge);
                         edges.add(ge);
@@ -138,18 +185,24 @@ public class GraphCanvas extends JPanel {
                 }
             case MAP:
                 HeapMap heapMap = (HeapMap)ent;
-                // once again, assume that the first pair is indicative of the rest
-                if (heapMap.pairs.size() > 0 && heapMap.pairs.get(0).val.type == Value.Type.REFERENCE) {
+                // check for any references
+                if (heapMap.pairs.size() > 0 && heapMap.pairs.stream().anyMatch(pair -> pair.val.type == Value.Type.REFERENCE)) {
                     ObjectMapNode omn = new ObjectMapNode(100, 100);
                     HashMap<String, GraphEdge> vals = new HashMap<>();
                     for (HeapMap.Pair p : heapMap.pairs) {
-                        GraphEdge ge = new GraphEdge(omn, renderNode(trace.heap.get(p.val.reference)), "[" + p.key + "]");
+                        GraphEdge ge;
+                        if (p.val.type == Value.Type.REFERENCE) {
+                            ge = new GraphEdge(omn, renderNode(trace.heap.get(p.val.reference)), "[" + p.key + "]");
+                        } else {
+                            NullNode to = new NullNode();
+                            ge = new GraphEdge(omn, to, "[" + p.key + "]");
+                            this.nodes.put(getUniqueNegKey(), to);
+                        }
                         this.edges.add(ge);
                         vals.put(p.key.toString(), ge);
                     }
                     omn.data = vals;
                     this.nodes.put(heapMap.id, omn);
-                    omn.draw((Graphics2D) grRef);
                     return omn;
                 } else { // do a primitive map
                     PrimitiveMapNode pmn = new PrimitiveMapNode(100, 100);
@@ -170,6 +223,13 @@ public class GraphCanvas extends JPanel {
                         GraphEdge edge = new GraphEdge(cn, renderNode(this.trace.heap.get(obj.fields.get(key).reference)), key);
                         cn.addPointer(edge);
                         this.edges.add(edge);
+                    } else if (obj.fields.get(key).type == Value.Type.NULL) {
+                        NullNode nn = new NullNode();
+                        GraphEdge edge = new GraphEdge(cn, nn, key);
+                        cn.addPointer(edge);
+                        this.edges.add(edge);
+                        this.nodes.put(getUniqueNegKey(), nn);
+
                     } else {
                         fields.put(key, obj.fields.get(key).toString());
                     }
@@ -187,15 +247,29 @@ public class GraphCanvas extends JPanel {
         }
     }
 
+    private long getUniqueNegKey() {
+        Random r = new Random();
+        int c = r.nextInt(2000);
+        while (nodes.containsKey((long)c)) {
+            c = r.nextInt(2000);
+        }
+        return c;
+    }
+
+
     public void paint(Graphics g) {
         g.clearRect(0, 0, this.getWidth(), this.getHeight());
         Graphics2D g2D = (Graphics2D) g;
         g2D.scale(scale, scale);
+        double max_x = 0, max_y = 0;
         for (INode gNode : nodes.values()) {
             // render nodes whose source edges should be in front
             if (gNode instanceof ObjectMapNode || gNode instanceof ObjectArrayNode) {
                 gNode.draw(g2D);
             }
+
+            max_x = Math.max(max_x, gNode.getX() + gNode.getWidth());
+            max_y = Math.max(max_y, gNode.getY() + gNode.getHeight());
         }
         for (GraphEdge edge : edges) {
             edge.draw(g2D);
@@ -205,9 +279,11 @@ public class GraphCanvas extends JPanel {
             if (!(gNode instanceof ObjectMapNode || gNode instanceof ObjectArrayNode)) {
                 gNode.draw(g2D);
             }
+            max_x = Math.max(max_x, gNode.getX() + gNode.getWidth());
+            max_y = Math.max(max_y, gNode.getY() + gNode.getHeight());
         }
         for (StackFrame sf : stackFrames) {
-            sf.draw(g2D, 0, 500);
+            sf.draw(g2D, (int)this.vertOffset, 500);
         }
         for (VariableNode n : variables) {
             n.draw(g2D);
@@ -215,7 +291,11 @@ public class GraphCanvas extends JPanel {
         if (curCursor != null) {
             setCursor(curCursor);
         }
+        max_x += 100;
+        max_y += 100;
+        setPreferredSize(new Dimension((int) (max_x * scale), (int) (max_y * scale)));
         g2D.dispose();
+        init = true;
     }
 
     private INode getNodeInCursor(double x, double y) {
@@ -231,14 +311,35 @@ public class GraphCanvas extends JPanel {
         return null;
     }
 
-    private List<INode> getDownstreamNodes(INode head) {
-        List<INode> downstream = new ArrayList<>(Arrays.<INode>asList(layoutTree.get(head).stream().map((edge) -> edge.dest).toArray(INode[]::new)));
-        List<INode> further = new ArrayList<>();
-        for (INode n : downstream) {
-            further.addAll(getDownstreamNodes(n));
+    // this is the one we call before layout is run. effectively does the same thing, but we don't have
+    // layoutTree yet, so we need to follow the edges
+    private Set<INode> findDownstreamNodes(INode node) {
+        HashSet<INode> result = new HashSet<INode>();
+        findDownstreamNodes(node, result);
+        return result;
+    }
+
+
+    private void findDownstreamNodes(INode node, Set<INode> result) {
+        result.add(node);
+        for (GraphEdge e : node.getChildren()) {
+            if (!result.contains(e.dest))
+                findDownstreamNodes(e.dest, result);
         }
-        downstream.addAll(further);
-        return downstream;
+    }
+
+
+    private Set<INode> getDownstreamNodes(INode head) {
+        if (layoutTree.get(head) != null) {
+            Set<INode> downstream = new HashSet<>(Arrays.<INode>asList(layoutTree.get(head).stream().map((edge) -> edge.dest).toArray(INode[]::new)));
+            Set<INode> further = new HashSet<>();
+            for (INode n : downstream) {
+                further.addAll(getDownstreamNodes(n));
+            }
+            downstream.addAll(further);
+            return downstream;
+        }
+        return new HashSet<>();
     }
 
     class MyMouseListener extends MouseAdapter {

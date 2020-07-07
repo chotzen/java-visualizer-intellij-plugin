@@ -8,11 +8,12 @@ import java.util.ArrayList;
 public class VariableNode implements INode {
 
     public INode reference;
+    public String name;
     private String label;
     private double x, y;
     private double height, width;
     private static final Font font = new Font("Monospaced", Font.BOLD, 13);
-    private static final float dash1[] = {10.0f};
+    private static final float dash1[] = {5.0f};
     private static final BasicStroke stroke = new BasicStroke(2.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash1, 0.0f);
     private static final int DD_PADDING = 5;
 
@@ -21,6 +22,7 @@ public class VariableNode implements INode {
         this.x = x;
         this.y = y;
         this.label = label + " =";
+        this.name = label;
         this.reference = reference;
 
         // Guess height/width before first display tick

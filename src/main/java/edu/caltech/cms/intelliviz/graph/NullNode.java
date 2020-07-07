@@ -5,12 +5,12 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 
-public class NullNode extends INode {
+public class NullNode implements INode {
 
     private double x = 0;
     private double y = 0;
     private double HEIGHT = 15;
-    private double WIDTH = 30;
+    private double WIDTH = 35;
 
     private Color bg = Color.decode("#DDDDDD");
     private Font font = new Font("Monospaced", Font.PLAIN, 12);
@@ -27,6 +27,17 @@ public class NullNode extends INode {
 
     @Override
     public void draw(Graphics2D g) {
+        Graphics2D g2d = (Graphics2D) g;
+        g2d.setColor(bg);
+        g2d.setFont(font);
+        FontMetrics fm = g2d.getFontMetrics();
+
+        Rectangle2D.Double rect = new Rectangle2D.Double(this.x, this.y, this.WIDTH, this.HEIGHT);
+        g2d.fill(rect);
+        g2d.setColor(Color.GRAY);
+        g2d.setStroke(new BasicStroke(1));
+        g2d.draw(rect);
+        g2d.drawString("null", (int)this.x + 3, (int)this.y + (int)this.HEIGHT - 3);
 
     }
 
@@ -37,12 +48,12 @@ public class NullNode extends INode {
 
     @Override
     public double getWidth() {
-        return 0;
+        return this.WIDTH;
     }
 
     @Override
     public double getHeight() {
-        return 0;
+        return this.HEIGHT;
     }
 
     @Override
@@ -57,12 +68,12 @@ public class NullNode extends INode {
 
     @Override
     public Point2D getTarget(double originX, double originY) {
-        return null;
+        return GraphEdge.getCenterTargetingProjection(this, originX, originY);
     }
 
     @Override
     public Point2D getOrigin(GraphEdge edge) {
-        return null;
+        return new Point2D.Double(this.x + this.WIDTH / 2, this.y + this.HEIGHT / 2);
     }
 
     @Override

@@ -7,7 +7,9 @@ public class GraphTest extends JFrame {
     public GraphTest() {
         super();
         this.setSize(600, 400);
-        this.add(new GraphCanvas());
+        GraphCanvas gc = new GraphCanvas();
+        this.add(gc);
+
         this.setVisible(true);
     }
 

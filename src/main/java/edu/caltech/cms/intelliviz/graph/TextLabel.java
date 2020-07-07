@@ -24,4 +24,8 @@ public class TextLabel {
         g2d.setColor(Color.BLACK);
         g2d.drawString(this.label, newX, newY - 1);
     }
+
+    public String toString() {
+        return label;
+    }
 }

@@ -27,15 +27,18 @@ public class StackFrame {
         this.depth = depth;
         this.active = active;
         this.displayString = fr.name.split(":")[0] + "(";
-        Iterator<String> iter = fr.locals.keySet().iterator();
+        Iterator<Map.Entry<String, Value>> iter = fr.locals.entrySet().stream()
+                .filter(map -> map.getValue().isArg)
+                .iterator();
         while (iter.hasNext()) {
-            String key = iter.next();
-            this.displayString += key + " = ";
-            if (fr.locals.get(key).type == Value.Type.REFERENCE) {
-                long ref = fr.locals.get(key).reference;
+            Map.Entry<String, Value> entry = iter.next();
+            this.displayString += entry.getKey() + " = ";
+            Value value = entry.getValue();
+            if (value.type == Value.Type.REFERENCE) {
+                long ref = value.reference;
                 this.displayString += heap.get(ref).label;
             } else {
-                String[] s = fr.locals.get(key).toString().split("\\.");
+                String[] s = value.toString().split("\\.");
                 this.displayString += s[s.length - 1];
             }
 

@@ -161,7 +161,9 @@ public class Tracer {
 				}
 
 				try {
-					output.locals.put(lv.name(), convertValue(sf.getValue(lv)));
+				    Value v = convertValue(sf.getValue(lv));
+				    v.isArg = true;
+					output.locals.put(lv.name(), v);
 				} catch (IllegalArgumentException exc) {
 					System.out.println("That shouldn't happen!");
 				}
@@ -177,7 +179,9 @@ public class Tracer {
 				List<com.sun.jdi.Value> anon_args = sf.getArgumentValues();
 				for (int i = 0; i < anon_args.size(); i++) {
 					String name = "param#" + i;
-					output.locals.put(name, convertValue(anon_args.get(i)));
+					Value v = convertValue(anon_args.get(i));
+					v.isArg = true;
+					output.locals.put(name, v);
 				}
 			} catch (InvalidStackFrameException e) {
 				// ok.
