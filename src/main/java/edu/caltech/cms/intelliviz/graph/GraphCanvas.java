@@ -285,8 +285,8 @@ public class GraphCanvas extends JPanel {
         for (StackFrame sf : stackFrames) {
             sf.draw(g2D, (int)this.vertOffset, 500);
         }
-        for (VariableNode n : variables) {
-            n.draw(g2D);
+        for (int i = 0; i < variables.size(); i++) {
+            variables.get(i).draw(g2D);
         }
         if (curCursor != null) {
             setCursor(curCursor);
