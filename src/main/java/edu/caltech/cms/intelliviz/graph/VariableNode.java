@@ -95,6 +95,6 @@ public class VariableNode implements INode {
 
     @Override
     public ArrayList<GraphEdge> getChildren() {
-        return null;
+        return new ArrayList<>();
     }
 }

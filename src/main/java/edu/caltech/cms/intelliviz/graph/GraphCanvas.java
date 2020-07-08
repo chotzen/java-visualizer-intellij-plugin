@@ -142,10 +142,9 @@ public class GraphCanvas extends JPanel {
             }
         }
 
-        double height = lowerLayout.getMax_y();
-        setPreferredSize(new Dimension((int) (500 * scale), (int) (height * scale)));
         tree.putAll(lowerLayout.tree);
         this.layoutTree = tree;
+        resetPreferredSize();
     }
 
     public INode renderNode(HeapEntity ent) {
@@ -256,46 +255,53 @@ public class GraphCanvas extends JPanel {
         return c;
     }
 
-
     public void paint(Graphics g) {
         g.clearRect(0, 0, this.getWidth(), this.getHeight());
         Graphics2D g2D = (Graphics2D) g;
         g2D.scale(scale, scale);
-        double max_x = 0, max_y = 0;
         for (INode gNode : nodes.values()) {
             // render nodes whose source edges should be in front
             if (gNode instanceof ObjectMapNode || gNode instanceof ObjectArrayNode) {
                 gNode.draw(g2D);
             }
-
-            max_x = Math.max(max_x, gNode.getX() + gNode.getWidth());
-            max_y = Math.max(max_y, gNode.getY() + gNode.getHeight());
         }
+
         for (GraphEdge edge : edges) {
             edge.draw(g2D);
         }
+
         for (INode gNode : nodes.values()) {
             // Render nodes whose source edges should be behind
             if (!(gNode instanceof ObjectMapNode || gNode instanceof ObjectArrayNode)) {
                 gNode.draw(g2D);
             }
-            max_x = Math.max(max_x, gNode.getX() + gNode.getWidth());
-            max_y = Math.max(max_y, gNode.getY() + gNode.getHeight());
         }
+
         for (StackFrame sf : stackFrames) {
             sf.draw(g2D, (int)this.vertOffset, 500);
         }
+
         for (int i = 0; i < variables.size(); i++) {
             variables.get(i).draw(g2D);
         }
+
         if (curCursor != null) {
             setCursor(curCursor);
         }
-        max_x += 100;
-        max_y += 100;
-        setPreferredSize(new Dimension((int) (max_x * scale), (int) (max_y * scale)));
+
+        resetPreferredSize();
         g2D.dispose();
         init = true;
+    }
+
+    private void resetPreferredSize() {
+        double max_x = this.nodes.values().stream()
+                .mapToDouble(node -> node.getX() + node.getWidth()).max().getAsDouble() + 100;
+        double max_y = this.nodes.values().stream()
+                .mapToDouble(node -> node.getY() + node.getHeight()).max().getAsDouble() + 100;
+
+        setPreferredSize(new Dimension((int) (max_x * scale), (int) (max_y * scale)));
+        setSize(new Dimension((int) (max_x * scale), (int) (max_y * scale)));
     }
 
     private INode getNodeInCursor(double x, double y) {
@@ -319,7 +325,6 @@ public class GraphCanvas extends JPanel {
         return result;
     }
 
-
     private void findDownstreamNodes(INode node, Set<INode> result) {
         result.add(node);
         for (GraphEdge e : node.getChildren()) {
@@ -328,18 +333,22 @@ public class GraphCanvas extends JPanel {
         }
     }
 
-
     private Set<INode> getDownstreamNodes(INode head) {
-        if (layoutTree.get(head) != null) {
-            Set<INode> downstream = new HashSet<>(Arrays.<INode>asList(layoutTree.get(head).stream().map((edge) -> edge.dest).toArray(INode[]::new)));
-            Set<INode> further = new HashSet<>();
-            for (INode n : downstream) {
-                further.addAll(getDownstreamNodes(n));
+        if (layoutTree != null) {
+            if (layoutTree.containsKey(head)) {
+                Set<INode> downstream = new HashSet<>(Arrays.<INode>asList(layoutTree.get(head).stream().map((edge) -> edge.dest).toArray(INode[]::new)));
+                Set<INode> further = new HashSet<>();
+                for (INode n : downstream) {
+                    further.addAll(getDownstreamNodes(n));
+                }
+                downstream.addAll(further);
+                return downstream;
+            } else {
+                return new HashSet<>();
             }
-            downstream.addAll(further);
-            return downstream;
+        } else {
+            return findDownstreamNodes(head);
         }
-        return new HashSet<>();
     }
 
     class MyMouseListener extends MouseAdapter {
@@ -353,20 +362,9 @@ public class GraphCanvas extends JPanel {
         }
 
         public void mouseReleased(MouseEvent e) {
-            selected = null;
+            selected = new HashSet<>();
         }
 
-        /*public void mouseClicked(MouseEvent e) {
-            if (ellipse.contains(e.getX(), e.getY())) {
-                selectedShape = ellipse;
-                boundingRec = ellipse.getBounds2D();
-
-            } else {
-                if (boundingRec != null)
-                    boundingRec = null;
-            }
-            GraphCanvas.this.repaint();
-        } */
     }
 
     class MyMouseMotionListener extends MouseMotionAdapter {
@@ -380,6 +378,7 @@ public class GraphCanvas extends JPanel {
                 x1 = x2;
                 y1 = y2;
             }
+            resetPreferredSize();
             GraphCanvas.this.repaint();
         }
 
