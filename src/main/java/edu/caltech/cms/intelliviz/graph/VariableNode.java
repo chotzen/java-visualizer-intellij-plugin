@@ -9,6 +9,7 @@ public class VariableNode implements INode {
 
     public INode reference;
     public String name;
+    public String declaringType;
     private String label;
     private double x, y;
     private double height, width;
@@ -18,7 +19,7 @@ public class VariableNode implements INode {
     private static final int DD_PADDING = 5;
 
 
-    public VariableNode(double x, double y, String label, INode reference) {
+    public VariableNode(double x, double y, String label, INode reference, String declaringType) {
         this.x = x;
         this.y = y;
         this.label = label + " =";

@@ -7,16 +7,22 @@ import java.awt.geom.Point2D;
 public class GraphEdge {
     public INode source;
     public INode dest;
+    public String declaringType;
     public TextLabel label;
 
     private Line2D line;
 
 
-    public GraphEdge(INode from, INode to, String label) {
+    private GraphEdge(INode from, INode to, String label) {
         this.source = from;
         this.dest = to;
         this.label = new TextLabel(label);
         line = new Line2D.Double();
+    }
+
+    public GraphEdge(INode from, INode to, String label, String declaringType) {
+        this(from, to, label);
+        this.declaringType = declaringType;
     }
 
     public void draw(Graphics2D g) {

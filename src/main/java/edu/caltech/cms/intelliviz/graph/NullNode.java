@@ -12,11 +12,12 @@ public class NullNode implements INode {
     private double HEIGHT = 15;
     private double WIDTH = 35;
 
+    private String type;
+
     private Color bg = Color.decode("#DDDDDD");
     private Font font = new Font("Monospaced", Font.PLAIN, 12);
 
     public NullNode() {
-
     }
 
     @Override

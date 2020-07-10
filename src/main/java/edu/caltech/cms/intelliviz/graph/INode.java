@@ -5,20 +5,22 @@ import java.awt.*;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 
-public interface INode {
-    void setPos(double x, double y);
-    void draw(Graphics2D g);
-    boolean contains(double x, double y);
+interface INode {
 
-    double getWidth();
-    double getHeight();
+    abstract void setPos(double x, double y);
+    abstract void draw(Graphics2D g);
+    abstract boolean contains(double x, double y);
 
-    double getX();
-    double getY();
+    abstract double getWidth();
+    abstract double getHeight();
+
+    abstract double getX();
+    abstract double getY();
 
     // Target and origin for edges
-    Point2D getTarget(double originX, double originY);
-    Point2D getOrigin(GraphEdge edge);
+    abstract Point2D getTarget(double originX, double originY);
+    abstract Point2D getOrigin(GraphEdge edge);
 
-    ArrayList<GraphEdge> getChildren();
+    abstract ArrayList<GraphEdge> getChildren();
+
 }

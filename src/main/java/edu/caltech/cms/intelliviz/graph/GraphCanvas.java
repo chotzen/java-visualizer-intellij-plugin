@@ -90,11 +90,11 @@ public class GraphCanvas extends JPanel {
         for (String v : fr.locals.keySet()) {
             System.out.println(fr.locals.get(v).type);
             if (fr.locals.get(v).type == Value.Type.REFERENCE) {
-                VariableNode var = new VariableNode(0, 0, v, renderNode(trace.heap.get(fr.locals.get(v).reference)));
+                VariableNode var = new VariableNode(0, 0, v, renderNode(trace.heap.get(fr.locals.get(v).reference)), fr.locals.get(v).referenceType);
                 this.variables.add(var);
             } else {
                 PrimitiveNode node = new PrimitiveNode(0, 0, fr.locals.get(v).toString());
-                VariableNode var = new VariableNode(0, 0, v, node);
+                VariableNode var = new VariableNode(0, 0, v, node, fr.locals.get(v).type.toString());
                 this.variables.add(var);
                 System.out.println(v);
                 this.nodes.put((long) primId, node);
@@ -103,48 +103,49 @@ public class GraphCanvas extends JPanel {
         }
         init = false;
 
-        this.paintImmediately(0, 0, 1000, 1000);
+        this.repaint();
 
-        while (!init) {
-            int i = 1;
-        }
+        SwingUtilities.invokeLater(() -> {
+            // get downstream nodes
+            // layout "this" without nodes
+            // get the height and reset stackframes
+            // render other nodes below it
 
-        // get downstream nodes
-        // layout "this" without nodes
-        // get the height and reset stackframes
-        // render other nodes below it
-
-        Set<INode> downstreamNodes = new HashSet<>();
-        VariableNode thisNode = null;
-        for (VariableNode v : this.variables) {
-            if (!v.name.equals("this")) {
-                downstreamNodes.addAll(findDownstreamNodes(v.reference));
-                downstreamNodes.add(v.reference);
-            } else {
-                thisNode = v;
+            Set<INode> downstreamNodes = new HashSet<>();
+            VariableNode thisNode = null;
+            for (VariableNode v : this.variables) {
+                if (!v.name.equals("this")) {
+                    downstreamNodes.addAll(findDownstreamNodes(v.reference));
+                    downstreamNodes.add(v.reference);
+                } else {
+                    thisNode = v;
+                }
             }
-        }
 
-        HashMap<INode, ArrayList<GraphEdge>> tree = new HashMap<>();
-        if (thisNode != null) {
-            GraphVisualizationAlgorithm upperLayout = new GraphVisualizationAlgorithm(20, 20, downstreamNodes);
-            upperLayout.layoutVariable(thisNode);
-            tree.putAll(upperLayout.tree);
-            this.vertOffset = upperLayout.getMax_y();
-        }
-
-        Point2D origin = this.stackFrames.get(this.stackFrames.size() - 1).getOrigin((int)this.vertOffset);
-        GraphVisualizationAlgorithm lowerLayout = new GraphVisualizationAlgorithm(origin.getX(), origin.getY(), new HashSet<>());
-
-        for (VariableNode v: this.variables) {
-            if (!v.equals(thisNode)) {
-                lowerLayout.layoutVariable(v);
+            HashMap<INode, ArrayList<GraphEdge>> tree = new HashMap<>();
+            if (thisNode != null) {
+                GraphVisualizationAlgorithm upperLayout = new GraphVisualizationAlgorithm(20, 20, downstreamNodes);
+                upperLayout.layoutVariable(thisNode);
+                tree.putAll(upperLayout.tree);
+                this.vertOffset = upperLayout.getMax_y();
             }
-        }
 
-        tree.putAll(lowerLayout.tree);
-        this.layoutTree = tree;
-        resetPreferredSize();
+            Point2D origin = this.stackFrames.get(this.stackFrames.size() - 1).getOrigin((int)this.vertOffset);
+            GraphVisualizationAlgorithm lowerLayout = new GraphVisualizationAlgorithm(origin.getX(), origin.getY(), new HashSet<>());
+
+            for (VariableNode v: this.variables) {
+                if (!v.equals(thisNode)) {
+                    lowerLayout.layoutVariable(v);
+                    System.out.println("layout");
+                }
+            }
+
+            tree.putAll(lowerLayout.tree);
+            this.layoutTree = tree;
+            resetPreferredSize();
+            this.repaint();
+        });
+
     }
 
     public INode renderNode(HeapEntity ent) {
@@ -168,7 +169,7 @@ public class GraphCanvas extends JPanel {
                             ref = new NullNode();
                             this.nodes.put(getUniqueNegKey(), ref);
                         }
-                        GraphEdge ge = new GraphEdge(oan, ref, "[" + i + "]");
+                        GraphEdge ge = new GraphEdge(oan, ref, "[" + i + "]", heapList.items.get(i).referenceType);
                         oan.addPointer(ge);
                         edges.add(ge);
                     }
@@ -191,10 +192,10 @@ public class GraphCanvas extends JPanel {
                     for (HeapMap.Pair p : heapMap.pairs) {
                         GraphEdge ge;
                         if (p.val.type == Value.Type.REFERENCE) {
-                            ge = new GraphEdge(omn, renderNode(trace.heap.get(p.val.reference)), "[" + p.key + "]");
+                            ge = new GraphEdge(omn, renderNode(trace.heap.get(p.val.reference)), "[" + p.key + "]", p.val.referenceType);
                         } else {
                             NullNode to = new NullNode();
-                            ge = new GraphEdge(omn, to, "[" + p.key + "]");
+                            ge = new GraphEdge(omn, to, "[" + p.key + "]", p.val.referenceType);
                             this.nodes.put(getUniqueNegKey(), to);
                         }
                         this.edges.add(ge);
@@ -219,12 +220,12 @@ public class GraphCanvas extends JPanel {
                 ClassNode cn = new ClassNode(100, 100, obj.label, fields);
                 for (String key : obj.fields.keySet()) {
                     if (obj.fields.get(key).type == Value.Type.REFERENCE) {
-                        GraphEdge edge = new GraphEdge(cn, renderNode(this.trace.heap.get(obj.fields.get(key).reference)), key);
+                        GraphEdge edge = new GraphEdge(cn, renderNode(this.trace.heap.get(obj.fields.get(key).reference)), key, obj.fields.get(key).referenceType);
                         cn.addPointer(edge);
                         this.edges.add(edge);
                     } else if (obj.fields.get(key).type == Value.Type.NULL) {
                         NullNode nn = new NullNode();
-                        GraphEdge edge = new GraphEdge(cn, nn, key);
+                        GraphEdge edge = new GraphEdge(cn, nn, key, obj.fields.get(key).referenceType);
                         cn.addPointer(edge);
                         this.edges.add(edge);
                         this.nodes.put(getUniqueNegKey(), nn);
@@ -295,10 +296,16 @@ public class GraphCanvas extends JPanel {
     }
 
     private void resetPreferredSize() {
-        double max_x = this.nodes.values().stream()
-                .mapToDouble(node -> node.getX() + node.getWidth()).max().getAsDouble() + 100;
-        double max_y = this.nodes.values().stream()
-                .mapToDouble(node -> node.getY() + node.getHeight()).max().getAsDouble() + 100;
+        double max_x, max_y;
+        try {
+            max_x = this.nodes.values().stream()
+                    .mapToDouble(node -> node.getX() + node.getWidth()).max().getAsDouble() + 100;
+            max_y = this.nodes.values().stream()
+                    .mapToDouble(node -> node.getY() + node.getHeight()).max().getAsDouble() + 100;
+        } catch (NoSuchElementException e) {
+            max_x = 500;
+            max_y = 500;
+        }
 
         setPreferredSize(new Dimension((int) (max_x * scale), (int) (max_y * scale)));
         setSize(new Dimension((int) (max_x * scale), (int) (max_y * scale)));
@@ -327,6 +334,8 @@ public class GraphCanvas extends JPanel {
 
     private void findDownstreamNodes(INode node, Set<INode> result) {
         result.add(node);
+        if (node == null || node.getChildren() == null) return;
+
         for (GraphEdge e : node.getChildren()) {
             if (!result.contains(e.dest))
                 findDownstreamNodes(e.dest, result);

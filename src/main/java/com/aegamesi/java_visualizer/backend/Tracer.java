@@ -235,6 +235,7 @@ public class Tracer {
 
 		// Actually create and return the reference
 		Value out = new Value();
+		out.referenceType = obj.type().name();
 		out.type = Value.Type.REFERENCE;
 		out.reference = key;
 		return out;
@@ -313,6 +314,7 @@ public class Tracer {
 					String name = SHOW_ALL_FIELDS ? me.getKey().declaringType().name() + "." : "";
 					name += me.getKey().name();
 					Value value = convertValue(me.getValue());
+					value.referenceType = me.getKey().typeName();
 					out.fields.put(name, value);
 				}
 			}

@@ -11,7 +11,7 @@ import java.util.HashMap;
 public class ClassNode implements INode {
 
     private double x, y, width, height;
-    private String name;
+    public String name;
     private HashMap<String, String> fields;
     private ArrayList<GraphEdge> pointers;
 
@@ -145,4 +145,5 @@ public class ClassNode implements INode {
     public void addPointer(GraphEdge e) {
         this.pointers.add(e);
     }
+
 }
