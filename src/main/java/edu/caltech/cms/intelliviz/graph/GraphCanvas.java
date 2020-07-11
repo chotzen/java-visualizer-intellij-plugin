@@ -150,7 +150,8 @@ public class GraphCanvas extends JPanel {
 
     public INode renderNode(HeapEntity ent) {
         // if we already have an object, return it!
-        if (this.nodes.containsKey(ent.id)) {
+        System.out.println(ent.id);
+        if (this.nodes.containsKey((Long)ent.id)) {
             return this.nodes.get(ent.id);
         }
         switch (ent.type) {
@@ -218,6 +219,7 @@ public class GraphCanvas extends JPanel {
                 HeapObject obj = (HeapObject)ent;
                 HashMap<String, String> fields = new HashMap<>();
                 ClassNode cn = new ClassNode(100, 100, obj.label, fields);
+                this.nodes.put(obj.id, cn);
                 for (String key : obj.fields.keySet()) {
                     if (obj.fields.get(key).type == Value.Type.REFERENCE) {
                         GraphEdge edge = new GraphEdge(cn, renderNode(this.trace.heap.get(obj.fields.get(key).reference)), key, obj.fields.get(key).referenceType);
@@ -234,7 +236,6 @@ public class GraphCanvas extends JPanel {
                         fields.put(key, obj.fields.get(key).toString());
                     }
                 }
-                this.nodes.put(obj.id, cn);
                 cn.init();
                 return cn;
             case PRIMITIVE:
