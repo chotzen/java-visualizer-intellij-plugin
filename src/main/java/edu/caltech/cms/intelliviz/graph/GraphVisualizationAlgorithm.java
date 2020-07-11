@@ -69,6 +69,7 @@ public class GraphVisualizationAlgorithm {
         beingHandled.add(node);
         double last_x = 0, last_y = 0;
 
+        boolean stepIn = false;
         if (node instanceof ClassNode && getChildrenOfSameType((ClassNode)node) >= 2)  {
             String[] prevHeuristics = {"prev", "pre", "last"};
             String[] nextHeuristics = {"next"}; // TODO: think of better things to put here
@@ -87,8 +88,9 @@ public class GraphVisualizationAlgorithm {
                     }
 
                     // shift down if we haven't already
-                    last_y = vSpace;
+                    last_y = vSpace + upstream.getHeight();
                     System.out.println("SHIFT IN");
+                    stepIn = true;
                 }
                 System.out.println("DOUBLY LINKED!");
                 layout = LayoutBehavior.DOUBLY_LINKED;
@@ -98,8 +100,10 @@ public class GraphVisualizationAlgorithm {
         }
 
         if (!(upstream instanceof ObjectArrayNode || upstream instanceof ObjectMapNode)) {
-            last_x = upstream.getOrigin(null).getX();
-            last_y += upstream.getOrigin(null).getY();
+            last_x = upstream.getX();
+            last_y += upstream.getY();
+            //last_x = upstream.getOrigin(null).getX();
+            //last_y += upstream.getOrigin(null).getY();
         } else if (upstream instanceof ObjectMapNode) {
             last_x = upstream.getX() + upstream.getWidth();
             last_y += upstream.getY();
@@ -127,13 +131,17 @@ public class GraphVisualizationAlgorithm {
             if (layout == LayoutBehavior.VERTICAL) {
                 node.setPos(last_x + offset, last_y + nodeSpace + upstream.getHeight() / 2);
             } else if (layout == LayoutBehavior.HORIZONTAL) {
-                node.setPos(last_x + nodeSpace + upstream.getWidth() / 2, last_y + offset);
+                node.setPos(last_x + nodeSpace + upstream.getWidth(), last_y + offset + upstream.getWidth() / 2 - node.getWidth() / 2);
             } else if (layout == LayoutBehavior.TREE) {
                 // position is not set from here. it is calculated after the leaves are positioned.
                 // this is temporary to pass position data down to the next level
                 node.setPos(last_x, last_y + treeVertSpace);
             } else if (layout == LayoutBehavior.DOUBLY_LINKED) {
-                node.setPos(last_x + nodeSpace + upstream.getWidth() / 2, last_y);
+                if (stepIn) {
+                    node.setPos(last_x, last_y);
+                } else {
+                    node.setPos(last_x + nodeSpace + upstream.getWidth(), last_y + upstream.getWidth() / 2 - node.getWidth() / 2);
+                }
             }
         }
 
@@ -180,10 +188,11 @@ public class GraphVisualizationAlgorithm {
                         if ((downstream.label.toString().contains("pre") || downstream.label.toString().contains("last"))
                                 && downstream.dest instanceof NullNode) {
                             // layout right and move over a bit too
-                            downstream.dest.setPos(last_x, last_y);
+                            downstream.dest.setPos(node.getX(), last_y + node.getHeight() / 2 - downstream.dest.getHeight() / 2);
                             beingHandled.add(downstream.dest);
                             declaringTypes.put(downstream.dest, downstream.declaringType);
-                            node.setPos(last_x + downstream.dest.getWidth() + nodeSpace, last_y);
+                            translateSubgraph(node, downstream.dest.getWidth() + nodeSpace, 0);
+                            tree.get(node).add(downstream);
                         } else {
                             layoutNode(downstream, LayoutBehavior.DOUBLY_LINKED, 0);
                         }
