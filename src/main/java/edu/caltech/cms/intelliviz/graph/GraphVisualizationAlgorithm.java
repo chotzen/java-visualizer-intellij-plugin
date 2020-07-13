@@ -1,5 +1,4 @@
 package edu.caltech.cms.intelliviz.graph;
-
 import java.util.*;
 import java.util.function.Predicate;
 
@@ -16,6 +15,7 @@ public class GraphVisualizationAlgorithm {
     private Set<INode> nodesToIgnore;
     public HashMap<INode, ArrayList<GraphEdge>> tree;
     private HashMap<INode, String> declaringTypes;
+
     private static final int vSpace = 30;
     private static final int nodeSpace = 50;
     private static final int indent = 40;
@@ -28,12 +28,6 @@ public class GraphVisualizationAlgorithm {
 
     // describe the bounds of the visualization
     private double max_x, max_y;
-
-    /*
-    Splitting algorithm:
-    - assign children of "this" but not those which are downstream from local variables
-    - do the vertical offset to the stackframes
-     */
 
     public GraphVisualizationAlgorithm(double originX, double originY, Set<INode> nodesToIgnore) {
         this.originX = originX;
@@ -99,18 +93,8 @@ public class GraphVisualizationAlgorithm {
             }
         }
 
-        if (!(upstream instanceof ObjectArrayNode || upstream instanceof ObjectMapNode)) {
-            last_x = upstream.getX();
-            last_y += upstream.getY();
-            //last_x = upstream.getOrigin(null).getX();
-            //last_y += upstream.getOrigin(null).getY();
-        } else if (upstream instanceof ObjectMapNode) {
-            last_x = upstream.getX() + upstream.getWidth();
-            last_y += upstream.getY();
-        } else {
-            last_x = upstream.getX(); // this should probably be different, tbh
-            last_y += upstream.getY();
-        }
+        last_x = upstream.getX();
+        last_y = upstream.getY();
 
         if (layout == LayoutBehavior.TREE) {
             last_x = upstream.getX();
@@ -120,18 +104,14 @@ public class GraphVisualizationAlgorithm {
         double bound = 0;
 
         if (upstream instanceof VariableNode) { // if it's at the head of the tree
-            if (node instanceof PrimitiveNode) {
-                node.setPos(last_x + primSpacing, last_y - node.getHeight() / 2); // render next to it, but not as much
-            } else {
-                node.setPos(last_x + vSpace, last_y - node.getHeight() / 2); // render next to it, but more
-            }
+            node.setPos(upstream.getOrigin(null).getX(), upstream.getOrigin(null).getY() - node.getHeight() / 2);
         } else {
             // this assumes that the upstream node is center-originating, which is true for ClassNodes.
             // other functionality to be implemented soon.
             if (layout == LayoutBehavior.VERTICAL) {
-                node.setPos(last_x + offset, last_y + nodeSpace + upstream.getHeight() / 2);
+                node.setPos(last_x + offset, last_y + nodeSpace + upstream.getHeight());
             } else if (layout == LayoutBehavior.HORIZONTAL) {
-                node.setPos(last_x + nodeSpace + upstream.getWidth(), last_y + offset + upstream.getWidth() / 2 - node.getWidth() / 2);
+                node.setPos(last_x + nodeSpace + upstream.getWidth(), last_y + offset);
             } else if (layout == LayoutBehavior.TREE) {
                 // position is not set from here. it is calculated after the leaves are positioned.
                 // this is temporary to pass position data down to the next level
@@ -148,16 +128,22 @@ public class GraphVisualizationAlgorithm {
         // Handle children
         ArrayList<INode> handleLater = new ArrayList<>();
         ArrayList<GraphEdge> children = node.getChildren();
-        children.sort((e1, e2) -> {
-            String thisType = declaringTypes.get(node);
-            if (e1.declaringType.equals(thisType)) {
-                return -1;
-            }
-            if (e2.declaringType.equals(thisType)) {
-                return 1;
-            }
-            return 0;
-        });
+
+        if (!(node instanceof ObjectMapNode || node instanceof ObjectArrayNode || node instanceof NullNode)) { // only sort if there's not a prescribed ordering
+            children.sort((e1, e2) -> {
+                String thisType = declaringTypes.get(node);
+                if (e1.declaringType.equals(thisType)) {
+                    return -1;
+                }
+                if (e2.declaringType.equals(thisType)) {
+                    return 1;
+                }
+                return 0;
+            });
+        }
+        if (layout == LayoutBehavior.HORIZONTAL && children.size() > 0) {
+            bound += (node.getHeight() - children.get(0).dest.getHeight()) / 2;
+        }
         for (GraphEdge downstream : children) {
             if (node instanceof ObjectArrayNode) { // force vertical layout for children of arrays
                 layoutNode(downstream, LayoutBehavior.VERTICAL, bound);
@@ -224,6 +210,9 @@ public class GraphVisualizationAlgorithm {
     }
 
     private void layoutNode(GraphEdge edge, LayoutBehavior layout, double offset) {
+        if (edge.label.toString().contains("elementData")) {
+            System.out.println();
+        }
         if (!beingHandled.contains(edge.dest) && !nodesToIgnore.contains(edge.dest)) {
             if (tree.get(edge.source) == null) {
                 tree.put(edge.source, new ArrayList<>());

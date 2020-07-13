@@ -91,7 +91,7 @@ public class VariableNode implements INode {
 
     @Override
     public Point2D getOrigin(GraphEdge edge) {
-        return new Point2D.Double(this.x + this.width + 3 * DD_PADDING, this.y - this.height / 4);
+        return new Point2D.Double(this.x + this.width + 4 * DD_PADDING, this.y - this.height / 4);
     }
 
     @Override

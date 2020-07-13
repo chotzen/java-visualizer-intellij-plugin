@@ -261,6 +261,11 @@ public class GraphCanvas extends JPanel {
         g.clearRect(0, 0, this.getWidth(), this.getHeight());
         Graphics2D g2D = (Graphics2D) g;
         g2D.scale(scale, scale);
+
+        for (int i = 0; i < variables.size(); i++) {
+            variables.get(i).draw(g2D);
+        }
+
         for (INode gNode : nodes.values()) {
             // render nodes whose source edges should be in front
             if (gNode instanceof ObjectMapNode || gNode instanceof ObjectArrayNode) {
@@ -283,9 +288,6 @@ public class GraphCanvas extends JPanel {
             sf.draw(g2D, (int)this.vertOffset, 500);
         }
 
-        for (int i = 0; i < variables.size(); i++) {
-            variables.get(i).draw(g2D);
-        }
 
         if (curCursor != null) {
             setCursor(curCursor);
@@ -383,7 +385,8 @@ public class GraphCanvas extends JPanel {
                 double x2 = e.getX() / scale;
                 double y2 = e.getY() / scale;
                 for (INode n : selected) {
-                    n.setPos(n.getX() + x2 - x1, n.getY() + y2 - y1);
+                    if (n != null)
+                        n.setPos(n.getX() + x2 - x1, n.getY() + y2 - y1);
                 }
                 x1 = x2;
                 y1 = y2;
