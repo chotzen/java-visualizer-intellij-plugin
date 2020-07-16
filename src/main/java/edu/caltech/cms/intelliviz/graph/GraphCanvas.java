@@ -2,6 +2,7 @@ package edu.caltech.cms.intelliviz.graph;
 
 import com.aegamesi.java_visualizer.model.*;
 import com.aegamesi.java_visualizer.model.Frame;
+import com.siyeh.ig.psiutils.VariableAssignedVisitor;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,16 +12,16 @@ import java.awt.event.MouseMotionAdapter;
 import java.awt.geom.Point2D;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class GraphCanvas extends JPanel {
 
     private double scale = 1.0;
 
-    private ArrayList<VariableNode> variables;
-    private HashMap<Long, INode> nodes;
+    private LinkedHashMap<StackFrame, List<VariableNode>> variables;
+    private Map<Long, INode> nodes;
     private List<GraphEdge> edges;
-    private ArrayList<StackFrame> stackFrames;
-    private HashMap<INode, ArrayList<GraphEdge>> layoutTree;
+    private Map<INode, List<GraphEdge>> layoutTree;
 
     private Set<INode> selected;
     private Cursor curCursor;
@@ -28,7 +29,6 @@ public class GraphCanvas extends JPanel {
     private ExecutionTrace trace;
 
     private Graphics grRef;
-    private double vertOffset = 0;
 
     private double x1, y1;
     private boolean init = false;
@@ -37,10 +37,9 @@ public class GraphCanvas extends JPanel {
         super();
         this.grRef = getGraphics();
 
-        this.variables = new ArrayList<>();
+        this.variables = new LinkedHashMap<>();
         this.nodes = new HashMap<>();
         this.edges = new ArrayList<>();
-        this.stackFrames = new ArrayList<>();
 
         setBackground(Color.WHITE);
         setVisible(true);
@@ -64,7 +63,7 @@ public class GraphCanvas extends JPanel {
         nodes.clear(); // TODO: preserve nodes that didn't get deleted, probably by their ID
         edges.clear();
         variables.clear();
-        stackFrames.clear();
+
 
         removeAll();
 
@@ -76,71 +75,105 @@ public class GraphCanvas extends JPanel {
 
     private void buildUI() {
 
-        // Initialize stack frames
-        // Vertical offset will be determined by layout and passed to draw() from this.vertOffset
-        for (int i = this.trace.frames.size() - 1; i >= 0; i--) {
-            this.stackFrames.add(new StackFrame(this.trace.heap, this.trace.frames.get(i),
-                    this.trace.frames.size() - i, i != this.trace.frames.size() - 1));
+        // INITIALIZE STACK FRAMES and map them to their variables.
+        int depth = 0;
+        VariableNode thisNode = null;
 
-        }
+        Collections.reverse(this.trace.frames);
 
-        int primId = -1;
+        for (Frame fr : this.trace.frames) {
 
-        Frame fr = this.trace.frames.get(0);
-        for (String v : fr.locals.keySet()) {
-            System.out.println(fr.locals.get(v).type);
-            if (fr.locals.get(v).type == Value.Type.REFERENCE) {
-                VariableNode var = new VariableNode(0, 0, v, renderNode(trace.heap.get(fr.locals.get(v).reference)), fr.locals.get(v).referenceType);
-                this.variables.add(var);
-            } else {
-                PrimitiveNode node = new PrimitiveNode(0, 0, fr.locals.get(v).toString());
-                VariableNode var = new VariableNode(0, 0, v, node, fr.locals.get(v).type.toString());
-                this.variables.add(var);
-                System.out.println(v);
-                this.nodes.put((long) primId, node);
-                primId--;
+            StackFrame convert = new StackFrame(this.trace.heap, fr, depth,
+                    !fr.equals(this.trace.frames.get(this.trace.frames.size() - 1)));
+            this.variables.put(convert, new ArrayList<>());
+
+            for (String v : fr.locals.keySet()) {
+                if (fr.locals.get(v).type == Value.Type.REFERENCE) {
+                    VariableNode var = new VariableNode(0, 0, v, renderNode(trace.heap.get(fr.locals.get(v).reference)), fr.locals.get(v).referenceType);
+                    if (v.equals("this")) {
+                        if (thisNode == null) {
+                            thisNode = var;
+                        } else {
+                            continue;
+                        }
+                    }
+                    this.variables.get(convert).add(var);
+                } else {
+                    PrimitiveNode node = new PrimitiveNode(0, 0, fr.locals.get(v).toString());
+                    VariableNode var = new VariableNode(0, 0, v, node, fr.locals.get(v).type.toString());
+                    this.variables.get(convert).add(var);
+                    System.out.println(v);
+                    this.nodes.put(getUniqueNegKey(), node);
+                }
             }
+            depth++;
         }
         init = false;
 
+        Set<INode> allDownstream = new HashSet<>();
+        Map<StackFrame, Set<INode>> downstreams = new HashMap<>();
+
+        for (Map.Entry<StackFrame, List<VariableNode>> ent : this.variables.entrySet()) {
+            // Map each stackframe to downstream nodes that have not yet been searched.
+            // this works because LinkedHashMap iterates based on insertion order, and
+            // this.variables is a LinkedHashMap, probably.
+            downstreams.put(ent.getKey(), new HashSet<>(
+                    ent.getValue().stream()
+                            .flatMap(vNode -> findDownstreamNodes(vNode).stream())
+                            .filter(node -> !allDownstream.contains(node))
+                            .collect(Collectors.toSet())
+            ));
+
+            allDownstream.addAll(downstreams.get(ent.getKey()));
+        }
+
         this.repaint();
 
+        VariableNode finalThisNode = thisNode;
         SwingUtilities.invokeLater(() -> {
+
+            /*
+            new plan:
+            - render `this` without allDownstream
+            - remove the next batch of nodes from allDownstream
+            - render them.
+             */
+
+
+            // OLD ALG:
             // get downstream nodes
             // layout "this" without nodes
             // get the height and reset stackframes
             // render other nodes below it
 
-            Set<INode> downstreamNodes = new HashSet<>();
-            VariableNode thisNode = null;
-            for (VariableNode v : this.variables) {
-                if (!v.name.equals("this")) {
-                    downstreamNodes.addAll(findDownstreamNodes(v.reference));
-                    downstreamNodes.add(v.reference);
-                } else {
-                    thisNode = v;
-                }
-            }
-
-            HashMap<INode, ArrayList<GraphEdge>> tree = new HashMap<>();
-            if (thisNode != null) {
-                GraphVisualizationAlgorithm upperLayout = new GraphVisualizationAlgorithm(20, 20, downstreamNodes);
-                upperLayout.layoutVariable(thisNode);
+            HashMap<INode, List<GraphEdge>> tree = new HashMap<>();
+            double vertOffset = 20;
+            if (finalThisNode != null) {
+                GraphVisualizationAlgorithm upperLayout = new GraphVisualizationAlgorithm(20, 20, allDownstream);
+                upperLayout.layoutVariable(finalThisNode);
                 tree.putAll(upperLayout.tree);
-                this.vertOffset = upperLayout.getMax_y();
+                vertOffset = upperLayout.getMax_y();
             }
 
-            Point2D origin = this.stackFrames.get(this.stackFrames.size() - 1).getOrigin((int)this.vertOffset);
-            GraphVisualizationAlgorithm lowerLayout = new GraphVisualizationAlgorithm(origin.getX(), origin.getY(), new HashSet<>());
+            for (Map.Entry<StackFrame, List<VariableNode>> ent : this.variables.entrySet()) {
+                allDownstream.removeAll(downstreams.get(ent.getKey()));
 
-            for (VariableNode v: this.variables) {
-                if (!v.equals(thisNode)) {
-                    lowerLayout.layoutVariable(v);
-                    System.out.println("layout");
+                ent.getKey().vertOffset = (int) vertOffset;
+                System.out.println(vertOffset);
+                Point2D origin = ent.getKey().getOrigin();
+                GraphVisualizationAlgorithm lowerLayout = new GraphVisualizationAlgorithm(origin.getX(), origin.getY(), allDownstream);
+
+                for (VariableNode v: ent.getValue()) {
+                    if (!v.equals(finalThisNode)) {
+                        lowerLayout.layoutVariable(v);
+                    }
                 }
+
+                tree.putAll(lowerLayout.tree);
+                vertOffset = lowerLayout.getMax_y() + 20;
+
             }
 
-            tree.putAll(lowerLayout.tree);
             this.layoutTree = tree;
             resetPreferredSize();
             this.repaint();
@@ -262,9 +295,7 @@ public class GraphCanvas extends JPanel {
         Graphics2D g2D = (Graphics2D) g;
         g2D.scale(scale, scale);
 
-        for (int i = 0; i < variables.size(); i++) {
-            variables.get(i).draw(g2D);
-        }
+        variables.values().stream().flatMap(Collection::stream).forEach(vNode -> vNode.draw(g2D));
 
         for (INode gNode : nodes.values()) {
             // render nodes whose source edges should be in front
@@ -284,10 +315,9 @@ public class GraphCanvas extends JPanel {
             }
         }
 
-        for (StackFrame sf : stackFrames) {
-            sf.draw(g2D, (int)this.vertOffset, 500);
+        for (StackFrame sf : variables.keySet()) {
+            sf.draw(g2D, 1000); // TODO: fix width
         }
-
 
         if (curCursor != null) {
             setCursor(curCursor);
@@ -320,7 +350,7 @@ public class GraphCanvas extends JPanel {
                 return g;
         }
 
-        for (VariableNode g : variables) {
+        for (VariableNode g : variables.values().stream().flatMap(Collection::stream).collect(Collectors.toSet())) {
             if (g.contains(x, y))
                 return g;
         }

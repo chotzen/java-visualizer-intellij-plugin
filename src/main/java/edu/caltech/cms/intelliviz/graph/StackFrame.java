@@ -21,6 +21,7 @@ public class StackFrame {
     private String displayString;
     private int depth;
     private boolean active;
+    public int vertOffset = 0;
 
 
     public StackFrame(Map<Long, HeapEntity> heap, Frame fr, int depth, boolean active) {
@@ -49,11 +50,11 @@ public class StackFrame {
         this.displayString += ")";
     }
 
-    public void draw(Graphics g, int vertOffset, int width) {
+    public void draw(Graphics g, int width) {
         Graphics2D g2d = (Graphics2D) g.create();
         // Draw rectangle
         int x = (1 + this.depth) * HEIGHT;
-        int y = (1 + this.depth) * HEIGHT + vertOffset;
+        int y = vertOffset;
         Rectangle2D box = new Rectangle2D.Double(x, y, width - depth * HEIGHT, HEIGHT);
         if (active) {
             g2d.setColor(ACTIVE_COLOR);
@@ -70,7 +71,7 @@ public class StackFrame {
         g2d.drawString(this.displayString, x + TEXT_OFFSET, y + TEXT_OFFSET + g2d.getFontMetrics().getAscent());
     }
 
-    public Point2D getOrigin(int vertOffset) {
-        return new Point2D.Double((1 + this.depth) * HEIGHT, (1 + this.depth) * HEIGHT + vertOffset);
+    public Point2D getOrigin() {
+        return new Point2D.Double((1 + this.depth) * HEIGHT, HEIGHT + vertOffset);
     }
 }
