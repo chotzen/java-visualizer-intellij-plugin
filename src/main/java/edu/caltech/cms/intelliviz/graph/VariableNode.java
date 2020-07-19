@@ -25,6 +25,7 @@ public class VariableNode implements INode {
         this.label = label + " =";
         this.name = label;
         this.reference = reference;
+        this.declaringType = declaringType;
 
         // Guess height/width before first display tick
         this.width = 40;

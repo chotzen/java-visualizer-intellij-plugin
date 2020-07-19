@@ -2,7 +2,6 @@ package edu.caltech.cms.intelliviz.graph;
 
 import com.aegamesi.java_visualizer.model.*;
 import com.aegamesi.java_visualizer.model.Frame;
-import com.siyeh.ig.psiutils.VariableAssignedVisitor;
 
 import javax.swing.*;
 import java.awt.*;
@@ -89,15 +88,14 @@ public class GraphCanvas extends JPanel {
 
             for (String v : fr.locals.keySet()) {
                 if (fr.locals.get(v).type == Value.Type.REFERENCE) {
-                    VariableNode var = new VariableNode(0, 0, v, renderNode(trace.heap.get(fr.locals.get(v).reference)), fr.locals.get(v).referenceType);
-                    if (v.equals("this")) {
-                        if (thisNode == null) {
+                    if (!v.equals("this") || thisNode == null) {
+                        VariableNode var = new VariableNode(0, 0, v, renderNode(trace.heap.get(fr.locals.get(v).reference)), fr.locals.get(v).referenceType);
+                        System.out.println(var.name + ": " + var.declaringType);
+                        if (v.equals("this")) {
                             thisNode = var;
-                        } else {
-                            continue;
                         }
+                        this.variables.get(convert).add(var);
                     }
-                    this.variables.get(convert).add(var);
                 } else {
                     PrimitiveNode node = new PrimitiveNode(0, 0, fr.locals.get(v).toString());
                     VariableNode var = new VariableNode(0, 0, v, node, fr.locals.get(v).type.toString());
@@ -113,14 +111,18 @@ public class GraphCanvas extends JPanel {
         Set<INode> allDownstream = new HashSet<>();
         Map<StackFrame, Set<INode>> downstreams = new HashMap<>();
 
-        for (Map.Entry<StackFrame, List<VariableNode>> ent : this.variables.entrySet()) {
+        List<Map.Entry<StackFrame, List<VariableNode>>> list = new ArrayList<>(this.variables.entrySet());
+        Collections.reverse(list);
+
+        for (Map.Entry<StackFrame, List<VariableNode>> ent : list) {
             // Map each stackframe to downstream nodes that have not yet been searched.
             // this works because LinkedHashMap iterates based on insertion order, and
             // this.variables is a LinkedHashMap, probably.
+            VariableNode finalThisNode1 = thisNode;
             downstreams.put(ent.getKey(), new HashSet<>(
                     ent.getValue().stream()
-                            .flatMap(vNode -> findDownstreamNodes(vNode).stream())
-                            .filter(node -> !allDownstream.contains(node))
+                            .flatMap(vNode -> findDownstreamNodes(vNode.reference).stream())
+                            .filter(node -> !allDownstream.contains(node) && !(finalThisNode1 != null && node.equals(finalThisNode1.reference)))
                             .collect(Collectors.toSet())
             ));
 
@@ -139,20 +141,13 @@ public class GraphCanvas extends JPanel {
             - render them.
              */
 
-
-            // OLD ALG:
-            // get downstream nodes
-            // layout "this" without nodes
-            // get the height and reset stackframes
-            // render other nodes below it
-
             HashMap<INode, List<GraphEdge>> tree = new HashMap<>();
             double vertOffset = 20;
             if (finalThisNode != null) {
                 GraphVisualizationAlgorithm upperLayout = new GraphVisualizationAlgorithm(20, 20, allDownstream);
                 upperLayout.layoutVariable(finalThisNode);
                 tree.putAll(upperLayout.tree);
-                vertOffset = upperLayout.getMax_y();
+                vertOffset = upperLayout.getMaxY();
             }
 
             for (Map.Entry<StackFrame, List<VariableNode>> ent : this.variables.entrySet()) {
@@ -165,12 +160,15 @@ public class GraphCanvas extends JPanel {
 
                 for (VariableNode v: ent.getValue()) {
                     if (!v.equals(finalThisNode)) {
+                        if (v.name.contains("root")) {
+                            System.out.println("breakpoint here");
+                        }
                         lowerLayout.layoutVariable(v);
                     }
                 }
 
                 tree.putAll(lowerLayout.tree);
-                vertOffset = lowerLayout.getMax_y() + 20;
+                vertOffset = lowerLayout.getMaxY() + 20;
 
             }
 
@@ -359,7 +357,7 @@ public class GraphCanvas extends JPanel {
 
     // this is the one we call before layout is run. effectively does the same thing, but we don't have
     // layoutTree yet, so we need to follow the edges
-    private Set<INode> findDownstreamNodes(INode node) {
+    Set<INode> findDownstreamNodes(INode node) {
         HashSet<INode> result = new HashSet<INode>();
         findDownstreamNodes(node, result);
         return result;

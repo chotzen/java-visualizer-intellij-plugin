@@ -49,15 +49,18 @@ public class GraphVisualizationAlgorithm {
         var.setPos(originX + indent, max_y + vSpace + ds_center_y);
 
         declaringTypes.put(downstream, var.declaringType);
-        layoutNode(var, downstream, LayoutBehavior.HORIZONTAL, 0);
-        this.max_y = getSubgraphMaxY(downstream);
+        if (layoutNode(var, downstream, LayoutBehavior.HORIZONTAL, 0)) {
+            this.max_y = getSubgraphMaxY(downstream);
+        } else {
+            this.max_y = getSubgraphMaxY(var);
+        }
     }
 
 
-    void layoutNode(INode upstream, INode node, LayoutBehavior layout, double offset) {
+    boolean layoutNode(INode upstream, INode node, LayoutBehavior layout, double offset) {
 
         if (beingHandled.contains(node) || nodesToIgnore.contains(node)) {
-            return;
+            return false;
         }
 
         beingHandled.add(node);
@@ -78,7 +81,7 @@ public class GraphVisualizationAlgorithm {
                     String[] tailHeuristics = {"tail", "end", "last"};
                     String e = edge.label.toString();
                     if (Arrays.stream(tailHeuristics).anyMatch(s -> e.contains(s))) {
-                        return;
+                        return false;
                     }
 
                     // shift down if we haven't already
@@ -193,7 +196,6 @@ public class GraphVisualizationAlgorithm {
         }
 
         if (layout == LayoutBehavior.TREE) {
-            System.out.println("TREE LAYOUT!!!");
             double coveredWidth = 0;
             // start at left edge, continuing rightward and adding space in between
             for (INode child : handleLater) {
@@ -205,14 +207,10 @@ public class GraphVisualizationAlgorithm {
                 node.setPos(last_x + coveredWidth / 2 - node.getWidth() / 2, node.getY());
             }
         }
-        System.out.println("HERE");
-
+        return true;
     }
 
-    private void layoutNode(GraphEdge edge, LayoutBehavior layout, double offset) {
-        if (edge.label.toString().contains("elementData")) {
-            System.out.println();
-        }
+    private boolean layoutNode(GraphEdge edge, LayoutBehavior layout, double offset) {
         if (!beingHandled.contains(edge.dest) && !nodesToIgnore.contains(edge.dest)) {
             if (tree.get(edge.source) == null) {
                 tree.put(edge.source, new ArrayList<>());
@@ -220,7 +218,9 @@ public class GraphVisualizationAlgorithm {
             tree.get(edge.source).add(edge);
             declaringTypes.put(edge.dest, edge.declaringType);
             layoutNode(edge.source, edge.dest, layout, offset);
+            return true;
         }
+        return false;
     }
 
 
@@ -288,7 +288,7 @@ public class GraphVisualizationAlgorithm {
     }
 
 
-    public double getMax_y() {
+    public double getMaxY() {
         return this.max_y;
     }
 }
