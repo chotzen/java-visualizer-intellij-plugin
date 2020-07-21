@@ -8,6 +8,9 @@ import com.aegamesi.java_visualizer.model.HeapMap;
 import com.aegamesi.java_visualizer.model.HeapObject;
 import com.aegamesi.java_visualizer.model.HeapPrimitive;
 import com.aegamesi.java_visualizer.model.Value;
+import com.intellij.openapi.module.ModuleManager;
+import com.intellij.openapi.project.ProjectManager;
+import com.intellij.openapi.roots.ModuleRootManager;
 import com.sun.jdi.AbsentInformationException;
 import com.sun.jdi.ArrayReference;
 import com.sun.jdi.BooleanValue;
@@ -30,14 +33,9 @@ import com.sun.jdi.StringReference;
 import com.sun.jdi.ThreadReference;
 import com.sun.jdi.VoidValue;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.*;
 
 import static com.aegamesi.java_visualizer.backend.TracerUtils.displayNameForType;
 import static com.aegamesi.java_visualizer.backend.TracerUtils.doesImplementInterface;
@@ -81,10 +79,13 @@ public class Tracer {
 	public ExecutionTrace getModel() throws IncompatibleThreadStateException {
 		model = new ExecutionTrace();
 
-		// Convert stack frame locals
+		Map<Frame, StackFrame> frameMap = new HashMap<>();
+
 		for (StackFrame frame : thread.frames()) {
 			if (shouldShowFrame(frame)) {
-				model.frames.add(convertFrame(frame));
+				Frame e = convertFrame(frame);
+				frameMap.put(e, frame);
+				model.frames.add(e);
 			}
 		}
 
@@ -113,6 +114,40 @@ public class Tracer {
 			HeapEntity converted = convertObject(obj);
 			converted.id = id;
 			model.heap.put(id, converted);
+		}
+
+		// Deal with holes
+		for (int i = model.frames.size() - 1; i > 0; i--) {
+			Frame fr = model.frames.get(i);
+			StackFrame frame = frameMap.get(fr);
+			String line = getCurrentLine(frame);
+			String[] pieces = line.split("=");
+			if (pieces.length == 2) {
+				// it's an assignment. probably.
+				// for now, ignore it if the left side has any parens, we don't want to deal with that
+				// could either be method calls or casting. just yuck in general
+				if (!pieces[0].contains("(")) {
+					List<String> path = new ArrayList<>(Arrays.asList(pieces[0].split("\\.")));
+					Value cur = fr.locals.get(path.get(0));
+					if (path.size() > 1) { // not a top-level variable, i.e. is a reference & we need to iterate over the rest of the path
+						for (int k = 1; k < path.size(); k++) {
+							HeapEntity next = model.heap.get(cur.reference);
+							if (next instanceof HeapObject) {
+								if (((HeapObject) next).fields.keySet().contains(path.get(k).trim())) {
+									cur = ((HeapObject) next).fields.get(path.get(k).trim());
+								}
+							} else {
+								cur = null;
+								break;
+							}
+						}
+					}
+					if (cur != null) {
+						cur.type = Value.Type.HOLE;
+						cur.holeDest = model.frames.get(i-1); // last frame converted is in position 0
+					}
+				}
+			}
 		}
 
 		return model;
@@ -360,6 +395,35 @@ public class Tracer {
 			out = convertReference(obj);
 		}
 		return out;
+	}
+
+	public String getCurrentLine(StackFrame frame) {
+		int lineNumber = frame.location().lineNumber();
+		String cPath = ModuleRootManager.getInstance(ModuleManager.getInstance(ProjectManager.getInstance().getOpenProjects()[0])
+				.getModules()[0]).getContentRoots()[0].toString();
+		int lnN = 0;
+		String line = null;
+		Scanner in = null;
+		try {
+			// for some reason we get backslashes here.
+			String fPath = frame.location().sourcePath().replaceAll("\\\\", "/");
+
+			// Assume (incorrectly?) that we're working in src/
+			in = new Scanner(new File(cPath.substring(7) + "/src/" + fPath));
+			while (in.hasNextLine() && lnN < lineNumber) {
+				line = in.nextLine();
+				lnN++;
+			}
+		} catch (AbsentInformationException | FileNotFoundException e) {
+			e.printStackTrace();
+		} finally {
+			in.close();
+		}
+
+		if (lnN == lineNumber) {
+			return line.replaceAll("\\s\\s*", " ").trim();
+		}
+		return null;
 	}
 
 	// input format: [package.]ClassName:lineno or [package.]ClassName

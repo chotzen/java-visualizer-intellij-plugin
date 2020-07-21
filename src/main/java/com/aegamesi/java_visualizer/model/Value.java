@@ -13,6 +13,7 @@ public class Value {
 	public char charValue;
 	public long reference;
 	public String referenceType;
+	public Frame holeDest;
 
 	@Override
 	public String toString() {
@@ -31,13 +32,15 @@ public class Value {
 				return "'" + charValue + "'";
 			case REFERENCE:
 				return "*REF*";
+			case HOLE:
+				return "*HOLE*";
 			default:
 				return "<?>";
 		}
 	}
 
 	public enum Type {
-		NULL, VOID, LONG, DOUBLE, BOOLEAN, STRING, CHAR, REFERENCE;
+		NULL, VOID, LONG, DOUBLE, BOOLEAN, STRING, CHAR, REFERENCE, HOLE;
 	}
 
 	JSONArray toJson() {

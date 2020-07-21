@@ -5,7 +5,7 @@ import java.awt.*;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 
-public interface INode {
+public interface INode extends Targetable {
 
     void setPos(double x, double y);
     void draw(Graphics2D g);
@@ -18,7 +18,6 @@ public interface INode {
     double getY();
 
     // Target and origin for edges
-    Point2D getTarget(double originX, double originY);
     Point2D getOrigin(GraphEdge edge);
 
     ArrayList<GraphEdge> getChildren();

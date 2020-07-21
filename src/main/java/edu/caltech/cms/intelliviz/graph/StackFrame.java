@@ -7,10 +7,11 @@ import com.aegamesi.java_visualizer.model.Value;
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 
-public class StackFrame {
+public class StackFrame implements INode {
 
     private static final int HEIGHT = 20;
     private static final int TEXT_OFFSET = 2;
@@ -73,5 +74,55 @@ public class StackFrame {
 
     public Point2D getOrigin() {
         return new Point2D.Double((1 + this.depth) * HEIGHT, HEIGHT + vertOffset);
+    }
+
+    @Override
+    public Point2D getTarget(double originX, double originY) {
+        return new Point2D.Double((1 + this.depth) * HEIGHT, HEIGHT / 2.0 + vertOffset);
+    }
+
+    @Override
+    public void setPos(double x, double y) {
+        // doesn't change. layout is computed elsewhere
+    }
+
+    @Override
+    public void draw(Graphics2D g) {
+        // see other draw method
+    }
+
+    @Override
+    public boolean contains(double x, double y) {
+        return false; // not drag-and-droppable
+    }
+
+    @Override
+    public double getWidth() {
+        return 0;
+    }
+
+    @Override
+    public double getHeight() {
+        return 0;
+    }
+
+    @Override
+    public double getX() {
+        return (1 + this.depth) * HEIGHT;
+    }
+
+    @Override
+    public double getY() {
+        return vertOffset;
+    }
+
+    @Override
+    public Point2D getOrigin(GraphEdge edge) {
+        return new Point2D.Double(getX(), getY());
+    }
+
+    @Override
+    public ArrayList<GraphEdge> getChildren() {
+        return new ArrayList<>();
     }
 }

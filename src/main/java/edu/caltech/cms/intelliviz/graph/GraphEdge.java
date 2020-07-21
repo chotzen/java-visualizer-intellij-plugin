@@ -1,5 +1,7 @@
 package edu.caltech.cms.intelliviz.graph;
 
+import org.apache.commons.lang.ObjectUtils;
+
 import java.awt.*;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
@@ -12,52 +14,55 @@ public class GraphEdge {
 
     private Line2D line;
 
-
-    private GraphEdge(INode from, INode to, String label) {
+    private GraphEdge(INode from, Targetable to, String label) {
         this.source = from;
-        this.dest = to;
+        this.dest = (INode)to;
         this.label = new TextLabel(label);
         line = new Line2D.Double();
     }
 
-    public GraphEdge(INode from, INode to, String label, String declaringType) {
+    public GraphEdge(INode from, Targetable to, String label, String declaringType) {
         this(from, to, label);
         this.declaringType = declaringType;
     }
 
     public void draw(Graphics2D g) {
-        Point2D origin = source.getOrigin(this); 
-        Point2D destPt = this.dest.getTarget(origin.getX(), origin.getY());
-        
-        g.setColor(Color.black);
-        line.setLine(origin.getX(), origin.getY(), destPt.getX(), destPt.getY());
-        g.draw(line);
+        try {
+            Point2D origin = source.getOrigin(this);
+            Point2D destPt = dest.getTarget(origin.getX(), origin.getY());
 
-        // Render label
+            g.setColor(Color.black);
+            line.setLine(origin.getX(), origin.getY(), destPt.getX(), destPt.getY());
+            g.draw(line);
 
-        if (this.source instanceof ClassNode) {
-            Point2D originProj = getCenterTargetingProjection(this.source, destPt.getX(), destPt.getY());
-            label.draw(g, (originProj.getX() + destPt.getX()) / 2, (originProj.getY() + destPt.getY()) / 2);
+            // Render label
 
-        } else {
-            label.draw(g, (origin.getX() + destPt.getX()) / 2, (origin.getY() + destPt.getY()) / 2);
+            if (this.source instanceof ClassNode) {
+                Point2D originProj = getCenterTargetingProjection(this.source, destPt.getX(), destPt.getY());
+                label.draw(g, (originProj.getX() + destPt.getX()) / 2, (originProj.getY() + destPt.getY()) / 2);
+
+            } else {
+                label.draw(g, (origin.getX() + destPt.getX()) / 2, (origin.getY() + destPt.getY()) / 2);
+            }
+
+
+            // Render Arrow Head
+            Graphics2D g2 = (Graphics2D) g.create();
+            double angle = Math.atan2(destPt.getY() - origin.getY(), destPt.getX() - origin.getX()) - Math.PI / 2d;
+            Polygon rotatedArrow = new Polygon();
+
+            // Rudimentary rotation matrix because AffineTransform breaks on my computer
+            rotatedArrow.addPoint(0, 0);
+            rotatedArrow.addPoint((int) (-4 * Math.cos(angle) + 8 * Math.sin(angle)),
+                    (int) (-4 * Math.sin(angle) - 8 * Math.cos(angle)));
+            rotatedArrow.addPoint((int) (4 * Math.cos(angle) + 8 * Math.sin(angle)),
+                    (int) (4 * Math.sin(angle) - 8 * Math.cos(angle)));
+            rotatedArrow.translate((int) destPt.getX(), (int) destPt.getY());
+            g2.fill(rotatedArrow);
+            g2.dispose();
+        } catch (NullPointerException e) {
+            System.out.println();
         }
-
-
-        // Render Arrow Head
-        Graphics2D g2 = (Graphics2D) g.create();
-        double angle = Math.atan2(destPt.getY() - origin.getY(), destPt.getX() - origin.getX()) - Math.PI / 2d;
-        Polygon rotatedArrow = new Polygon();
-
-        // Rudimentary rotation matrix because AffineTransform breaks on my computer
-        rotatedArrow.addPoint(0, 0);
-        rotatedArrow.addPoint(  (int)(-4 * Math.cos(angle) + 8 * Math.sin(angle)),
-                                (int)(-4 * Math.sin(angle) - 8 * Math.cos(angle)));
-        rotatedArrow.addPoint(  (int)(4 * Math.cos(angle) + 8 * Math.sin(angle)),
-                                (int)(4 * Math.sin(angle) - 8 * Math.cos(angle)));
-        rotatedArrow.translate((int)destPt.getX(), (int)destPt.getY());
-        g2.fill(rotatedArrow);
-        g2.dispose();
     }
 
     public static Point2D getCenterTargetingProjection(INode dest, double originX, double originY) {

@@ -17,6 +17,7 @@ public class GraphCanvas extends JPanel {
 
     private double scale = 1.0;
 
+    private Map<Frame, StackFrame> frameMap;
     private LinkedHashMap<StackFrame, List<VariableNode>> variables;
     private Map<Long, INode> nodes;
     private List<GraphEdge> edges;
@@ -39,6 +40,7 @@ public class GraphCanvas extends JPanel {
         this.variables = new LinkedHashMap<>();
         this.nodes = new HashMap<>();
         this.edges = new ArrayList<>();
+        this.frameMap = new HashMap<>();
 
         setBackground(Color.WHITE);
         setVisible(true);
@@ -74,18 +76,27 @@ public class GraphCanvas extends JPanel {
 
     private void buildUI() {
 
-        // INITIALIZE STACK FRAMES and map them to their variables.
         int depth = 0;
         VariableNode thisNode = null;
 
         Collections.reverse(this.trace.frames);
 
+        Map<StackFrame, Frame> invFrameMap = new HashMap<>();
+        // Initialize stack frames
         for (Frame fr : this.trace.frames) {
-
             StackFrame convert = new StackFrame(this.trace.heap, fr, depth,
                     !fr.equals(this.trace.frames.get(this.trace.frames.size() - 1)));
             this.variables.put(convert, new ArrayList<>());
+            frameMap.put(fr, convert);
+            invFrameMap.put(convert, fr);
+        }
 
+        // Initialize variables, by frame
+        // this is done separately to allow hole pointers to work
+        for (Frame fr : this.variables.keySet().stream().filter(invFrameMap::containsKey)
+                                                        .map(invFrameMap::get)
+                                                        .collect(Collectors.toSet())) {
+            StackFrame convert = frameMap.get(fr);
             for (String v : fr.locals.keySet()) {
                 if (fr.locals.get(v).type == Value.Type.REFERENCE) {
                     if (!v.equals("this") || thisNode == null) {
@@ -93,6 +104,9 @@ public class GraphCanvas extends JPanel {
                         System.out.println(var.name + ": " + var.declaringType);
                         if (v.equals("this")) {
                             thisNode = var;
+                        }
+                        if (frameMap.size() != this.variables.size()) {
+                            System.out.println("breakpoint here this is weird");
                         }
                         this.variables.get(convert).add(var);
                     }
@@ -160,9 +174,6 @@ public class GraphCanvas extends JPanel {
 
                 for (VariableNode v: ent.getValue()) {
                     if (!v.equals(finalThisNode)) {
-                        if (v.name.contains("root")) {
-                            System.out.println("breakpoint here");
-                        }
                         lowerLayout.layoutVariable(v);
                     }
                 }
@@ -179,10 +190,10 @@ public class GraphCanvas extends JPanel {
 
     }
 
-    public INode renderNode(HeapEntity ent) {
+    INode renderNode(HeapEntity ent) {
         // if we already have an object, return it!
         System.out.println(ent.id);
-        if (this.nodes.containsKey((Long)ent.id)) {
+        if (this.nodes.containsKey(ent.id)) {
             return this.nodes.get(ent.id);
         }
         switch (ent.type) {
@@ -254,6 +265,10 @@ public class GraphCanvas extends JPanel {
                 for (String key : obj.fields.keySet()) {
                     if (obj.fields.get(key).type == Value.Type.REFERENCE) {
                         GraphEdge edge = new GraphEdge(cn, renderNode(this.trace.heap.get(obj.fields.get(key).reference)), key, obj.fields.get(key).referenceType);
+                        cn.addPointer(edge);
+                        this.edges.add(edge);
+                    } else if (obj.fields.get(key).type == Value.Type.HOLE) {
+                        GraphEdge edge = new GraphEdge(cn, this.frameMap.get(obj.fields.get(key).holeDest), key, obj.fields.get(key).referenceType);
                         cn.addPointer(edge);
                         this.edges.add(edge);
                     } else if (obj.fields.get(key).type == Value.Type.NULL) {
