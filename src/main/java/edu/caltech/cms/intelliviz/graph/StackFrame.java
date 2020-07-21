@@ -16,8 +16,10 @@ public class StackFrame implements INode {
     private static final int HEIGHT = 20;
     private static final int TEXT_OFFSET = 2;
     private static final Font font = new Font("Monospaced", Font.ITALIC | Font.BOLD, 12);
+    private static final Font font2 = new Font("SanSerif", Font.ITALIC | Font.BOLD, 12);
     private static final Color INACTIVE_COLOR = Color.decode("#B9C8D2");
     private static final Color ACTIVE_COLOR = Color.decode("#DDF5FA");
+    public boolean targeted = false;
 
     private String displayString;
     private int depth;
@@ -70,6 +72,11 @@ public class StackFrame implements INode {
         // Draw text
         g2d.setFont(font);
         g2d.drawString(this.displayString, x + TEXT_OFFSET, y + TEXT_OFFSET + g2d.getFontMetrics().getAscent());
+
+        if (targeted) {
+            g2d.setFont(font2);
+            g2d.drawString("...", x - TEXT_OFFSET - 10, y + TEXT_OFFSET + g2d.getFontMetrics().getAscent());
+        }
     }
 
     public Point2D getOrigin() {
@@ -78,7 +85,7 @@ public class StackFrame implements INode {
 
     @Override
     public Point2D getTarget(double originX, double originY) {
-        return new Point2D.Double((1 + this.depth) * HEIGHT, HEIGHT / 2.0 + vertOffset);
+        return new Point2D.Double((1 + this.depth) * HEIGHT - 10, HEIGHT / 2.0 + vertOffset);
     }
 
     @Override

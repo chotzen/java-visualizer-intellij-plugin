@@ -89,6 +89,7 @@ public class GraphCanvas extends JPanel {
             this.variables.put(convert, new ArrayList<>());
             frameMap.put(fr, convert);
             invFrameMap.put(convert, fr);
+            depth++;
         }
 
         // Initialize variables, by frame
@@ -118,7 +119,6 @@ public class GraphCanvas extends JPanel {
                     this.nodes.put(getUniqueNegKey(), node);
                 }
             }
-            depth++;
         }
         init = false;
 
@@ -158,7 +158,7 @@ public class GraphCanvas extends JPanel {
             HashMap<INode, List<GraphEdge>> tree = new HashMap<>();
             double vertOffset = 20;
             if (finalThisNode != null) {
-                GraphVisualizationAlgorithm upperLayout = new GraphVisualizationAlgorithm(20, 20, allDownstream);
+                GraphLayoutAlgorithm upperLayout = new GraphLayoutAlgorithm(20, 20, allDownstream);
                 upperLayout.layoutVariable(finalThisNode);
                 tree.putAll(upperLayout.tree);
                 vertOffset = upperLayout.getMaxY();
@@ -170,7 +170,7 @@ public class GraphCanvas extends JPanel {
                 ent.getKey().vertOffset = (int) vertOffset;
                 System.out.println(vertOffset);
                 Point2D origin = ent.getKey().getOrigin();
-                GraphVisualizationAlgorithm lowerLayout = new GraphVisualizationAlgorithm(origin.getX(), origin.getY(), allDownstream);
+                GraphLayoutAlgorithm lowerLayout = new GraphLayoutAlgorithm(origin.getX(), origin.getY(), allDownstream);
 
                 for (VariableNode v: ent.getValue()) {
                     if (!v.equals(finalThisNode)) {
@@ -268,7 +268,9 @@ public class GraphCanvas extends JPanel {
                         cn.addPointer(edge);
                         this.edges.add(edge);
                     } else if (obj.fields.get(key).type == Value.Type.HOLE) {
-                        GraphEdge edge = new GraphEdge(cn, this.frameMap.get(obj.fields.get(key).holeDest), key, obj.fields.get(key).referenceType);
+                        StackFrame fr = this.frameMap.get(obj.fields.get(key).holeDest);
+                        fr.targeted = true;
+                        GraphEdge edge = new GraphEdge(cn, fr, key, obj.fields.get(key).referenceType);
                         cn.addPointer(edge);
                         this.edges.add(edge);
                     } else if (obj.fields.get(key).type == Value.Type.NULL) {
@@ -277,7 +279,6 @@ public class GraphCanvas extends JPanel {
                         cn.addPointer(edge);
                         this.edges.add(edge);
                         this.nodes.put(getUniqueNegKey(), nn);
-
                     } else {
                         fields.put(key, obj.fields.get(key).toString());
                     }

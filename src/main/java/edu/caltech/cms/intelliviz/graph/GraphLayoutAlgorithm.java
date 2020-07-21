@@ -2,7 +2,7 @@ package edu.caltech.cms.intelliviz.graph;
 import java.util.*;
 import java.util.function.Predicate;
 
-public class GraphVisualizationAlgorithm {
+public class GraphLayoutAlgorithm {
 
     public enum LayoutBehavior {
         HORIZONTAL,
@@ -29,7 +29,7 @@ public class GraphVisualizationAlgorithm {
     // describe the bounds of the visualization
     private double max_x, max_y;
 
-    public GraphVisualizationAlgorithm(double originX, double originY, Set<INode> nodesToIgnore) {
+    GraphLayoutAlgorithm(double originX, double originY, Set<INode> nodesToIgnore) {
         this.originX = originX;
         this.originY = originY;
         this.max_x = originX;
@@ -40,7 +40,7 @@ public class GraphVisualizationAlgorithm {
         tree = new HashMap<>();
     }
 
-    public void layoutVariable(VariableNode var)  {
+    void layoutVariable(VariableNode var)  {
 
         // center vertically based on dimensions of node immediately downstream
         INode downstream = var.reference;
@@ -57,7 +57,7 @@ public class GraphVisualizationAlgorithm {
     }
 
 
-    boolean layoutNode(INode upstream, INode node, LayoutBehavior layout, double offset) {
+    private boolean layoutNode(INode upstream, INode node, LayoutBehavior layout, double offset) {
 
         if (beingHandled.contains(node) || nodesToIgnore.contains(node)) {
             return false;
@@ -148,6 +148,9 @@ public class GraphVisualizationAlgorithm {
             bound += (node.getHeight() - children.get(0).dest.getHeight()) / 2;
         }
         for (GraphEdge downstream : children) {
+            if (downstream.label.toString().contains("overallRoot")) {
+                System.out.println("break");
+            }
             if (node instanceof ObjectArrayNode) { // force vertical layout for children of arrays
                 layoutNode(downstream, LayoutBehavior.VERTICAL, bound);
                 bound += getSubgraphWidth(downstream.dest) + nodeSpace;
@@ -212,9 +215,7 @@ public class GraphVisualizationAlgorithm {
 
     private boolean layoutNode(GraphEdge edge, LayoutBehavior layout, double offset) {
         if (!beingHandled.contains(edge.dest) && !nodesToIgnore.contains(edge.dest)) {
-            if (tree.get(edge.source) == null) {
-                tree.put(edge.source, new ArrayList<>());
-            }
+            tree.computeIfAbsent(edge.source, k -> new ArrayList<>());
             tree.get(edge.source).add(edge);
             declaringTypes.put(edge.dest, edge.declaringType);
             layoutNode(edge.source, edge.dest, layout, offset);
@@ -235,7 +236,8 @@ public class GraphVisualizationAlgorithm {
         // Checks nodes immediately downstream to see if they're the same type
         return (int)node.getChildren().stream()
                 // want to only search down the tree
-                .filter(edge -> edge.declaringType.equals(declaringTypes.get(node)))
+                .filter(edge -> edge.declaringType.equals(declaringTypes.get(node))
+                                && !(edge.dest instanceof StackFrame))
                 .count();
     }
 
@@ -288,7 +290,7 @@ public class GraphVisualizationAlgorithm {
     }
 
 
-    public double getMaxY() {
+    double getMaxY() {
         return this.max_y;
     }
 }
