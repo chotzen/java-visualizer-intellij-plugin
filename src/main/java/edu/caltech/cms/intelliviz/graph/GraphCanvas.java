@@ -111,11 +111,15 @@ public class GraphCanvas extends JPanel {
                         }
                         this.variables.get(convert).add(var);
                     }
+                } else if (fr.locals.get(v).type == Value.Type.HOLE) {
+                    StackFrame dest = this.frameMap.get(fr.locals.get(v).holeDest);
+                    VariableNode var = new VariableNode(0, 0, v, dest, fr.locals.get(v).type.toString());
+                    dest.targeted = true;
+                    this.variables.get(convert).add(var);
                 } else {
                     PrimitiveNode node = new PrimitiveNode(0, 0, fr.locals.get(v).toString());
                     VariableNode var = new VariableNode(0, 0, v, node, fr.locals.get(v).type.toString());
                     this.variables.get(convert).add(var);
-                    System.out.println(v);
                     this.nodes.put(getUniqueNegKey(), node);
                 }
             }
@@ -155,13 +159,16 @@ public class GraphCanvas extends JPanel {
             - render them.
              */
 
+            double spacing = 20;
+
             HashMap<INode, List<GraphEdge>> tree = new HashMap<>();
-            double vertOffset = 20;
+            double vertOffset = spacing;
+            double horizOffset = 0;
             if (finalThisNode != null) {
                 GraphLayoutAlgorithm upperLayout = new GraphLayoutAlgorithm(20, 20, allDownstream);
                 upperLayout.layoutVariable(finalThisNode);
                 tree.putAll(upperLayout.tree);
-                vertOffset = upperLayout.getMaxY();
+                vertOffset = upperLayout.getMaxY() + spacing;
             }
 
             for (Map.Entry<StackFrame, List<VariableNode>> ent : this.variables.entrySet()) {
@@ -179,7 +186,7 @@ public class GraphCanvas extends JPanel {
                 }
 
                 tree.putAll(lowerLayout.tree);
-                vertOffset = lowerLayout.getMaxY() + 20;
+                vertOffset = lowerLayout.getMaxY() + ent.getValue().size() > 0 ? spacing : 0;
 
             }
 

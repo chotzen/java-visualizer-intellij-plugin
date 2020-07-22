@@ -59,7 +59,9 @@ public class GraphLayoutAlgorithm {
 
     private boolean layoutNode(INode upstream, INode node, LayoutBehavior layout, double offset) {
 
-        if (beingHandled.contains(node) || nodesToIgnore.contains(node)) {
+        // Offset StackFrames that are a result of VariableNodes to be a little further to the right.
+
+        if (beingHandled.contains(node) || nodesToIgnore.contains(node) || node instanceof StackFrame) {
             return false;
         }
 

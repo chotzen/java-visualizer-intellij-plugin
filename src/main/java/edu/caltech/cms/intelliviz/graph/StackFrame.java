@@ -13,7 +13,7 @@ import java.util.Map;
 
 public class StackFrame implements INode {
 
-    private static final int HEIGHT = 20;
+    static final int HEIGHT = 20;
     private static final int TEXT_OFFSET = 2;
     private static final Font font = new Font("Monospaced", Font.ITALIC | Font.BOLD, 12);
     private static final Font font2 = new Font("SanSerif", Font.ITALIC | Font.BOLD, 12);
@@ -25,6 +25,7 @@ public class StackFrame implements INode {
     private int depth;
     private boolean active;
     public int vertOffset = 0;
+    public int horizOffset = 0;
 
 
     public StackFrame(Map<Long, HeapEntity> heap, Frame fr, int depth, boolean active) {
@@ -56,7 +57,7 @@ public class StackFrame implements INode {
     public void draw(Graphics g, int width) {
         Graphics2D g2d = (Graphics2D) g.create();
         // Draw rectangle
-        int x = (1 + this.depth) * HEIGHT;
+        int x = (int)getX();
         int y = vertOffset;
         Rectangle2D box = new Rectangle2D.Double(x, y, width - depth * HEIGHT, HEIGHT);
         if (active) {
@@ -80,12 +81,12 @@ public class StackFrame implements INode {
     }
 
     public Point2D getOrigin() {
-        return new Point2D.Double((1 + this.depth) * HEIGHT, HEIGHT + vertOffset);
+        return new Point2D.Double(getX(), HEIGHT + vertOffset);
     }
 
     @Override
     public Point2D getTarget(double originX, double originY) {
-        return new Point2D.Double((1 + this.depth) * HEIGHT - 10, HEIGHT / 2.0 + vertOffset);
+        return new Point2D.Double(getX() - 10, HEIGHT / 2.0 + vertOffset);
     }
 
     @Override
@@ -115,7 +116,7 @@ public class StackFrame implements INode {
 
     @Override
     public double getX() {
-        return (1 + this.depth) * HEIGHT;
+        return horizOffset == 0? (1 + this.depth) * HEIGHT : HEIGHT + horizOffset;
     }
 
     @Override
