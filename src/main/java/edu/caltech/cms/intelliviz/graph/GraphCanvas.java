@@ -140,7 +140,7 @@ public class GraphCanvas extends JPanel {
             downstreams.put(ent.getKey(), new HashSet<>(
                     ent.getValue().stream()
                             .flatMap(vNode -> findDownstreamNodes(vNode.reference).stream())
-                            .filter(node -> !allDownstream.contains(node) && !(finalThisNode1 != null && node.equals(finalThisNode1.reference)))
+                            .filter(node -> !(node instanceof NullNode) && !allDownstream.contains(node) && !(finalThisNode1 != null && node.equals(finalThisNode1.reference)))
                             .collect(Collectors.toSet())
             ));
 
@@ -151,6 +151,7 @@ public class GraphCanvas extends JPanel {
 
         VariableNode finalThisNode = thisNode;
         SwingUtilities.invokeLater(() -> {
+            System.out.println("invoke");
 
             /*
             new plan:
@@ -179,6 +180,17 @@ public class GraphCanvas extends JPanel {
                 Point2D origin = ent.getKey().getOrigin();
                 GraphLayoutAlgorithm lowerLayout = new GraphLayoutAlgorithm(origin.getX(), origin.getY(), allDownstream);
 
+                // sort variables to put holes last.
+                ent.getValue().sort((v1, v2) -> {
+                    if (v1.reference instanceof StackFrame) {
+                        return 1;
+                    }
+                    if (v2.reference instanceof StackFrame) {
+                        return -1;
+                    }
+                    return 0;
+                });
+
                 for (VariableNode v: ent.getValue()) {
                     if (!v.equals(finalThisNode)) {
                         lowerLayout.layoutVariable(v);
@@ -186,7 +198,8 @@ public class GraphCanvas extends JPanel {
                 }
 
                 tree.putAll(lowerLayout.tree);
-                vertOffset = lowerLayout.getMaxY() + ent.getValue().size() > 0 ? spacing : 0;
+                vertOffset = lowerLayout.getMaxY() + (ent.getValue().size() > 0 ? spacing : 0);
+
 
             }
 

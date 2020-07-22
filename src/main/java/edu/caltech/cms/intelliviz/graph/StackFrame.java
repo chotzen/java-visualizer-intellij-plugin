@@ -17,8 +17,8 @@ public class StackFrame implements INode {
     private static final int TEXT_OFFSET = 2;
     private static final Font font = new Font("Monospaced", Font.ITALIC | Font.BOLD, 12);
     private static final Font font2 = new Font("SanSerif", Font.ITALIC | Font.BOLD, 12);
-    private static final Color INACTIVE_COLOR = Color.decode("#B9C8D2");
-    private static final Color ACTIVE_COLOR = Color.decode("#DDF5FA");
+    private static final Color ACTIVE_COLOR = Color.decode("#B9C8D2");
+    private static final Color INACTIVE_COLOR = Color.decode("#DDF5FA");
     public boolean targeted = false;
 
     private String displayString;

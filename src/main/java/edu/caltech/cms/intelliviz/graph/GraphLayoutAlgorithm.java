@@ -59,8 +59,6 @@ public class GraphLayoutAlgorithm {
 
     private boolean layoutNode(INode upstream, INode node, LayoutBehavior layout, double offset) {
 
-        // Offset StackFrames that are a result of VariableNodes to be a little further to the right.
-
         if (beingHandled.contains(node) || nodesToIgnore.contains(node) || node instanceof StackFrame) {
             return false;
         }
@@ -69,6 +67,7 @@ public class GraphLayoutAlgorithm {
         double last_x = 0, last_y = 0;
 
         boolean stepIn = false;
+        LayoutBehavior prevBehavior = null;
         if (node instanceof ClassNode && getChildrenOfSameType((ClassNode)node) >= 2)  {
             String[] prevHeuristics = {"prev", "pre", "last"};
             String[] nextHeuristics = {"next"}; // TODO: think of better things to put here
@@ -94,6 +93,9 @@ public class GraphLayoutAlgorithm {
                 System.out.println("DOUBLY LINKED!");
                 layout = LayoutBehavior.DOUBLY_LINKED;
             } else {
+                if (layout != LayoutBehavior.TREE) {
+                    prevBehavior = layout;
+                }
                 layout = LayoutBehavior.TREE;
             }
         }
@@ -102,13 +104,16 @@ public class GraphLayoutAlgorithm {
         last_y = upstream.getY();
 
         if (layout == LayoutBehavior.TREE) {
-            last_x = upstream.getX();
-            last_y = upstream.getY() + upstream.getHeight();
+            if (upstream instanceof VariableNode) {
+                last_x = upstream.getX() + upstream.getWidth();
+            } else {
+                last_x = upstream.getX();
+            }
         }
 
         double bound = 0;
 
-        if (upstream instanceof VariableNode) { // if it's at the head of the tree
+        if (upstream instanceof VariableNode && layout != LayoutBehavior.TREE) { // if it's at the head of the tree
             node.setPos(upstream.getOrigin(null).getX(), upstream.getOrigin(null).getY() - node.getHeight() / 2);
         } else {
             // this assumes that the upstream node is center-originating, which is true for ClassNodes.
@@ -120,7 +125,19 @@ public class GraphLayoutAlgorithm {
             } else if (layout == LayoutBehavior.TREE) {
                 // position is not set from here. it is calculated after the leaves are positioned.
                 // this is temporary to pass position data down to the next level
-                node.setPos(last_x, last_y + treeVertSpace);
+                if (prevBehavior != null) {
+                    // layout as we normally would
+                    if (upstream instanceof VariableNode) {
+                        node.setPos(upstream.getOrigin(null).getX(), upstream.getOrigin(null).getY() - node.getHeight() / 2);
+                    } if (prevBehavior == LayoutBehavior.VERTICAL) {
+                        node.setPos(last_x + offset, last_y + nodeSpace + upstream.getHeight());
+                    } else { // horizontal / doubly linked list? idk
+                        last_x = last_x + upstream.getWidth() + nodeSpace; // align to edge of where it "would" be
+                        node.setPos(last_x, last_y + offset);
+                    }
+                } else {
+                    node.setPos(last_x, last_y + upstream.getHeight() + treeVertSpace);
+                }
             } else if (layout == LayoutBehavior.DOUBLY_LINKED) {
                 if (stepIn) {
                     node.setPos(last_x, last_y);
@@ -163,7 +180,7 @@ public class GraphLayoutAlgorithm {
                 if (layout == LayoutBehavior.HORIZONTAL) {
                     layoutNode(downstream, layout, bound);
                     bound += getSubgraphHeight(downstream.dest) + nodeSpace;
-                } else if (layout == LayoutBehavior.VERTICAL){
+                } else if (layout == LayoutBehavior.VERTICAL) {
                     layoutNode(downstream, layout, bound);
                     bound += getSubgraphWidth(downstream.dest) + nodeSpace;
                 } else if (layout == LayoutBehavior.TREE) {
@@ -192,7 +209,7 @@ public class GraphLayoutAlgorithm {
                         }
                     } else {
                         // force vertical for non-same-type children of doubly linked lists
-                        layoutNode(downstream, layout.VERTICAL, bound);
+                        layoutNode(downstream, LayoutBehavior.VERTICAL, bound);
                         bound += getSubgraphWidth(downstream.dest) + nodeSpace;
                     }
                 }
@@ -205,7 +222,9 @@ public class GraphLayoutAlgorithm {
             // start at left edge, continuing rightward and adding space in between
             for (INode child : handleLater) {
                 translateSubgraph(child, coveredWidth, 0);
-                coveredWidth += getSubgraphWidth(child) + treeHorizSpace;
+                if (!(child instanceof StackFrame)) {
+                    coveredWidth += getSubgraphWidth(child) + treeHorizSpace;
+                }
             }
             coveredWidth -= treeHorizSpace;
             if (handleLater.size() >= 2) {
@@ -239,7 +258,7 @@ public class GraphLayoutAlgorithm {
         return (int)node.getChildren().stream()
                 // want to only search down the tree
                 .filter(edge -> edge.declaringType.equals(declaringTypes.get(node))
-                                && !(edge.dest instanceof StackFrame))
+                                /*&& !(edge.dest instanceof StackFrame)*/)
                 .count();
     }
 
@@ -268,6 +287,9 @@ public class GraphLayoutAlgorithm {
     }
 
     private double getSubgraphWidth(INode node) {
+        if (node instanceof StackFrame) {
+            throw new IllegalArgumentException("Cannot get width of subgraph involving stackframes!");
+        }
         return getSubgraphMaxX(node) - getSubgraphMinX(node);
     }
 
