@@ -139,8 +139,9 @@ public class GraphCanvas extends JPanel {
             VariableNode finalThisNode1 = thisNode;
             downstreams.put(ent.getKey(), new HashSet<>(
                     ent.getValue().stream()
+                            .filter(node -> !node.name.equals("this"))
                             .flatMap(vNode -> findDownstreamNodes(vNode.reference).stream())
-                            .filter(node -> !(node instanceof NullNode) && !allDownstream.contains(node) && !(finalThisNode1 != null && node.equals(finalThisNode1.reference)))
+                            .filter(node -> !allDownstream.contains(node) && !(finalThisNode1 != null && node.equals(finalThisNode1.reference)))
                             .collect(Collectors.toSet())
             ));
 
