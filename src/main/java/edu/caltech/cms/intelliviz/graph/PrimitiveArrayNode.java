@@ -1,9 +1,13 @@
 package edu.caltech.cms.intelliviz.graph;
 
+import com.intellij.codeInsight.daemon.impl.analysis.HighlightInfoHolder;
+
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 public class PrimitiveArrayNode implements INode {
 
@@ -11,6 +15,7 @@ public class PrimitiveArrayNode implements INode {
 
     private ArrayList<TextLabel> labels;
     private String[] values;
+    private Set<Integer> highlightedIndices = new HashSet<>();
     private double width;
     private int MIN_BOX_WIDTH = 20;
     private int TEXT_PADDING = 3;
@@ -46,23 +51,28 @@ public class PrimitiveArrayNode implements INode {
         g2d.setFont(insideFont);
         FontMetrics fm = g2d.getFontMetrics();
         this.width = 0;
-        for (int i = 0; i < values.length; i++) {
-            int textWidth = fm.stringWidth(values[i]) + 2 * TEXT_PADDING;
-            if (textWidth + 2 * TEXT_PADDING < MIN_BOX_WIDTH) {
-                drawCell(g2d, (int)(x + this.width), (int)y, MIN_BOX_WIDTH, textWidth, values[i]);
-                labels.get(i).draw(g, x + this.width + 0.5 * MIN_BOX_WIDTH + LABEL_HORIZ_OFFSET, y + BOX_HEIGHT + LABEL_VERT_OFFSET);
-                this.width += MIN_BOX_WIDTH;
-            } else {
-                drawCell(g2d, (int)(x + this.width), (int)y, textWidth, textWidth, values[i]);
-                labels.get(i).draw(g, x + this.width + 0.5 * textWidth + LABEL_HORIZ_OFFSET, y + BOX_HEIGHT + LABEL_VERT_OFFSET);
-                this.width += textWidth;
+        if (this.values.length != 0) {
+            for (int i = 0; i < values.length; i++) {
+                int textWidth = fm.stringWidth(values[i]) + 2 * TEXT_PADDING;
+                if (textWidth + 2 * TEXT_PADDING < MIN_BOX_WIDTH) {
+                    drawCell(g2d, (int)(x + this.width), (int)y, MIN_BOX_WIDTH, textWidth, values[i], i);
+                    labels.get(i).draw(g, x + this.width + 0.5 * MIN_BOX_WIDTH + LABEL_HORIZ_OFFSET, y + BOX_HEIGHT + LABEL_VERT_OFFSET);
+                    this.width += MIN_BOX_WIDTH;
+                } else {
+                    drawCell(g2d, (int)(x + this.width), (int)y, textWidth, textWidth, values[i], i);
+                    labels.get(i).draw(g, x + this.width + 0.5 * textWidth + LABEL_HORIZ_OFFSET, y + BOX_HEIGHT + LABEL_VERT_OFFSET);
+                    this.width += textWidth;
+                }
             }
-
+        } else {
+            // draw a black bar because there aren't any elements
+            g2d.setColor(Color.BLACK);
+            g2d.fillRect((int)x, (int)y, 5, BOX_HEIGHT);
         }
     }
 
-    private void drawCell(Graphics2D g, int x, int y, int width, int textWidth, String text) {
-        g.setColor(background);
+    private void drawCell(Graphics2D g, int x, int y, int width, int textWidth, String text, int idx) {
+        g.setColor(highlightedIndices.contains(idx) ? HIGHLIGHTED_COLOR : background);
         g.fillRect(x, y, width, BOX_HEIGHT);
 
         g.setColor(Color.BLACK);
@@ -113,5 +123,21 @@ public class PrimitiveArrayNode implements INode {
     @Override
     public ArrayList<GraphEdge> getChildren() {
         return new ArrayList<>();
+    }
+
+    @Override
+    public void highlightChanges(INode ref) {
+        highlightedIndices.clear();
+        if (ref instanceof PrimitiveArrayNode) {
+            PrimitiveArrayNode pan = (PrimitiveArrayNode) ref;
+            for (int i = 0; i < this.values.length; i++) {
+                if (!this.values[i].equals(pan.values[i])) {
+                    highlightedIndices.add(i);
+                }
+            }
+        } else {
+            // shouldn't happen
+            System.out.println("IDs can change reference type!! Whoops");
+        }
     }
 }

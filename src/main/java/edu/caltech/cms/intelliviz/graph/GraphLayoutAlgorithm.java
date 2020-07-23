@@ -17,7 +17,7 @@ public class GraphLayoutAlgorithm {
     private HashMap<INode, String> declaringTypes;
 
     private static final int vSpace = 30;
-    private static final int nodeSpace = 50;
+    private static final int nodeSpace = 70;
     private static final int indent = 40;
     private static final int primSpacing = 5;
 

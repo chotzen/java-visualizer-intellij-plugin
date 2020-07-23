@@ -108,4 +108,9 @@ public class ObjectArrayNode implements INode {
         return pointers;
     }
 
+    @Override
+    public void highlightChanges(INode ref) {
+        INode.checkReferencesForTypeChange( this, ref);
+    }
+
 }

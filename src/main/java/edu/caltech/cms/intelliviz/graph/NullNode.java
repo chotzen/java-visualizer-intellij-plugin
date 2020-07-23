@@ -11,6 +11,7 @@ public class NullNode implements INode {
     private double y = 0;
     private double HEIGHT = 15;
     private double WIDTH = 35;
+    private boolean highlighted = false;
 
     private String type;
 
@@ -29,7 +30,7 @@ public class NullNode implements INode {
     @Override
     public void draw(Graphics2D g) {
         Graphics2D g2d = (Graphics2D) g;
-        g2d.setColor(bg);
+        g2d.setColor(highlighted ? HIGHLIGHTED_COLOR : bg);
         g2d.setFont(font);
         FontMetrics fm = g2d.getFontMetrics();
 
@@ -80,5 +81,10 @@ public class NullNode implements INode {
     @Override
     public ArrayList<GraphEdge> getChildren() {
         return new ArrayList<>();
+    }
+
+    @Override
+    public void highlightChanges(INode ref) {
+        highlighted = true;
     }
 }

@@ -20,6 +20,7 @@ public class GraphCanvas extends JPanel {
     private Map<Frame, StackFrame> frameMap;
     private LinkedHashMap<StackFrame, List<VariableNode>> variables;
     private Map<Long, INode> nodes;
+    private Map<Long, INode> lastNodes;
     private List<GraphEdge> edges;
     private Map<INode, List<GraphEdge>> layoutTree;
 
@@ -61,10 +62,9 @@ public class GraphCanvas extends JPanel {
     }
 
     private void refreshUI() {
-        nodes.clear(); // TODO: preserve nodes that didn't get deleted, probably by their ID
+        //nodes.clear();
         edges.clear();
         variables.clear();
-
 
         removeAll();
 
@@ -75,10 +75,11 @@ public class GraphCanvas extends JPanel {
     }
 
     private void buildUI() {
+        this.lastNodes = this.nodes;
+        this.nodes = new HashMap<>();
 
         int depth = 0;
         VariableNode thisNode = null;
-
         Collections.reverse(this.trace.frames);
 
         Map<StackFrame, Frame> invFrameMap = new HashMap<>();
@@ -102,12 +103,8 @@ public class GraphCanvas extends JPanel {
                 if (fr.locals.get(v).type == Value.Type.REFERENCE) {
                     if (!v.equals("this") || thisNode == null) {
                         VariableNode var = new VariableNode(0, 0, v, renderNode(trace.heap.get(fr.locals.get(v).reference)), fr.locals.get(v).referenceType);
-                        System.out.println(var.name + ": " + var.declaringType);
                         if (v.equals("this")) {
                             thisNode = var;
-                        }
-                        if (frameMap.size() != this.variables.size()) {
-                            System.out.println("breakpoint here this is weird");
                         }
                         this.variables.get(convert).add(var);
                     }
@@ -211,12 +208,12 @@ public class GraphCanvas extends JPanel {
 
     }
 
-    INode renderNode(HeapEntity ent) {
+    private INode renderNode(HeapEntity ent) {
         // if we already have an object, return it!
-        System.out.println(ent.id);
         if (this.nodes.containsKey(ent.id)) {
             return this.nodes.get(ent.id);
         }
+        INode ret = null;
         switch (ent.type) {
             case LIST:
             case SET:
@@ -237,7 +234,8 @@ public class GraphCanvas extends JPanel {
                         oan.addPointer(ge);
                         edges.add(ge);
                     }
-                    return oan;
+                    ret = oan;
+                    break;
                 } else {
                     String[] vals = new String[heapList.items.size()];
                     for (int i = 0; i < heapList.items.size(); i++) {
@@ -245,7 +243,8 @@ public class GraphCanvas extends JPanel {
                     }
                     PrimitiveArrayNode pan = new PrimitiveArrayNode(100, 100, vals);
                     this.nodes.put(heapList.id, pan);
-                    return pan;
+                    ret = pan;
+                    break;
                 }
             case MAP:
                 HeapMap heapMap = (HeapMap)ent;
@@ -267,7 +266,8 @@ public class GraphCanvas extends JPanel {
                     }
                     omn.data = vals;
                     this.nodes.put(heapMap.id, omn);
-                    return omn;
+                    ret = omn;
+                    break;
                 } else { // do a primitive map
                     PrimitiveMapNode pmn = new PrimitiveMapNode(100, 100);
                     HashMap<String, String> vals = new HashMap<>();
@@ -276,7 +276,8 @@ public class GraphCanvas extends JPanel {
                     }
                     pmn.data = vals;
                     this.nodes.put(heapMap.id, pmn);
-                    return pmn;
+                    ret = pmn;
+                    break;
                 }
             case OBJECT:
                 HeapObject obj = (HeapObject)ent;
@@ -305,15 +306,22 @@ public class GraphCanvas extends JPanel {
                     }
                 }
                 cn.init();
-                return cn;
+                ret = cn;
+                break;
             case PRIMITIVE:
                 HeapPrimitive prim = (HeapPrimitive)ent;
                 PrimitiveNode pn = new PrimitiveNode(100, 100, prim.value.toString());
                 this.nodes.put(prim.id, pn);
-                return pn;
+                ret = pn;
+                break;
             default:
                 return null;
         }
+        // we've already laid out this element. what changed?
+        if (this.lastNodes.containsKey(ent.id)) {
+            ret.highlightChanges(this.lastNodes.get(ent.id));
+        }
+        return ret;
     }
 
     private long getUniqueNegKey() {

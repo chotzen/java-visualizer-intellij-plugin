@@ -3,15 +3,14 @@ package edu.caltech.cms.intelliviz.graph;
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
+import java.util.*;
 
 public class PrimitiveMapNode implements INode {
 
     private double x, y;
     private double width, height;
     public Map<String, String> data;
+    private Set<String> highlightedKeys = new HashSet<>();
 
     private static final Color headerColor = Color.WHITE;
     private static final Color lowerColor = Color.decode("#C8FAD8");
@@ -62,7 +61,7 @@ public class PrimitiveMapNode implements INode {
     }
 
     private void drawRow(Graphics2D g, int num, String left, String right, int leftWidth, int rightWidth, Color color) {
-        g.setColor(color);
+        g.setColor(highlightedKeys.contains(left) ? HIGHLIGHTED_COLOR : color);
         g.fillRect((int)x, (int)y + num * ROW_HEIGHT, (int)this.width, ROW_HEIGHT);
         g.setColor(Color.BLACK);
         g.drawRect((int)x, (int)y + num * ROW_HEIGHT, leftWidth, ROW_HEIGHT);
@@ -113,6 +112,18 @@ public class PrimitiveMapNode implements INode {
 
     @Override
     public ArrayList<GraphEdge> getChildren() {
-        return new ArrayList<GraphEdge>();
+        return new ArrayList<>();
+    }
+
+    @Override
+    public void highlightChanges(INode ref) {
+        highlightedKeys.clear();
+        if (ref instanceof PrimitiveMapNode) {
+            for (Map.Entry<String, String> ent : this.data.entrySet()) {
+                if (!ent.getValue().equals(((PrimitiveMapNode)ref).data.get(ent.getKey()))) {
+                    highlightedKeys.add(ent.getKey());
+                }
+            }
+        }
     }
 }

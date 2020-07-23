@@ -73,5 +73,10 @@ public class RectNode implements INode {
         return null;
     }
 
+    @Override
+    public void highlightChanges(INode ref) {
+
+    }
+
 
 }

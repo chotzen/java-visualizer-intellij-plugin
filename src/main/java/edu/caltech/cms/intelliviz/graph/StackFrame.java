@@ -133,4 +133,9 @@ public class StackFrame implements INode {
     public ArrayList<GraphEdge> getChildren() {
         return new ArrayList<>();
     }
+
+    @Override
+    public void highlightChanges(INode ref) {
+        // nothing
+    }
 }

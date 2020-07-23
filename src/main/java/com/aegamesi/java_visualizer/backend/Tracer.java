@@ -118,43 +118,47 @@ public class Tracer {
 
 		// Deal with holes
 		for (int i = model.frames.size() - 1; i > 0; i--) {
-			Frame fr = model.frames.get(i);
-			StackFrame frame = frameMap.get(fr);
-			String line = getCurrentLine(frame);
-			String[] pieces = line.split("=");
-			if (pieces.length == 2) {
-				// it's an assignment. probably.
-				// for now, ignore it if the left side has any parens, we don't want to deal with that
-				// could either be method calls or casting. just yuck in general
-				if (!pieces[0].contains("(")) {
-				    // now, we will assume that the "word" closest to the equals sign is the name of the variable.
-					String[] leftPieces = pieces[0].trim().split(" ");
-					String varName = leftPieces[leftPieces.length - 1].trim();
-					List<String> path = new ArrayList<>(Arrays.asList(varName.split("\\.")));
-					Value cur = fr.locals.get(path.get(0));
-					if (path.size() > 1) { // not a top-level variable, i.e. is a reference & we need to iterate over the rest of the path
-						for (int k = 1; k < path.size(); k++) {
-							HeapEntity next = model.heap.get(cur.reference);
-							if (next instanceof HeapObject) {
-								if (((HeapObject) next).fields.keySet().contains(path.get(k).trim())) {
-									cur = ((HeapObject) next).fields.get(path.get(k).trim());
+		    try {
+				Frame fr = model.frames.get(i);
+				StackFrame frame = frameMap.get(fr);
+				String line = getCurrentLine(frame);
+				String[] pieces = line.split("=");
+				if (pieces.length == 2) {
+					// it's an assignment. probably.
+					// for now, ignore it if the left side has any parens, we don't want to deal with that
+					// could either be method calls or casting. just yuck in general
+					if (!pieces[0].contains("(")) {
+						// now, we will assume that the "word" closest to the equals sign is the name of the variable.
+						String[] leftPieces = pieces[0].trim().split(" ");
+						String varName = leftPieces[leftPieces.length - 1].trim();
+						List<String> path = new ArrayList<>(Arrays.asList(varName.split("\\.")));
+						Value cur = fr.locals.get(path.get(0));
+						if (path.size() > 1) { // not a top-level variable, i.e. is a reference & we need to iterate over the rest of the path
+							for (int k = 1; k < path.size(); k++) {
+								HeapEntity next = model.heap.get(cur.reference);
+								if (next instanceof HeapObject) {
+									if (((HeapObject) next).fields.keySet().contains(path.get(k).trim())) {
+										cur = ((HeapObject) next).fields.get(path.get(k).trim());
+									}
+								} else {
+									cur = null;
+									break;
 								}
-							} else {
-								cur = null;
-								break;
 							}
+						} else if (cur == null) {
+							// if the variable doesn't already exist, create it. only occurs for locals, since
+							// indirect references need to already be declared.
+							cur = new Value();
+							fr.locals.put(varName, cur);
 						}
-					} else if (cur == null) {
-						// if the variable doesn't already exist, create it. only occurs for locals, since
-						// indirect references need to already be declared.
-						cur = new Value();
-						fr.locals.put(varName, cur);
-					}
-					if (cur != null) {
-						cur.type = Value.Type.HOLE;
-						cur.holeDest = model.frames.get(i-1); // last frame converted is in position 0
+						if (cur != null) {
+							cur.type = Value.Type.HOLE;
+							cur.holeDest = model.frames.get(i - 1); // last frame converted is in position 0
+						}
 					}
 				}
+			} catch (Exception e) {
+				System.err.println("Error: frames not loaded. ");
 			}
 		}
 

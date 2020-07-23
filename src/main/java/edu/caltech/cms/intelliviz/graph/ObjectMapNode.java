@@ -121,4 +121,9 @@ public class ObjectMapNode implements INode {
     public ArrayList<GraphEdge> getChildren() {
         return new ArrayList<>(data.values());
     }
+
+    @Override
+    public void highlightChanges(INode ref) {
+        INode.checkReferencesForTypeChange( this, ref);
+    }
 }
