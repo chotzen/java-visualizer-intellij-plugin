@@ -339,6 +339,10 @@ public class GraphCanvas extends JPanel {
             }
         }
 
+        for (StackFrame sf : variables.keySet()) {
+            sf.draw(g2D, 1000); // TODO: fix width
+        }
+
         for (GraphEdge edge : edges) {
             edge.draw(g2D);
         }
@@ -350,9 +354,6 @@ public class GraphCanvas extends JPanel {
             }
         }
 
-        for (StackFrame sf : variables.keySet()) {
-            sf.draw(g2D, 1000); // TODO: fix width
-        }
 
         if (curCursor != null) {
             setCursor(curCursor);
