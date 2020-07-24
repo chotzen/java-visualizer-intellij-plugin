@@ -1,6 +1,10 @@
 package edu.caltech.cms.intelliviz.graph;
 
 import com.intellij.codeInsight.daemon.impl.analysis.HighlightInfoHolder;
+import com.intellij.notification.Notification;
+import com.intellij.notification.Notifications;
+import com.intellij.openapi.project.ProjectManager;
+import com.intellij.openapi.ui.MessageType;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
@@ -52,7 +56,16 @@ public class PrimitiveArrayNode implements INode {
         FontMetrics fm = g2d.getFontMetrics();
         this.width = 0;
         if (this.values.length != 0) {
-            for (int i = 0; i < values.length; i++) {
+            if (values.length > 200) {
+                // send a notification that we're clipping it
+                final Notification not = GraphCanvas.VIZ_NOTIFICATIONS
+                        .createNotification("Array is too long (length " + values.length + ") to render completely. " +
+                                        "Rendering first 200 values.",
+                                        MessageType.WARNING);
+
+                not.notify(ProjectManager.getInstance().getDefaultProject());
+            }
+            for (int i = 0; i < Math.min(values.length, 200); i++) {
                 int textWidth = fm.stringWidth(values[i]) + 2 * TEXT_PADDING;
                 if (textWidth + 2 * TEXT_PADDING < MIN_BOX_WIDTH) {
                     drawCell(g2d, (int)(x + this.width), (int)y, MIN_BOX_WIDTH, textWidth, values[i], i);

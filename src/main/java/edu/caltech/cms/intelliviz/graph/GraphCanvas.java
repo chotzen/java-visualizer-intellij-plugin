@@ -2,6 +2,8 @@ package edu.caltech.cms.intelliviz.graph;
 
 import com.aegamesi.java_visualizer.model.*;
 import com.aegamesi.java_visualizer.model.Frame;
+import com.intellij.notification.NotificationDisplayType;
+import com.intellij.notification.NotificationGroup;
 
 import javax.swing.*;
 import java.awt.*;
@@ -33,6 +35,8 @@ public class GraphCanvas extends JPanel {
 
     private double x1, y1;
     private boolean init = false;
+
+    static final NotificationGroup VIZ_NOTIFICATIONS = new NotificationGroup("Java Visualization", NotificationDisplayType.TOOL_WINDOW, true);
 
     public GraphCanvas() {
         super();

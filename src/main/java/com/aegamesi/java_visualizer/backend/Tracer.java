@@ -158,7 +158,7 @@ public class Tracer {
 					}
 				}
 			} catch (Exception e) {
-				System.err.println("Error: frames not loaded. ");
+				System.err.println("Error: frames not loaded.");
 			}
 		}
 
