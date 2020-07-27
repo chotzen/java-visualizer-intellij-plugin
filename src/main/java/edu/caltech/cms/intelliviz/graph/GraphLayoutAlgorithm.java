@@ -85,10 +85,8 @@ public class GraphLayoutAlgorithm {
                         return false;
                     }
 
-                    // shift down if we haven't already
-                    last_y = vSpace + upstream.getHeight();
-                    System.out.println("SHIFT IN");
                     stepIn = true;
+                    prevBehavior = layout;
                 }
                 System.out.println("DOUBLY LINKED!");
                 layout = LayoutBehavior.DOUBLY_LINKED;
@@ -140,7 +138,7 @@ public class GraphLayoutAlgorithm {
                 }
             } else if (layout == LayoutBehavior.DOUBLY_LINKED) {
                 if (stepIn) {
-                    node.setPos(last_x, last_y);
+                    node.setPos(last_x, last_y + upstream.getHeight() + vSpace);
                 } else {
                     node.setPos(last_x + nodeSpace + upstream.getWidth(), last_y + upstream.getWidth() / 2 - node.getWidth() / 2);
                 }
@@ -149,6 +147,7 @@ public class GraphLayoutAlgorithm {
 
         // Handle children
         ArrayList<INode> handleLater = new ArrayList<>();
+        ArrayList<GraphEdge> handleMuchLater = new ArrayList<>();
         ArrayList<GraphEdge> children = node.getChildren();
 
         if (!(node instanceof ObjectMapNode || node instanceof ObjectArrayNode || node instanceof NullNode)) { // only sort if there's not a prescribed ordering
@@ -190,8 +189,7 @@ public class GraphLayoutAlgorithm {
                         layoutNode(downstream, LayoutBehavior.TREE, 0);
                         handleLater.add(downstream.dest);
                     } else {
-                        layoutNode(downstream, LayoutBehavior.HORIZONTAL, bound);
-                        bound += getSubgraphHeight(downstream.dest) + nodeSpace;
+                        handleMuchLater.add(downstream);
                     }
                 } else if (layout == LayoutBehavior.DOUBLY_LINKED) {
                     if (declaringTypes.get(node).equals(downstream.declaringType)) {
@@ -199,7 +197,7 @@ public class GraphLayoutAlgorithm {
                         if ((downstream.label.toString().contains("pre") || downstream.label.toString().contains("last"))
                                 && downstream.dest instanceof NullNode) {
                             // layout right and move over a bit too
-                            downstream.dest.setPos(node.getX(), last_y + node.getHeight() / 2 - downstream.dest.getHeight() / 2);
+                            downstream.dest.setPos(node.getX(), node.getY() + node.getHeight() / 2 - downstream.dest.getHeight() / 2);
                             beingHandled.add(downstream.dest);
                             declaringTypes.put(downstream.dest, downstream.declaringType);
                             translateSubgraph(node, downstream.dest.getWidth() + nodeSpace, 0);
@@ -229,6 +227,11 @@ public class GraphLayoutAlgorithm {
             coveredWidth -= treeHorizSpace;
             if (handleLater.size() >= 2) {
                 node.setPos(last_x + coveredWidth / 2 - node.getWidth() / 2, node.getY());
+            }
+
+            for (GraphEdge ds : handleMuchLater) {
+                layoutNode(ds, LayoutBehavior.HORIZONTAL, bound);
+                bound += getSubgraphHeight(ds.dest) + nodeSpace;
             }
         }
         return true;

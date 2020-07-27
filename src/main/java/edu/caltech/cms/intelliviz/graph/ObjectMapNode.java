@@ -129,8 +129,8 @@ public class ObjectMapNode implements INode {
         INode.checkReferencesForTypeChange( this, ref);
     }
 
-    public void setData(Map<String, GraphEdge> data) {
-        INode.warnOnClip(this.data.size(), MAX_RENDER_LENGTH);
+    void setData(Map<String, GraphEdge> data) {
+        INode.warnOnClip(data.size(), MAX_RENDER_LENGTH);
         this.data = INode.clipToLength(data, MAX_RENDER_LENGTH);
     }
 }
