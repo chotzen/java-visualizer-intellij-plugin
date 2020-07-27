@@ -1,6 +1,10 @@
 package edu.caltech.cms.intelliviz.graph;
 
 
+import com.intellij.notification.Notification;
+import com.intellij.openapi.project.ProjectManager;
+import com.intellij.openapi.ui.MessageType;
+
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
@@ -41,5 +45,21 @@ public interface INode extends Targetable {
                 }
             }
         }
+    }
+
+    static void warnOnClip(int length, int rendered) {
+        if (length > rendered) {
+            final Notification not = GraphCanvas.VIZ_NOTIFICATIONS
+                    .createNotification("Array is too long (length " + length + ") to render completely. " +
+                                    "Rendering first " + rendered + " values.",
+                            MessageType.WARNING);
+
+            not.notify(ProjectManager.getInstance().getDefaultProject());
+        }
+    }
+
+    static <A, B> Map<A, B> clipToLength(Map<A, B> map, int length) {
+        return map.entrySet().stream().limit(length)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 }

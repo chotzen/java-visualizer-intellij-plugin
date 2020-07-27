@@ -4,12 +4,14 @@ import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class PrimitiveMapNode implements INode {
 
+    private static final int MAX_RENDER_LENGTH = 50;
     private double x, y;
     private double width, height;
-    public Map<String, String> data;
+    private Map<String, String> data;
     private Set<String> highlightedKeys = new HashSet<>();
 
     private static final Color headerColor = Color.WHITE;
@@ -125,5 +127,14 @@ public class PrimitiveMapNode implements INode {
                 }
             }
         }
+    }
+
+    public void setData(Map<String, String> data) {
+        INode.warnOnClip(data.size(), MAX_RENDER_LENGTH);
+        this.data = INode.clipToLength(data, MAX_RENDER_LENGTH);
+    }
+
+    public Map<String, String> getData() {
+        return this.data;
     }
 }

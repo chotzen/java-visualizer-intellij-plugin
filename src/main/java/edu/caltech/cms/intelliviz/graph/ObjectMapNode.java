@@ -7,12 +7,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ObjectMapNode implements INode {
 
     private double x, y;
     private double width, height;
-    public Map<String, GraphEdge> data;
+    private Map<String, GraphEdge> data;
     private Map<GraphEdge, Integer> rowMap;
 
     private static final Color headerColor = Color.WHITE;
@@ -22,6 +23,7 @@ public class ObjectMapNode implements INode {
     private static final int MIN_COL_WIDTH = 40;
     private static final int POINTER_COL_WIDTH = 40;
     private static final int ROW_HEIGHT = 30;
+    private static final int MAX_RENDER_LENGTH = 50;
 
     private static final Font font = new Font("SanSerif", Font.BOLD | Font.ITALIC, 12);
 
@@ -125,5 +127,10 @@ public class ObjectMapNode implements INode {
     @Override
     public void highlightChanges(INode ref) {
         INode.checkReferencesForTypeChange( this, ref);
+    }
+
+    public void setData(Map<String, GraphEdge> data) {
+        INode.warnOnClip(this.data.size(), MAX_RENDER_LENGTH);
+        this.data = INode.clipToLength(data, MAX_RENDER_LENGTH);
     }
 }

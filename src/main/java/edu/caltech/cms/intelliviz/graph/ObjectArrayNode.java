@@ -4,13 +4,14 @@ import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.List;
 
 public class ObjectArrayNode implements INode {
 
     private double x, y;
 
     private ArrayList<TextLabel> labels;
-    private ArrayList<GraphEdge> pointers;
+    private List<GraphEdge> pointers;
     private double width;
     private int length;
     private int BOX_WIDTH = 30;
@@ -18,6 +19,8 @@ public class ObjectArrayNode implements INode {
     private int BOX_HEIGHT = 30;
     private final int LABEL_VERT_OFFSET = 8;
     private final int LABEL_HORIZ_OFFSET = 2;
+
+    private final int MAX_RENDER_LENGTH = 50;
 
     private Font insideFont = new Font("SanSerif", Font.BOLD | Font.ITALIC, 12);
     private Color background = Color.decode("#FAF1C8");
@@ -35,8 +38,9 @@ public class ObjectArrayNode implements INode {
         this.width = length * BOX_WIDTH;
     }
 
-    public void addPointer(GraphEdge edge) {
-        this.pointers.add(edge);
+    public void setPointers(List<GraphEdge> edges) {
+        this.pointers = edges;
+        INode.warnOnClip(this.pointers.size(), MAX_RENDER_LENGTH);
     }
 
     @Override
@@ -105,7 +109,7 @@ public class ObjectArrayNode implements INode {
 
     @Override
     public ArrayList<GraphEdge> getChildren() {
-        return pointers;
+        return new ArrayList<>(pointers);
     }
 
     @Override

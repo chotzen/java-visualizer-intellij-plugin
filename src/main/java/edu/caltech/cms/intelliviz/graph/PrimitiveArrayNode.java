@@ -1,11 +1,5 @@
 package edu.caltech.cms.intelliviz.graph;
 
-import com.intellij.codeInsight.daemon.impl.analysis.HighlightInfoHolder;
-import com.intellij.notification.Notification;
-import com.intellij.notification.Notifications;
-import com.intellij.openapi.project.ProjectManager;
-import com.intellij.openapi.ui.MessageType;
-
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
@@ -27,6 +21,8 @@ public class PrimitiveArrayNode implements INode {
     private final int LABEL_VERT_OFFSET = 8;
     private final int LABEL_HORIZ_OFFSET = 2;
 
+    private final int MAX_RENDER_LENGTH = 200;
+
     private Font insideFont = new Font("SanSerif", Font.BOLD | Font.ITALIC, 12);
     private Color background = Color.decode("#C8FAD8");
 
@@ -35,8 +31,12 @@ public class PrimitiveArrayNode implements INode {
         this.y = y;
         this.values = values;
         labels = new ArrayList<>();
-        for (int i = 0; i < values.length; i++) {
+        for (int i = 0; i < Math.min(values.length, MAX_RENDER_LENGTH); i++) {
             labels.add(new TextLabel(String.valueOf(i)));
+
+        }
+        if (values.length > MAX_RENDER_LENGTH) {
+            INode.warnOnClip(values.length, MAX_RENDER_LENGTH);
         }
 
         // Estimate width before it's calculated on draw, as we don't have a Graphics2D here
@@ -56,16 +56,7 @@ public class PrimitiveArrayNode implements INode {
         FontMetrics fm = g2d.getFontMetrics();
         this.width = 0;
         if (this.values.length != 0) {
-            if (values.length > 200) {
-                // send a notification that we're clipping it
-                final Notification not = GraphCanvas.VIZ_NOTIFICATIONS
-                        .createNotification("Array is too long (length " + values.length + ") to render completely. " +
-                                        "Rendering first 200 values.",
-                                        MessageType.WARNING);
-
-                not.notify(ProjectManager.getInstance().getDefaultProject());
-            }
-            for (int i = 0; i < Math.min(values.length, 200); i++) {
+            for (int i = 0; i < Math.min(values.length, MAX_RENDER_LENGTH); i++) {
                 int textWidth = fm.stringWidth(values[i]) + 2 * TEXT_PADDING;
                 if (textWidth + 2 * TEXT_PADDING < MIN_BOX_WIDTH) {
                     drawCell(g2d, (int)(x + this.width), (int)y, MIN_BOX_WIDTH, textWidth, values[i], i);

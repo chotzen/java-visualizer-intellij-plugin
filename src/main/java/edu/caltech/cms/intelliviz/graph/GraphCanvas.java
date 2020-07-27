@@ -36,7 +36,8 @@ public class GraphCanvas extends JPanel {
     private double x1, y1;
     private boolean init = false;
 
-    static final NotificationGroup VIZ_NOTIFICATIONS = new NotificationGroup("Java Visualization", NotificationDisplayType.TOOL_WINDOW, true);
+    static final NotificationGroup VIZ_NOTIFICATIONS = new NotificationGroup("Java Visualization",
+            NotificationDisplayType.TOOL_WINDOW, true);
 
     public GraphCanvas() {
         super();
@@ -105,11 +106,8 @@ public class GraphCanvas extends JPanel {
             StackFrame convert = frameMap.get(fr);
             for (String v : fr.locals.keySet()) {
                 if (fr.locals.get(v).type == Value.Type.REFERENCE) {
-                    if (!v.equals("this") || thisNode == null) {
+                    if (!v.equals("this")) {
                         VariableNode var = new VariableNode(0, 0, v, renderNode(trace.heap.get(fr.locals.get(v).reference)), fr.locals.get(v).referenceType);
-                        if (v.equals("this")) {
-                            thisNode = var;
-                        }
                         this.variables.get(convert).add(var);
                     }
                 } else if (fr.locals.get(v).type == Value.Type.HOLE) {
@@ -125,6 +123,15 @@ public class GraphCanvas extends JPanel {
                 }
             }
         }
+
+        Frame last = this.trace.frames.get(this.trace.frames.size() - 1);
+        StackFrame conv = frameMap.get(last);
+        if (last.locals.containsKey("this")) {
+            VariableNode var = new VariableNode(0, 0, "this", renderNode(trace.heap.get(last.locals.get("this").reference)), last.locals.get("this").referenceType);
+            this.variables.get(conv).add(var);
+            thisNode = var;
+        }
+
         init = false;
 
         Set<INode> allDownstream = new HashSet<>();
@@ -153,7 +160,6 @@ public class GraphCanvas extends JPanel {
 
         VariableNode finalThisNode = thisNode;
         SwingUtilities.invokeLater(() -> {
-            System.out.println("invoke");
 
             /*
             new plan:
@@ -226,6 +232,7 @@ public class GraphCanvas extends JPanel {
                 if (heapList.items.size() > 0 && heapList.items.stream().anyMatch(val -> val.type == Value.Type.REFERENCE)) {
                     ObjectArrayNode oan = new ObjectArrayNode(100, 100, heapList.items.size());
                     this.nodes.put(heapList.id, oan);
+                    List<GraphEdge> pointers = new ArrayList<>();
                     for (int i = 0; i < heapList.items.size(); i++) {
                         INode ref;
                         if (heapList.items.get(i).type == Value.Type.REFERENCE) {
@@ -235,9 +242,10 @@ public class GraphCanvas extends JPanel {
                             this.nodes.put(getUniqueNegKey(), ref);
                         }
                         GraphEdge ge = new GraphEdge(oan, ref, "[" + i + "]", heapList.items.get(i).referenceType);
-                        oan.addPointer(ge);
+                        pointers.add(ge);
                         edges.add(ge);
                     }
+                    oan.setPointers(pointers);
                     ret = oan;
                     break;
                 } else {
@@ -268,7 +276,7 @@ public class GraphCanvas extends JPanel {
                         this.edges.add(ge);
                         vals.put(p.key.toString(), ge);
                     }
-                    omn.data = vals;
+                    omn.setData(vals);
                     this.nodes.put(heapMap.id, omn);
                     ret = omn;
                     break;
@@ -278,7 +286,7 @@ public class GraphCanvas extends JPanel {
                     for (HeapMap.Pair p : heapMap.pairs) {
                         vals.put(p.key.toString(), p.val.toString());
                     }
-                    pmn.data = vals;
+                    pmn.setData(vals);
                     this.nodes.put(heapMap.id, pmn);
                     ret = pmn;
                     break;
