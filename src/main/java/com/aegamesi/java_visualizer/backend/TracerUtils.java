@@ -6,11 +6,9 @@ import com.sun.jdi.InterfaceType;
 import com.sun.jdi.ObjectReference;
 import com.sun.jdi.ThreadReference;
 import com.sun.jdi.Value;
+import org.apache.xmlbeans.impl.xb.xmlconfig.Extensionconfig;
 
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
 
 class TracerUtils {
 	static com.sun.jdi.Value invokeSimple(ThreadReference thread, ObjectReference r, String name) {
@@ -34,6 +32,17 @@ class TracerUtils {
 				return invokeSimple(thread, i, "next");
 			}
 		};
+	}
+
+	static Set<String> getImplementedInterfaces(ObjectReference obj) {
+		Set<String> result = new HashSet<>();
+		Queue<InterfaceType> queue = new LinkedList<>(((ClassType) obj.referenceType()).interfaces());
+		while (!queue.isEmpty()) {
+			InterfaceType next = queue.poll();
+			result.add(next.name());
+			queue.addAll(next.superinterfaces());
+		}
+		return result;
 	}
 
 	static boolean doesImplementInterface(ObjectReference obj, String iface) {

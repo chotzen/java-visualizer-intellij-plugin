@@ -37,10 +37,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 
-import static com.aegamesi.java_visualizer.backend.TracerUtils.displayNameForType;
-import static com.aegamesi.java_visualizer.backend.TracerUtils.doesImplementInterface;
-import static com.aegamesi.java_visualizer.backend.TracerUtils.getIterator;
-import static com.aegamesi.java_visualizer.backend.TracerUtils.invokeSimple;
+import static com.aegamesi.java_visualizer.backend.TracerUtils.*;
 
 /**
  * Some code from traceprinter, written by David Pritchard (daveagp@gmail.com)
@@ -325,7 +322,7 @@ public class Tracer {
 			return out;
 		} */
 
-		if (doesImplementInterface(obj, "java.util.Map") && isInternalPackage(typeName)) {
+		/*if (doesImplementInterface(obj, "java.util.Map") && isInternalPackage(typeName)) {
 			HeapMap out = new HeapMap();
 			out.type = HeapEntity.Type.MAP;
 			out.label = displayNameForType(obj);
@@ -340,12 +337,13 @@ public class Tracer {
 				out.pairs.add(pair);
 			}
 			return out;
-		}
+		}*/
 
 		// now, arbitrary objects
 		HeapObject out = new HeapObject();
 		out.type = HeapEntity.Type.OBJECT;
 		out.label = displayNameForType(obj);
+		out.interfaces = getImplementedInterfaces(obj);
 
 		ReferenceType refType = obj.referenceType();
 

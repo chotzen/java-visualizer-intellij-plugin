@@ -9,6 +9,7 @@ public class ClassNode implements INode {
 
     private double x, y, width, height;
     public String name;
+    public Set<String> implementedInterfaces = new HashSet<>();
     private String displayName;
     private HashMap<String, String> fields;
     private ArrayList<GraphEdge> pointers;
