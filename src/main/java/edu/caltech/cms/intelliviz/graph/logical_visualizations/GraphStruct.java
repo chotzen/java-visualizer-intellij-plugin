@@ -1,4 +1,4 @@
-package edu.caltech.cms.intelliviz.graph.logicalvisualizations;
+package edu.caltech.cms.intelliviz.graph.logical_visualizations;
 
 import edu.caltech.cms.intelliviz.graph.GraphEdge;
 import edu.caltech.cms.intelliviz.graph.INode;

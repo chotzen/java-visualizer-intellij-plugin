@@ -1,4 +1,7 @@
-package edu.caltech.cms.intelliviz.graph;
+package edu.caltech.cms.intelliviz.graph.logical_visualizations.ui;
+
+import edu.caltech.cms.intelliviz.graph.GraphEdge;
+import edu.caltech.cms.intelliviz.graph.INode;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
@@ -129,7 +132,7 @@ public class ObjectMapNode implements INode {
         INode.checkReferencesForTypeChange( this, ref);
     }
 
-    void setData(Map<String, GraphEdge> data) {
+    public void setData(Map<String, GraphEdge> data) {
         INode.warnOnClip(data.size(), MAX_RENDER_LENGTH);
         this.data = INode.clipToLength(data, MAX_RENDER_LENGTH);
     }

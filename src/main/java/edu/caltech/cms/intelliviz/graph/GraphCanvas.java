@@ -4,6 +4,8 @@ import com.aegamesi.java_visualizer.model.*;
 import com.aegamesi.java_visualizer.model.Frame;
 import com.intellij.notification.NotificationDisplayType;
 import com.intellij.notification.NotificationGroup;
+import edu.caltech.cms.intelliviz.graph.logical_visualizations.ui.ObjectMapNode;
+import edu.caltech.cms.intelliviz.graph.logical_visualizations.ui.PrimitiveMapNode;
 
 import javax.swing.*;
 import java.awt.*;

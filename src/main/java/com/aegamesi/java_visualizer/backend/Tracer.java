@@ -312,7 +312,7 @@ public class Tracer {
 		}
 
 		String typeName = obj.referenceType().name();
-		/*if ((doesImplementInterface(obj, "java.util.List")
+		if ((doesImplementInterface(obj, "java.util.List")
 				|| doesImplementInterface(obj, "java.util.Set"))
 				&& isInternalPackage(typeName)) {
 			HeapList out = new HeapList();
@@ -323,7 +323,7 @@ public class Tracer {
 				out.items.add(convertValue(i.next()));
 			}
 			return out;
-		} */
+		}
 
 		if (doesImplementInterface(obj, "java.util.Map") && isInternalPackage(typeName)) {
 			HeapMap out = new HeapMap();
@@ -349,7 +349,7 @@ public class Tracer {
 
 		ReferenceType refType = obj.referenceType();
 
-		if (shouldShowDetails(refType) || doesImplementInterface(obj, "java.util.Set") || doesImplementInterface(obj, "java.util.List")) {
+		/*if (shouldShowDetails(refType) || doesImplementInterface(obj, "java.util.Set") || doesImplementInterface(obj, "java.util.List")) {
 			// fields: -inherited -hidden +synthetic
 			// visibleFields: +inherited -hidden +synthetic
 			// allFields: +inherited +hidden +repeated_synthetic
@@ -365,7 +365,7 @@ public class Tracer {
 					out.fields.put(name, value);
 				}
 			}
-		}
+		} */
 		return out;
 	}
 
