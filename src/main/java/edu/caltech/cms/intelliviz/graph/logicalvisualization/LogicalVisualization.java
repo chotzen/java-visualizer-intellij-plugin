@@ -33,9 +33,9 @@ public abstract class LogicalVisualization {
         this.interfaces = interfaceParams;
     }
 
-    abstract String getDisplayName();
-    abstract void applyOnTrace(ObjectReference ref, ThreadReference thread);
-    abstract void applyOnBuild(INode ref);
+    protected abstract String getDisplayName();
+    protected abstract void applyOnTrace(ObjectReference ref, ThreadReference thread);
+    protected abstract void applyOnBuild(INode ref);
 
     public static void main(String[] args) {
         try {
@@ -57,7 +57,7 @@ public abstract class LogicalVisualization {
             )));
             JSONObject obj = (JSONObject) ob;
 
-            String pkg = (String) obj.get("pkgs"); // we know it's a list of strings
+            String pkg = (String) obj.get("pkg"); // we know it's a list of strings
 
             Map visualizers = (Map) obj.get("visualizations"); // this definitely works
             for (Map.Entry<String, JSONObject> visualizer : (Set<Map.Entry<String, JSONObject>>)visualizers.entrySet()) {
@@ -74,7 +74,7 @@ public abstract class LogicalVisualization {
                     interfaceParams = getParams(interfaces);
                 }
 
-                String fullName = pkg + className;
+                String fullName = pkg + '.' + className;
                 Class vizClass = Class.forName(fullName);
                 Constructor[] constructors = vizClass.getConstructors();
                 LogicalVisualization viz = (LogicalVisualization)constructors[0].newInstance(classParams, interfaceParams);

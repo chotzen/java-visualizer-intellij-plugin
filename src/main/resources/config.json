@@ -1,5 +1,5 @@
 {
-  "pkg": "edu.caltech.cms.intelliviz.graph.logicalvisualization",
+  "pkg": "edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers",
   "visualizations": {
     "SetVisualization": {
       "interfaces": [
