@@ -309,6 +309,7 @@ public class Tracer {
 		}
 
 		String typeName = obj.referenceType().name();
+
 		/*if ((doesImplementInterface(obj, "java.util.List")
 				|| doesImplementInterface(obj, "java.util.Set"))
 				&& isInternalPackage(typeName)) {

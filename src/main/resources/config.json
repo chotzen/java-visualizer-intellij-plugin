@@ -1,0 +1,23 @@
+{
+  "pkg": "edu.caltech.cms.intelliviz.graph.logicalvisualization",
+  "visualizations": {
+    "SetVisualization": {
+      "interfaces": [
+        {
+          "name": "java.util.Set",
+          "params": {
+            "iteratorMethod": "iterator"
+          }
+        }
+      ]
+    },
+    "ScannerVisualization": {
+      "classes": [
+        {
+          "name": "java.util.Scanner",
+          "params": {}
+        }
+      ]
+    }
+  }
+}

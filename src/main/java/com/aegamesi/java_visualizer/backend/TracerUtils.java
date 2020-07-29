@@ -10,7 +10,7 @@ import org.apache.xmlbeans.impl.xb.xmlconfig.Extensionconfig;
 
 import java.util.*;
 
-class TracerUtils {
+public class TracerUtils {
 	static com.sun.jdi.Value invokeSimple(ThreadReference thread, ObjectReference r, String name) {
 		try {
 			return r.invokeMethod(thread, r.referenceType().methodsByName(name).get(0), Collections.emptyList(), 0);
@@ -45,7 +45,7 @@ class TracerUtils {
 		return result;
 	}
 
-	static boolean doesImplementInterface(ObjectReference obj, String iface) {
+	public static boolean doesImplementInterface(ObjectReference obj, String iface) {
 		if (obj.referenceType() instanceof ClassType) {
 			Queue<InterfaceType> queue = new LinkedList<>(((ClassType) obj.referenceType()).interfaces());
 			while (!queue.isEmpty()) {
@@ -60,7 +60,7 @@ class TracerUtils {
 	}
 
 	// TODO clean up!!
-	static String displayNameForType(ObjectReference obj) {
+	public static String displayNameForType(ObjectReference obj) {
 		String fullName = obj.referenceType().name();
 		if (fullName.indexOf("$") > 0) {
 			// inner, local, anonymous or lambda class
