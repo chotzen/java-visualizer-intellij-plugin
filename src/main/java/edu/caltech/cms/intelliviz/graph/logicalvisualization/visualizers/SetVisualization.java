@@ -37,11 +37,12 @@ public class SetVisualization extends LogicalVisualization {
         parent.interfaces = new HashSet<>();
         parent.id = ref.uniqueID();
         parent.type = HeapEntity.Type.OBJECT;
+        parent.label = TracerUtils.displayNameForType(ref);
 
         HeapSet data = new HeapSet();
         data.type = HeapEntity.Type.SET; // XXX: or SET
-        data.label = TracerUtils.displayNameForType(ref);
-        Iterator<com.sun.jdi.Value> i = TracerUtils.getIterator(thread, ref, params.get("iterator"));
+        Iterator<com.sun.jdi.Value> i = TracerUtils.getIterator(thread, ref, params.get("iteratorMethod"));
+        data.label = "INTERNAL SET";
         while (i.hasNext()) {
             data.items.add(Tracer.convertValue(i.next()));
         }
@@ -54,6 +55,8 @@ public class SetVisualization extends LogicalVisualization {
         refValue.type = Value.Type.REFERENCE;
         refValue.reference = id;
         refValue.referenceType = "*INTERNAL*";
+
+        parent.fields.put("elementData", refValue);
 
         return parent;
     }

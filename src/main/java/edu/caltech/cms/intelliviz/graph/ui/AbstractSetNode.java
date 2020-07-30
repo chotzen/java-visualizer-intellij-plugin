@@ -14,7 +14,7 @@ public abstract class AbstractSetNode implements INode {
     private int width = 0, height = 0;
     private int upperHeight = 0, lowerHeight = 0;
 
-    private static final int BOX_PADDING = 2;
+    private static final int BOX_PADDING = 3;
 
     public AbstractSetNode() {
 
@@ -41,7 +41,8 @@ public abstract class AbstractSetNode implements INode {
             double maxWidth;
             if (2*i + 1 < rects.size()) {
                 maxWidth = Math.max(rects.get(2*i).getWidth(), rects.get(2*i + 1).getWidth());
-                lowerHeight = (int)Math.max(rects.get(2*i + 1).getHeight(), lowerHeight);
+                double bottomHeight = (int)rects.get(2*i + 1).getHeight();
+                lowerHeight = (int)Math.max(bottomHeight, lowerHeight);
             } else {
                 maxWidth = rects.get(2 * i).getWidth();
             }
@@ -70,8 +71,9 @@ public abstract class AbstractSetNode implements INode {
             rects.get(2 * i).setRect(xBound, this.y + BOX_PADDING, rects.get(2 * i).getWidth(), rects.get(2 * i).getHeight());
             g2d.fill(rects.get(2*i));
             if (2 * i + 1 < rects.size()) {
-                rects.get(2 * i + 1).setRect(xBound, this.y + BOX_PADDING, rects.get(2 * i + 1).getWidth(), rects.get(2 * i + 1).getHeight());
+                rects.get(2 * i + 1).setRect(xBound, this.y + 2 * BOX_PADDING + this.upperHeight, rects.get(2 * i + 1).getWidth(), rects.get(2 * i + 1).getHeight());
                 g2d.fill(rects.get(2*i + 1));
+                xBound += Math.max(rects.get(2*i + 1).getWidth(), rects.get(2*i).getWidth()) + BOX_PADDING;
             }
         }
 
@@ -80,31 +82,31 @@ public abstract class AbstractSetNode implements INode {
 
     @Override
     public boolean contains(double x, double y) {
-        return false;
+        return new Rectangle2D.Double(this.x, this.y, this.width, this.height).contains(x, y);
     }
 
     @Override
     public double getWidth() {
-        return 0;
+        return this.width;
     }
 
     @Override
     public double getHeight() {
-        return 0;
+        return this.height;
     }
 
     @Override
     public double getX() {
-        return 0;
+        return this.x;
     }
 
     @Override
     public double getY() {
-        return 0;
+        return this.y;
     }
 
     @Override
     public Point2D getTarget(double originX, double originY) {
-        return null;
+        return new Point2D.Double(this.x, this.y + this.height / 2.0);
     }
 }

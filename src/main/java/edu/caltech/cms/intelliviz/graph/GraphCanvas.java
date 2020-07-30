@@ -2,6 +2,7 @@ package edu.caltech.cms.intelliviz.graph;
 
 import com.aegamesi.java_visualizer.model.*;
 import com.aegamesi.java_visualizer.model.Frame;
+import com.android.aapt.Resources;
 import com.intellij.notification.NotificationDisplayType;
 import com.intellij.notification.NotificationGroup;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.GraphStruct;
@@ -229,6 +230,32 @@ public class GraphCanvas extends JPanel {
         INode ret = null;
         switch (ent.type) {
             case SET:
+                HeapSet heapSet = (HeapSet)ent;
+                if (heapSet.items.size() > 0 && heapSet.items.stream().anyMatch(val -> val.type == Value.Type.REFERENCE)) {
+                    ObjectSetNode osn = new ObjectSetNode();
+                    Set<GraphEdge> pointers = heapSet.items.stream().map(val -> {
+                        INode ref = null;
+                        if (val.type == Value.Type.NULL) {
+                            ref = new NullNode();
+                            this.nodes.put(getUniqueNegKey(), ref);
+                        } else if (val.type == Value.Type.REFERENCE){
+                            ref = renderNode(this.trace.heap.get(val.reference));
+                        }
+
+                        GraphEdge graphEdge = new GraphEdge(osn, ref, "");
+                        this.edges.add(graphEdge);
+                        return graphEdge;
+                    }).collect(Collectors.toSet());
+                    this.nodes.put(heapSet.id, osn);
+                    osn.setPointers(pointers);
+                    ret = osn;
+                } else {
+                    PrimitiveSetNode psn = new PrimitiveSetNode();
+                    psn.setData(heapSet.items.stream().map(Value::toString).collect(Collectors.toSet()));
+                    this.nodes.put(heapSet.id, psn);
+                    ret = psn;
+                }
+                break;
             case LIST:
                 HeapList heapList = (HeapList)ent;
                 // Reference list (checks for at least one reference)
@@ -366,7 +393,7 @@ public class GraphCanvas extends JPanel {
 
         for (INode gNode : nodes.values()) {
             // render nodes whose source edges should be in front
-            if (gNode instanceof ObjectMapNode || gNode instanceof ObjectArrayNode) {
+            if (gNode instanceof ObjectMapNode || gNode instanceof ObjectArrayNode || gNode instanceof ObjectSetNode) {
                 gNode.draw(g2D);
             }
         }
@@ -381,7 +408,7 @@ public class GraphCanvas extends JPanel {
 
         for (INode gNode : nodes.values()) {
             // Render nodes whose source edges should be behind
-            if (!(gNode instanceof ObjectMapNode || gNode instanceof ObjectArrayNode)) {
+            if (!(gNode instanceof ObjectMapNode || gNode instanceof ObjectArrayNode || gNode instanceof ObjectSetNode)) {
                 gNode.draw(g2D);
             }
         }

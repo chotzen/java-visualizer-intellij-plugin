@@ -15,7 +15,7 @@ public class GraphEdge {
 
     private Line2D line;
 
-    private GraphEdge(INode from, Targetable to, String label) {
+    GraphEdge(INode from, Targetable to, String label) {
         this.source = from;
         this.dest = (INode)to;
         this.label = new TextLabel(label);

@@ -5,6 +5,7 @@ import com.aegamesi.java_visualizer.model.ExecutionTrace;
 import com.aegamesi.java_visualizer.model.HeapEntity;
 import com.sun.jdi.ObjectReference;
 import com.sun.jdi.ThreadReference;
+import com.thoughtworks.qdox.model.expression.LogicalAnd;
 import edu.caltech.cms.intelliviz.graph.ui.ClassNode;
 import edu.caltech.cms.intelliviz.graph.INode;
 import org.json.simple.JSONArray;
@@ -53,9 +54,12 @@ public abstract class LogicalVisualization {
     // loads the classes to which it shall be applied
     public static void loadFromCfg() {
         try {
-            Object ob = new JSONParser().parse(new FileReader(new File(
-                    LogicalVisualization.class.getResource("/config.json").getFile()
-            )));
+            Scanner sc = new Scanner(LogicalVisualization.class.getResourceAsStream("/config.json"));
+            String s = "";
+            while (sc.hasNext()) {
+                s += sc.next();
+            }
+            Object ob = new JSONParser().parse(s);
             JSONObject obj = (JSONObject) ob;
 
             String pkg = (String) obj.get("pkg"); // we know it's a list of strings
@@ -63,13 +67,13 @@ public abstract class LogicalVisualization {
             Map visualizers = (Map) obj.get("visualizations"); // this definitely works
             for (Map.Entry<String, JSONObject> visualizer : (Set<Map.Entry<String, JSONObject>>)visualizers.entrySet()) {
                 String className = visualizer.getKey();
-                Map<String, Map<String, String>> classParams = null;
+                Map<String, Map<String, String>> classParams = new HashMap<>();
                 if (visualizer.getValue().containsKey("classes")) {
                     JSONArray classes = (JSONArray) visualizer.getValue().get("classes");
                     classParams = getParams(classes);
                 }
 
-                Map<String, Map<String, String>> interfaceParams = null;
+                Map<String, Map<String, String>> interfaceParams = new HashMap<>();
                 if (visualizer.getValue().containsKey("interfaces")) {
                     JSONArray interfaces = (JSONArray) visualizer.getValue().get("interfaces");
                     interfaceParams = getParams(interfaces);
@@ -81,7 +85,7 @@ public abstract class LogicalVisualization {
                 LogicalVisualization viz = (LogicalVisualization)constructors[0].newInstance(classParams, interfaceParams);
                 vizList.add(viz);
             }
-        } catch (ParseException | ClassNotFoundException | ClassCastException | IllegalAccessException | InstantiationException | InvocationTargetException | IOException e) {
+        } catch (ParseException | ClassNotFoundException | ClassCastException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
             System.err.println("Error: Could not parse config.json");
             e.printStackTrace();
         }
@@ -115,10 +119,10 @@ public abstract class LogicalVisualization {
                 return this.applyOnBuild(obj, this.classes.get(obj.name));
             }
 
-            Stream<String> matched = this.interfaces.keySet().stream().filter(iface -> obj.implementedInterfaces.contains(iface));
+            Optional<String> matched = this.interfaces.keySet().stream().filter(iface -> obj.implementedInterfaces.contains(iface)).findFirst();
 
-            if (matched.findFirst().isPresent()) {
-                String iface = matched.findFirst().get();
+            if (matched.isPresent()) {
+                String iface = matched.get();
                 return this.applyOnBuild(obj, this.interfaces.get(iface));
             }
         }
@@ -138,10 +142,10 @@ public abstract class LogicalVisualization {
             return this.applyOnTrace(ref, thread, model, this.classes.get(TracerUtils.displayNameForType(ref)));
         }
 
-        Stream<String> matched = this.interfaces.keySet().stream().filter(iface -> TracerUtils.doesImplementInterface(ref, iface));
+        Optional<String> matched = this.interfaces.keySet().stream().filter(iface -> TracerUtils.doesImplementInterface(ref, iface)).findFirst();
 
-        if (matched.findFirst().isPresent()) {
-            String iface = matched.findFirst().get();
+        if (matched.isPresent()) {
+            String iface = matched.get();
             return this.applyOnTrace(ref, thread, model, this.interfaces.get(iface));
         }
 
