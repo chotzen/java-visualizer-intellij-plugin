@@ -119,7 +119,11 @@ public class GraphLayoutAlgorithm {
             // this assumes that the upstream node is center-originating, which is true for ClassNodes.
             // other functionality to be implemented soon.
             if (layout == LayoutBehavior.VERTICAL) {
-                node.setPos(last_x + offset, last_y + nodeSpace + upstream.getHeight());
+                if (upstream instanceof ObjectSetNode) {
+                    node.setPos(last_x + offset, last_y + nodeSpace / 2.0 + upstream.getHeight());
+                } else {
+                    node.setPos(last_x + offset, last_y + nodeSpace + upstream.getHeight());
+                }
             } else if (layout == LayoutBehavior.HORIZONTAL) {
                 node.setPos(last_x + nodeSpace + upstream.getWidth(), last_y + offset);
             } else if (layout == LayoutBehavior.TREE) {
@@ -152,7 +156,7 @@ public class GraphLayoutAlgorithm {
         ArrayList<GraphEdge> handleMuchLater = new ArrayList<>();
         ArrayList<GraphEdge> children = node.getChildren();
 
-        if (!(node instanceof ObjectMapNode || node instanceof ObjectArrayNode || node instanceof NullNode)) { // only sort if there's not a prescribed ordering
+        if (!(node instanceof ObjectMapNode || node instanceof ObjectArrayNode || node instanceof NullNode || node instanceof ObjectSetNode)) { // only sort if there's not a prescribed ordering
             children.sort((e1, e2) -> {
                 String thisType = declaringTypes.get(node);
                 if (e1.declaringType.equals(thisType)) {
@@ -174,6 +178,9 @@ public class GraphLayoutAlgorithm {
             if (node instanceof ObjectArrayNode) { // force vertical layout for children of arrays
                 layoutNode(downstream, LayoutBehavior.VERTICAL, bound);
                 bound += getSubgraphWidth(downstream.dest) + nodeSpace;
+            } else if (node instanceof ObjectSetNode) {
+                layoutNode(downstream, LayoutBehavior.VERTICAL, bound);
+                bound += getSubgraphWidth(downstream.dest) + nodeSpace / 2;
             } else if (node instanceof ObjectMapNode) { // force horizontal layout for children of maps
                 layoutNode(downstream, LayoutBehavior.HORIZONTAL, bound);
                 bound += getSubgraphHeight(downstream.dest) + nodeSpace;
