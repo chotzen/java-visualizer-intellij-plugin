@@ -11,7 +11,7 @@ import org.apache.xmlbeans.impl.xb.xmlconfig.Extensionconfig;
 import java.util.*;
 
 public class TracerUtils {
-	static com.sun.jdi.Value invokeSimple(ThreadReference thread, ObjectReference r, String name) {
+	public static com.sun.jdi.Value invokeSimple(ThreadReference thread, ObjectReference r, String name) {
 		try {
 			return r.invokeMethod(thread, r.referenceType().methodsByName(name).get(0), Collections.emptyList(), 0);
 		} catch (Exception e) {
@@ -19,8 +19,8 @@ public class TracerUtils {
 		}
 	}
 
-	static Iterator<Value> getIterator(ThreadReference thread, ObjectReference obj) {
-		ObjectReference i = (ObjectReference) invokeSimple(thread, obj, "iterator");
+	public static Iterator<Value> getIterator(ThreadReference thread, ObjectReference obj, String methodName) {
+		ObjectReference i = (ObjectReference) invokeSimple(thread, obj, methodName);
 		return new Iterator<com.sun.jdi.Value>() {
 			@Override
 			public boolean hasNext() {
@@ -34,7 +34,7 @@ public class TracerUtils {
 		};
 	}
 
-	static Set<String> getImplementedInterfaces(ObjectReference obj) {
+	public static Set<String> getImplementedInterfaces(ObjectReference obj) {
 		Set<String> result = new HashSet<>();
 		Queue<InterfaceType> queue = new LinkedList<>(((ClassType) obj.referenceType()).interfaces());
 		while (!queue.isEmpty()) {

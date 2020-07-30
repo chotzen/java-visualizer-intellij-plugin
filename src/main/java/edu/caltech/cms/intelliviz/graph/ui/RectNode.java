@@ -1,5 +1,8 @@
-package edu.caltech.cms.intelliviz.graph;
+package edu.caltech.cms.intelliviz.graph.ui;
 
+
+import edu.caltech.cms.intelliviz.graph.GraphEdge;
+import edu.caltech.cms.intelliviz.graph.INode;
 
 import java.awt.*;
 import java.awt.geom.Point2D;

@@ -1,4 +1,6 @@
 package edu.caltech.cms.intelliviz.graph;
+import edu.caltech.cms.intelliviz.graph.ui.*;
+
 import java.util.*;
 import java.util.function.Predicate;
 

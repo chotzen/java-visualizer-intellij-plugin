@@ -1,4 +1,7 @@
-package edu.caltech.cms.intelliviz.graph;
+package edu.caltech.cms.intelliviz.graph.ui;
+
+import edu.caltech.cms.intelliviz.graph.GraphEdge;
+import edu.caltech.cms.intelliviz.graph.INode;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
@@ -67,7 +70,7 @@ public class ClassNode implements INode {
         lower.setFrame(x, y + HEADER_HEIGHT, this.width, this.fields.size() * HEADER_HEIGHT);
     }
 
-    void init() {
+    protected void init() {
         this.height = (1 + this.fields.size()) * HEADER_HEIGHT;
     }
 

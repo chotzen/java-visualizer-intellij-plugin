@@ -4,6 +4,9 @@ import com.aegamesi.java_visualizer.model.*;
 import com.aegamesi.java_visualizer.model.Frame;
 import com.intellij.notification.NotificationDisplayType;
 import com.intellij.notification.NotificationGroup;
+import edu.caltech.cms.intelliviz.graph.logicalvisualization.GraphStruct;
+import edu.caltech.cms.intelliviz.graph.logicalvisualization.LogicalVisualization;
+import edu.caltech.cms.intelliviz.graph.ui.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -225,8 +228,8 @@ public class GraphCanvas extends JPanel {
         }
         INode ret = null;
         switch (ent.type) {
-            case LIST:
             case SET:
+            case LIST:
                 HeapList heapList = (HeapList)ent;
                 // Reference list (checks for at least one reference)
                 if (heapList.items.size() > 0 && heapList.items.stream().anyMatch(val -> val.type == Value.Type.REFERENCE)) {
@@ -317,7 +320,7 @@ public class GraphCanvas extends JPanel {
                         fields.put(key, obj.fields.get(key).toString());
                     }
                 }
-                cn.init();
+                //cn.init();
                 ret = cn;
                 break;
             case PRIMITIVE:
@@ -333,10 +336,19 @@ public class GraphCanvas extends JPanel {
         if (this.lastNodes.containsKey(ent.id)) {
             ret.highlightChanges(this.lastNodes.get(ent.id));
         }
+
+        for (LogicalVisualization viz : LogicalVisualization.vizList) {
+            GraphStruct repl = viz.applyBuild(ret);
+            if (repl != null) {
+                this.edges.addAll(repl.edges);
+                this.nodes.putAll(repl.nodes);
+                return repl.root;
+            }
+        }
         return ret;
     }
 
-    private long getUniqueNegKey() {
+     private long getUniqueNegKey() {
         Random r = new Random();
         int c = r.nextInt(2000);
         while (nodes.containsKey((long)c)) {

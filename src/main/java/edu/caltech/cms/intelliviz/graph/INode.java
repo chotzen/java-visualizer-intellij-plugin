@@ -4,6 +4,7 @@ package edu.caltech.cms.intelliviz.graph;
 import com.intellij.notification.Notification;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.ui.MessageType;
+import edu.caltech.cms.intelliviz.graph.ui.NullNode;
 
 import java.awt.*;
 import java.awt.geom.Point2D;

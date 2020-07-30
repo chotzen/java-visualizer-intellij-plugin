@@ -6,7 +6,8 @@
         {
           "name": "java.util.Set",
           "params": {
-            "iteratorMethod": "iterator"
+            "iteratorMethod": "iterator",
+            "sizeMethod": "size"
           }
         }
       ]

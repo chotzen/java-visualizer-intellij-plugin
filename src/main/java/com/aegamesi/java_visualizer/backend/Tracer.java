@@ -32,6 +32,8 @@ import com.sun.jdi.StackFrame;
 import com.sun.jdi.StringReference;
 import com.sun.jdi.ThreadReference;
 import com.sun.jdi.VoidValue;
+import edu.caltech.cms.intelliviz.graph.logicalvisualization.HeapStruct;
+import edu.caltech.cms.intelliviz.graph.logicalvisualization.LogicalVisualization;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -67,10 +69,11 @@ public class Tracer {
 	However, once we start running code on the thread, we can no longer read frame locals.
 	Therefore, we have to convert all heap objects at the very end.
 	*/
-	private TreeMap<Long, ObjectReference> pendingConversion = new TreeMap<>();
+	private static TreeMap<Long, ObjectReference> pendingConversion = new TreeMap<>();
 
 	public Tracer(ThreadReference thread) {
 		this.thread = thread;
+		LogicalVisualization.loadFromCfg();
 	}
 
 	public ExecutionTrace getModel() throws IncompatibleThreadStateException {
@@ -267,7 +270,7 @@ public class Tracer {
 		return output;
 	}
 
-	private Value convertReference(ObjectReference obj) {
+	public static Value convertReference(ObjectReference obj) {
 		// Special handling for boxed types
 		if (obj.referenceType().name().startsWith("java.lang.")
 				&& BOXED_TYPES.contains(obj.referenceType().name().substring(10))) {
@@ -340,7 +343,17 @@ public class Tracer {
 			return out;
 		}*/
 
-		// now, arbitrary objects
+		boolean appliedViz = false;
+
+		for (LogicalVisualization viz : LogicalVisualization.vizList) {
+			HeapEntity he = viz.applyTrace(obj, thread, model);
+			if (he != null) {
+			    // avoid index conflicts with generation
+                // TODO HERE
+				return he; // and search no further!
+			}
+		}
+
 		HeapObject out = new HeapObject();
 		out.type = HeapEntity.Type.OBJECT;
 		out.label = displayNameForType(obj);
@@ -349,26 +362,28 @@ public class Tracer {
 		ReferenceType refType = obj.referenceType();
 
 		if (shouldShowDetails(refType) || doesImplementInterface(obj, "java.util.Set") || doesImplementInterface(obj, "java.util.List")) {
-			// fields: -inherited -hidden +synthetic
-			// visibleFields: +inherited -hidden +synthetic
-			// allFields: +inherited +hidden +repeated_synthetic
-			Map<Field, com.sun.jdi.Value> fields = obj.getValues(
-					SHOW_ALL_FIELDS ? refType.allFields() : refType.visibleFields()
-			);
-			for (Map.Entry<Field, com.sun.jdi.Value> me : fields.entrySet()) {
-				if (!me.getKey().isStatic() && (SHOW_ALL_FIELDS || !me.getKey().isSynthetic())) {
-					String name = SHOW_ALL_FIELDS ? me.getKey().declaringType().name() + "." : "";
-					name += me.getKey().name();
-					Value value = convertValue(me.getValue());
-					value.referenceType = me.getKey().typeName();
-					out.fields.put(name, value);
-				}
-			}
+			 // fields: -inherited -hidden +synthetic
+			 // visibleFields: +inherited -hidden +synthetic
+			 // allFields: +inherited +hidden +repeated_synthetic
+			 Map<Field, com.sun.jdi.Value> fields = obj.getValues(
+					  SHOW_ALL_FIELDS ? refType.allFields() : refType.visibleFields()
+			 );
+			 for (Map.Entry<Field, com.sun.jdi.Value> me : fields.entrySet()) {
+				  if (!me.getKey().isStatic() && (SHOW_ALL_FIELDS || !me.getKey().isSynthetic())) {
+					  String name = SHOW_ALL_FIELDS ? me.getKey().declaringType().name() + "." : "";
+					  name += me.getKey().name();
+					  Value value = convertValue(me.getValue());
+					  value.referenceType = me.getKey().typeName();
+					  out.fields.put(name, value);
+				  }
+			 }
 		}
+
+		// now, arbitrary objects
 		return out;
 	}
 
-	private Value convertValue(com.sun.jdi.Value v) {
+	public static Value convertValue(com.sun.jdi.Value v) {
 		Value out = new Value();
 		if (v instanceof BooleanValue) {
 			out.type = Value.Type.BOOLEAN;

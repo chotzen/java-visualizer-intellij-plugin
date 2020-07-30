@@ -1,4 +1,7 @@
-package edu.caltech.cms.intelliviz.graph;
+package edu.caltech.cms.intelliviz.graph.ui;
+
+import edu.caltech.cms.intelliviz.graph.GraphEdge;
+import edu.caltech.cms.intelliviz.graph.INode;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
@@ -15,8 +18,6 @@ public class PrimitiveNode implements INode {
 
     private static final Font boldItalic = new Font("SanSerif", Font.BOLD | Font.ITALIC, 12);
     private static final Color LOWER_COLOR = Color.decode("#C8FAD8");
-
-
 
     public PrimitiveNode(double x, double y, String label) {
         this.x = x;

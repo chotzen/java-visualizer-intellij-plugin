@@ -1,9 +1,11 @@
 package edu.caltech.cms.intelliviz.graph.logicalvisualization;
 
 import com.aegamesi.java_visualizer.backend.TracerUtils;
+import com.aegamesi.java_visualizer.model.ExecutionTrace;
+import com.aegamesi.java_visualizer.model.HeapEntity;
 import com.sun.jdi.ObjectReference;
 import com.sun.jdi.ThreadReference;
-import edu.caltech.cms.intelliviz.graph.ClassNode;
+import edu.caltech.cms.intelliviz.graph.ui.ClassNode;
 import edu.caltech.cms.intelliviz.graph.INode;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -16,6 +18,7 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.stream.Stream;
 
 public abstract class LogicalVisualization {
 
@@ -24,7 +27,7 @@ public abstract class LogicalVisualization {
         ON_BUILD
     }
 
-    static List<LogicalVisualization> vizList = new ArrayList<>();
+    public static List<LogicalVisualization> vizList = new ArrayList<>();
 
     private Map<String, Map<String, String>> classes, interfaces;
 
@@ -34,8 +37,8 @@ public abstract class LogicalVisualization {
     }
 
     protected abstract String getDisplayName();
-    protected abstract void applyOnTrace(ObjectReference ref, ThreadReference thread);
-    protected abstract void applyOnBuild(INode ref);
+    protected abstract HeapEntity applyOnTrace(ObjectReference ref, ThreadReference thread, ExecutionTrace trace, Map<String, String> params);
+    protected abstract GraphStruct applyOnBuild(INode ref, Map<String, String> params);
 
     public static void main(String[] args) {
         try {
@@ -45,15 +48,13 @@ public abstract class LogicalVisualization {
         }
     }
 
-    static {
-        loadFromCfg();
-    }
+    // TODO: make this not static?
 
     // loads the classes to which it shall be applied
-    static void loadFromCfg() {
+    public static void loadFromCfg() {
         try {
             Object ob = new JSONParser().parse(new FileReader(new File(
-                    LogicalVisualization.class.getClassLoader().getResource("config.json").getFile()
+                    LogicalVisualization.class.getResource("/config.json").getFile()
             )));
             JSONObject obj = (JSONObject) ob;
 
@@ -80,19 +81,16 @@ public abstract class LogicalVisualization {
                 LogicalVisualization viz = (LogicalVisualization)constructors[0].newInstance(classParams, interfaceParams);
                 vizList.add(viz);
             }
-        } catch (ParseException | ClassNotFoundException | ClassCastException | FileNotFoundException e) {
+        } catch (ParseException | ClassNotFoundException | ClassCastException | IllegalAccessException | InstantiationException | InvocationTargetException | IOException e) {
             System.err.println("Error: Could not parse config.json");
-        } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     /**
-     * Gets the
-     * @param arr
-     * @return
+     * Extracts the classes/interfaces data from a JSON array
+     * @param arr the json array of classes or interfaces
+     * @return a map linking the [fully qualified] class/interface name to a params map
      */
     static Map<String, Map<String, String>> getParams(JSONArray arr) {
         List<JSONObject> objList = (List<JSONObject>)arr;
@@ -106,24 +104,58 @@ public abstract class LogicalVisualization {
     }
 
     /**
-     * Applies the appropriate logical visualization to the given node. Does nothing
-     * if the visualization is not appropriate.
+     * Applies the appropriate logical visualization to the given node, after the visualization tree has
+     * already been built. Does nothing if the visualization is not appropriate.
      * @param ref the node to apply the reference to
      */
-    public void applyBuild(INode ref, VizPoint vizPoint) {
+    public GraphStruct applyBuild(INode ref) {
         if (ref instanceof ClassNode) {
             ClassNode obj = (ClassNode) ref;
-            if (this.classes.containsKey(obj.name) || this.interfaces.keySet().stream().anyMatch(iface -> obj.implementedInterfaces.contains(iface))) {
-                this.applyOnBuild(obj);
+            if (this.classes.containsKey(obj.name)) {
+                return this.applyOnBuild(obj, this.classes.get(obj.name));
+            }
+
+            Stream<String> matched = this.interfaces.keySet().stream().filter(iface -> obj.implementedInterfaces.contains(iface));
+
+            if (matched.findFirst().isPresent()) {
+                String iface = matched.findFirst().get();
+                return this.applyOnBuild(obj, this.interfaces.get(iface));
             }
         }
+        return null;
     }
 
-    public void applyTrace(ObjectReference ref, ThreadReference thread, Map<String, String> params) {
-        if (this.classes.containsKey(TracerUtils.displayNameForType(ref)) ||
-               this.interfaces.keySet().stream().anyMatch(iface -> TracerUtils.doesImplementInterface(ref, iface))) {
-            this.applyOnTrace(ref, thread);
+    /**
+     * Applies the appropriate logical visuazliation to the given heap entity, during the tracing on the thread.
+     * This means we can actually reflect/call methods on the thing, which has its benefits for accessing interface methods
+     * Does nothing if the entity is improper.
+     * @param ref the heap entity the visualization can be applied to
+     * @param thread the thread to search
+     * @return a small "heap" to be merged with the heap model
+     */
+    public HeapEntity applyTrace(ObjectReference ref, ThreadReference thread, ExecutionTrace model) {
+        if (this.classes.containsKey(TracerUtils.displayNameForType(ref))) {
+            return this.applyOnTrace(ref, thread, model, this.classes.get(TracerUtils.displayNameForType(ref)));
         }
+
+        Stream<String> matched = this.interfaces.keySet().stream().filter(iface -> TracerUtils.doesImplementInterface(ref, iface));
+
+        if (matched.findFirst().isPresent()) {
+            String iface = matched.findFirst().get();
+            return this.applyOnTrace(ref, thread, model, this.interfaces.get(iface));
+        }
+
+        return null;
     }
+
+    protected static long getUniqueNegKey(ExecutionTrace model) {
+        Random r = new Random();
+        int c = - r.nextInt(10000);
+        while (model.heap.containsKey((long)c)) {
+            c = - r.nextInt(10000);
+        }
+        return c;
+    }
+
 }
 

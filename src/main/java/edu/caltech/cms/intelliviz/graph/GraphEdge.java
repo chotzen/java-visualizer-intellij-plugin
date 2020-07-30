@@ -1,6 +1,7 @@
 package edu.caltech.cms.intelliviz.graph;
 
-import org.apache.commons.lang.ObjectUtils;
+import edu.caltech.cms.intelliviz.graph.ui.ClassNode;
+import edu.caltech.cms.intelliviz.graph.ui.TextLabel;
 
 import java.awt.*;
 import java.awt.geom.Line2D;
