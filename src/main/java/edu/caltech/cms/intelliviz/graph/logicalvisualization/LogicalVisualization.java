@@ -1,8 +1,11 @@
 package edu.caltech.cms.intelliviz.graph.logicalvisualization;
 
+import com.aegamesi.java_visualizer.backend.Tracer;
 import com.aegamesi.java_visualizer.backend.TracerUtils;
 import com.aegamesi.java_visualizer.model.ExecutionTrace;
 import com.aegamesi.java_visualizer.model.HeapEntity;
+import com.aegamesi.java_visualizer.model.HeapObject;
+import com.aegamesi.java_visualizer.model.Value;
 import com.sun.jdi.ObjectReference;
 import com.sun.jdi.ThreadReference;
 import com.thoughtworks.qdox.model.expression.LogicalAnd;
@@ -158,7 +161,22 @@ public abstract class LogicalVisualization {
         while (model.heap.containsKey((long)c)) {
             c = - r.nextInt(10000);
         }
+        System.out.println(c);
         return c;
+    }
+
+    protected static HeapObject convertParent(ObjectReference ref, ThreadReference thread, ExecutionTrace model, Map<String, String> params) {
+        HeapObject parent = new HeapObject();
+        parent.fields = new HashMap<>();
+        com.sun.jdi.Value sizeValue = TracerUtils.invokeSimple(thread, ref, params.get("sizeMethod"));
+        Value convSize = Tracer.convertValue(sizeValue);
+        parent.fields.put("size", convSize);
+        parent.interfaces = new HashSet<>();
+        parent.id = ref.uniqueID();
+        parent.type = HeapEntity.Type.OBJECT;
+        parent.label = TracerUtils.displayNameForType(ref);
+
+        return parent;
     }
 
 }

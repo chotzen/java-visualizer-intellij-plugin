@@ -3,12 +3,10 @@ package edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers;
 import com.aegamesi.java_visualizer.backend.Tracer;
 import com.aegamesi.java_visualizer.backend.TracerUtils;
 import com.aegamesi.java_visualizer.model.*;
-import com.sun.jdi.IntegerValue;
 import com.sun.jdi.ObjectReference;
 import com.sun.jdi.ThreadReference;
 import edu.caltech.cms.intelliviz.graph.INode;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.GraphStruct;
-import edu.caltech.cms.intelliviz.graph.logicalvisualization.HeapStruct;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.LogicalVisualization;
 
 import java.util.HashMap;
@@ -24,20 +22,12 @@ public class SetVisualization extends LogicalVisualization {
 
     @Override
     protected String getDisplayName() {
-        return null;
+        return "Set";
     }
 
     @Override
     protected HeapEntity applyOnTrace(ObjectReference ref, ThreadReference thread, ExecutionTrace trace, Map<String, String> params) {
-        HeapObject parent = new HeapObject();
-        parent.fields = new HashMap<>();
-        com.sun.jdi.Value sizeValue = TracerUtils.invokeSimple(thread, ref, params.get("sizeMethod"));
-        Value convSize = Tracer.convertValue(sizeValue);
-        parent.fields.put("size", convSize);
-        parent.interfaces = new HashSet<>();
-        parent.id = ref.uniqueID();
-        parent.type = HeapEntity.Type.OBJECT;
-        parent.label = TracerUtils.displayNameForType(ref);
+        HeapObject parent = convertParent(ref, thread, trace, params);
 
         HeapSet data = new HeapSet();
         data.type = HeapEntity.Type.SET; // XXX: or SET
@@ -49,6 +39,7 @@ public class SetVisualization extends LogicalVisualization {
 
         // link two things with a reference
         Long id = getUniqueNegKey(trace);
+        data.id = id;
         trace.heap.put(id, data);
 
         Value refValue = new Value();

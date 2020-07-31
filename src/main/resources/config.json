@@ -9,6 +9,35 @@
             "iteratorMethod": "iterator",
             "sizeMethod": "size"
           }
+        },
+        {
+          "name": "edu.caltech.cs2.interfaces.ISet",
+          "params": {
+            "iteratorMethod": "iterator",
+            "sizeMethod": "size"
+          }
+        }
+      ]
+    },
+    "MapVisualization":{
+      "interfaces": [
+        {
+          "name": "java.util.Map",
+          "params": {
+            "keySetMethod": "keySet",
+            "getMethod": "get",
+            "keySetIteratorMethod": "iterator",
+            "sizeMethod": "size"
+          }
+        },
+        {
+          "name": "edu.caltech.cs2.interfaces.IDictionary",
+          "params": {
+            "keySetMethod": "keySet",
+            "getMethod": "get",
+            "keySetIteratorMethod": "iterator",
+            "sizeMethod": "size"
+          }
         }
       ]
     },
