@@ -171,26 +171,31 @@ public class GraphLayoutAlgorithm {
         if (layout == LayoutBehavior.HORIZONTAL && children.size() > 0) {
             bound += (node.getHeight() - children.get(0).dest.getHeight()) / 2;
         }
+
+        if (bound < 0) {
+            bound = 0;
+        }
+
         for (GraphEdge downstream : children) {
             if (downstream.label.toString().contains("overallRoot")) {
                 System.out.println("break");
             }
             if (node instanceof ObjectArrayNode) { // force vertical layout for children of arrays
                 layoutNode(downstream, LayoutBehavior.VERTICAL, bound);
-                bound += getSubgraphWidth(downstream.dest) + nodeSpace;
+                bound += getSubgraphWidth(downstream.dest) + vSpace;
             } else if (node instanceof ObjectSetNode) {
                 layoutNode(downstream, LayoutBehavior.VERTICAL, bound);
-                bound += getSubgraphWidth(downstream.dest) + nodeSpace / 2;
+                bound += getSubgraphWidth(downstream.dest) + vSpace;
             } else if (node instanceof ObjectMapNode) { // force horizontal layout for children of maps
                 layoutNode(downstream, LayoutBehavior.HORIZONTAL, bound);
-                bound += getSubgraphHeight(downstream.dest) + nodeSpace;
+                bound += getSubgraphHeight(downstream.dest) + vSpace;
             } else {
                 if (layout == LayoutBehavior.HORIZONTAL) {
                     layoutNode(downstream, layout, bound);
-                    bound += getSubgraphHeight(downstream.dest) + nodeSpace;
+                    bound += getSubgraphHeight(downstream.dest) + vSpace;
                 } else if (layout == LayoutBehavior.VERTICAL) {
                     layoutNode(downstream, layout, bound);
-                    bound += getSubgraphWidth(downstream.dest) + nodeSpace;
+                    bound += getSubgraphWidth(downstream.dest) + vSpace;
                 } else if (layout == LayoutBehavior.TREE) {
                     if (declaringTypes.get(node).equals(downstream.declaringType)) {
                         // this is where subgraphs get calculated. trust the process.

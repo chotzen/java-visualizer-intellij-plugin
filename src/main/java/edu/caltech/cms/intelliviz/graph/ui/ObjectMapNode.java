@@ -6,16 +6,14 @@ import edu.caltech.cms.intelliviz.graph.INode;
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class ObjectMapNode implements INode {
 
     private double x, y;
     private double width, height;
-    private Map<String, GraphEdge> data;
+    private Map<String, GraphEdge> primKeyData;
+    private Map<GraphEdge, GraphEdge> objKeyData;
     private Map<GraphEdge, Integer> rowMap;
 
     private static final Color headerColor = Color.WHITE;
@@ -56,17 +54,26 @@ public class ObjectMapNode implements INode {
         Graphics2D g2d = (Graphics2D) g.create();
         g2d.setFont(font);
         g.setStroke(new BasicStroke(1));
-        int keyWidth = calculateMinWidth(data.keySet(), g2d.getFontMetrics());
+        int keyWidth = calculateMinWidth(primKeyData == null ? Collections.emptyList() : primKeyData.keySet(), g2d.getFontMetrics());
         this.width = keyWidth + POINTER_COL_WIDTH;
-        this.height = (data.size() + 1) * ROW_HEIGHT;
+        this.height = ((primKeyData == null ? objKeyData.size() : primKeyData.size()) + 1) * ROW_HEIGHT;
 
         drawRow(g2d, 0, "Key", "Value", keyWidth, POINTER_COL_WIDTH, headerColor);
         int row = 1;
         rowMap.clear();
-        for (String s : data.keySet()) {
-            drawRow(g2d, row, s, "", keyWidth, POINTER_COL_WIDTH, lowerColor);
-            rowMap.put(data.get(s), row);
-            row++;
+        if (primKeyData != null) {
+            for (String s : primKeyData.keySet()) {
+                drawRow(g2d, row, s, "", keyWidth, POINTER_COL_WIDTH, lowerColor);
+                rowMap.put(primKeyData.get(s), row);
+                row++;
+            }
+        } else {
+            for (GraphEdge e : objKeyData.keySet()) {
+                drawRow(g2d, row, "", "", keyWidth, POINTER_COL_WIDTH, lowerColor);
+                rowMap.put(objKeyData.get(e), row);
+                rowMap.put(e, row);
+                row++;
+            }
         }
     }
 
@@ -118,12 +125,21 @@ public class ObjectMapNode implements INode {
     @Override
     public Point2D getOrigin(GraphEdge edge) {
         int row = rowMap.get(edge);
+        if (objKeyData != null && objKeyData.containsKey(edge)) {
+            return new Point2D.Double(x + MIN_COL_WIDTH / 2d, y + ROW_HEIGHT * (row + 0.5));
+        }
         return new Point2D.Double(x + this.width - POINTER_COL_WIDTH / 2d, y + ROW_HEIGHT * (row + 0.5));
     }
 
     @Override
     public ArrayList<GraphEdge> getChildren() {
-        return new ArrayList<>(data.values());
+        if (primKeyData != null) {
+            return new ArrayList<>(primKeyData.values());
+        } else {
+            ArrayList<GraphEdge> result = new ArrayList<>(objKeyData.values());
+            result.addAll(objKeyData.keySet());
+            return result;
+        }
     }
 
     @Override
@@ -131,8 +147,15 @@ public class ObjectMapNode implements INode {
         INode.checkReferencesForTypeChange( this, ref);
     }
 
-    public void setData(Map<String, GraphEdge> data) {
+    public void setPrimData(Map<String, GraphEdge> data) {
         INode.warnOnClip(data.size(), MAX_RENDER_LENGTH);
-        this.data = INode.clipToLength(data, MAX_RENDER_LENGTH);
+        this.primKeyData = INode.clipToLength(data, MAX_RENDER_LENGTH);
+        this.objKeyData = null;
+    }
+
+    public void setObjData(Map<GraphEdge, GraphEdge> data) {
+        INode.warnOnClip(data.size(), MAX_RENDER_LENGTH);
+        this.objKeyData = INode.clipToLength(data, MAX_RENDER_LENGTH);
+        this.primKeyData = null;
     }
 }

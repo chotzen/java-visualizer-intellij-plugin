@@ -2,9 +2,9 @@ package edu.caltech.cms.intelliviz.graph;
 
 import com.aegamesi.java_visualizer.model.*;
 import com.aegamesi.java_visualizer.model.Frame;
-import com.android.aapt.Resources;
 import com.intellij.notification.NotificationDisplayType;
 import com.intellij.notification.NotificationGroup;
+import com.intellij.vcs.log.Hash;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.GraphStruct;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.LogicalVisualization;
 import edu.caltech.cms.intelliviz.graph.ui.*;
@@ -293,20 +293,49 @@ public class GraphCanvas extends JPanel {
                 // check for any references
                 if (heapMap.pairs.size() > 0 && heapMap.pairs.stream().anyMatch(pair -> pair.val.type == Value.Type.REFERENCE)) {
                     ObjectMapNode omn = new ObjectMapNode(100, 100);
-                    HashMap<String, GraphEdge> vals = new HashMap<>();
-                    for (HeapMap.Pair p : heapMap.pairs) {
-                        GraphEdge ge;
-                        if (p.val.type == Value.Type.REFERENCE) {
-                            ge = new GraphEdge(omn, renderNode(trace.heap.get(p.val.reference)), "[" + p.key + "]", p.val.referenceType);
-                        } else {
-                            NullNode to = new NullNode();
-                            ge = new GraphEdge(omn, to, "[" + p.key + "]", p.val.referenceType);
-                            this.nodes.put(getUniqueNegKey(), to);
+                    if (heapMap.pairs.stream().anyMatch(pair -> pair.key.type == Value.Type.REFERENCE)) {
+                        HashMap<GraphEdge, GraphEdge> vals = new HashMap<>();
+                        for (HeapMap.Pair p : heapMap.pairs) {
+                            GraphEdge valEdge = new GraphEdge(omn, null, "", p.val.referenceType);
+                            if (p.val.type == Value.Type.REFERENCE) {
+                                valEdge.dest = renderNode(trace.heap.get(p.val.reference));
+                            } else {
+                                NullNode to = new NullNode();
+                                valEdge.dest = to;
+                                this.nodes.put(getUniqueNegKey(), to);
+                            }
+
+                            GraphEdge keyEdge = new GraphEdge(omn, null, "", p.val.referenceType);
+                            if (p.key.type == Value.Type.REFERENCE) {
+                                keyEdge.dest = renderNode(trace.heap.get(p.key.reference));
+                            } else {
+                                NullNode to = new NullNode();
+                                keyEdge.dest = to;
+                                this.nodes.put(getUniqueNegKey(), to);
+                            }
+                            this.edges.add(keyEdge);
+                            this.edges.add(valEdge);
+
+                            vals.put(keyEdge, valEdge);
                         }
-                        this.edges.add(ge);
-                        vals.put(p.key.toString(), ge);
+                        omn.setObjData(vals);
+                    } else {
+                        HashMap<String, GraphEdge> vals = new HashMap<>();
+                        for (HeapMap.Pair p : heapMap.pairs) {
+                            GraphEdge ge;
+                            if (p.val.type == Value.Type.REFERENCE) {
+                                ge = new GraphEdge(omn, renderNode(trace.heap.get(p.val.reference)), "[" + p.key + "]", p.val.referenceType);
+                            } else {
+                                NullNode to = new NullNode();
+                                ge = new GraphEdge(omn, to, "[" + p.key + "]", p.val.referenceType);
+                                this.nodes.put(getUniqueNegKey(), to);
+                            }
+                            this.edges.add(ge);
+                            vals.put(p.key.toString(), ge);
+                        }
+                        omn.setPrimData(vals);
                     }
-                    omn.setData(vals);
+
                     this.nodes.put(heapMap.id, omn);
                     ret = omn;
                     break;
@@ -377,7 +406,7 @@ public class GraphCanvas extends JPanel {
 
      private long getUniqueNegKey() {
         Random r = new Random();
-        int c = r.nextInt(2000);
+         int c = r.nextInt(2000);
         while (nodes.containsKey((long)c)) {
             c = r.nextInt(2000);
         }
