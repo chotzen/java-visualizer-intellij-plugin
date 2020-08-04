@@ -14,8 +14,8 @@ public class ClassNode implements INode {
     public String name;
     public Set<String> implementedInterfaces = new HashSet<>();
     private String displayName;
-    private HashMap<String, String> fields;
-    private ArrayList<GraphEdge> pointers;
+    public HashMap<String, String> fields;
+    public ArrayList<GraphEdge> pointers;
     private Set<String> highlightedFields = new HashSet<>();
 
     private Rectangle2D upper, lower;

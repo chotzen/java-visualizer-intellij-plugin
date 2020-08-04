@@ -9,6 +9,7 @@ import com.aegamesi.java_visualizer.model.HeapObject;
 import com.sun.jdi.ObjectReference;
 import com.sun.jdi.ThreadReference;
 import com.sun.jdi.Value;
+import edu.caltech.cms.intelliviz.graph.GraphEdge;
 import edu.caltech.cms.intelliviz.graph.INode;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.GraphStruct;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.LogicalVisualization;
@@ -63,7 +64,7 @@ public class MapVisualization extends LogicalVisualization {
     }
 
     @Override
-    protected GraphStruct applyOnBuild(INode ref, Map<String, String> params) {
+    protected INode applyOnBuild(INode ref, Map<Long, INode> nodes, List<GraphEdge> edges, Map<String, String> params) {
         return null;
     }
 

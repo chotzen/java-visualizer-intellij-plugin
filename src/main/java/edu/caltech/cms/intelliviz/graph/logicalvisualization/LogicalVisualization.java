@@ -9,6 +9,7 @@ import com.aegamesi.java_visualizer.model.Value;
 import com.sun.jdi.ObjectReference;
 import com.sun.jdi.ThreadReference;
 import com.thoughtworks.qdox.model.expression.LogicalAnd;
+import edu.caltech.cms.intelliviz.graph.GraphEdge;
 import edu.caltech.cms.intelliviz.graph.ui.ClassNode;
 import edu.caltech.cms.intelliviz.graph.INode;
 import org.json.simple.JSONArray;
@@ -42,7 +43,7 @@ public abstract class LogicalVisualization {
 
     protected abstract String getDisplayName();
     protected abstract HeapEntity applyOnTrace(ObjectReference ref, ThreadReference thread, ExecutionTrace trace, Map<String, String> params);
-    protected abstract GraphStruct applyOnBuild(INode ref, Map<String, String> params);
+    protected abstract INode applyOnBuild(INode ref, Map<Long, INode> nodes, List<GraphEdge> edges, Map<String, String> params);
 
     public static void main(String[] args) {
         try {
@@ -115,18 +116,18 @@ public abstract class LogicalVisualization {
      * already been built. Does nothing if the visualization is not appropriate.
      * @param ref the node to apply the reference to
      */
-    public GraphStruct applyBuild(INode ref) {
+    public INode applyBuild(INode ref, Map<Long, INode> nodes, List<GraphEdge> edges) {
         if (ref instanceof ClassNode) {
             ClassNode obj = (ClassNode) ref;
             if (this.classes.containsKey(obj.name)) {
-                return this.applyOnBuild(obj, this.classes.get(obj.name));
+                return this.applyOnBuild(obj, nodes, edges, this.classes.get(obj.name));
             }
 
             Optional<String> matched = this.interfaces.keySet().stream().filter(iface -> obj.implementedInterfaces.contains(iface)).findFirst();
 
             if (matched.isPresent()) {
                 String iface = matched.get();
-                return this.applyOnBuild(obj, this.interfaces.get(iface));
+                return this.applyOnBuild(obj, nodes, edges, this.interfaces.get(iface));
             }
         }
         return null;

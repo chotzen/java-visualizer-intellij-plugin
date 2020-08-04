@@ -4,7 +4,6 @@ import com.aegamesi.java_visualizer.model.*;
 import com.aegamesi.java_visualizer.model.Frame;
 import com.intellij.notification.NotificationDisplayType;
 import com.intellij.notification.NotificationGroup;
-import com.intellij.vcs.log.Hash;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.GraphStruct;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.LogicalVisualization;
 import edu.caltech.cms.intelliviz.graph.ui.*;
@@ -23,12 +22,15 @@ public class GraphCanvas extends JPanel {
 
     private double scale = 1.0;
 
+    public JScrollPane parent = null;
+
     private Map<Frame, StackFrame> frameMap;
     private LinkedHashMap<StackFrame, List<VariableNode>> variables;
     private Map<Long, INode> nodes;
     private Map<Long, INode> lastNodes;
     private List<GraphEdge> edges;
     private Map<INode, List<GraphEdge>> layoutTree;
+
 
     private Set<INode> selected;
     private Cursor curCursor;
@@ -388,25 +390,29 @@ public class GraphCanvas extends JPanel {
             default:
                 return null;
         }
-        // we've already laid out this element. what changed?
+
+        // we've already laid out this element. highlight changes.
         if (this.lastNodes.containsKey(ent.id)) {
             ret.highlightChanges(this.lastNodes.get(ent.id));
         }
 
+        // apply applicable logical visualizations.
         for (LogicalVisualization viz : LogicalVisualization.vizList) {
-            GraphStruct repl = viz.applyBuild(ret);
+            INode repl = viz.applyBuild(ret, this.nodes, this.edges);
             if (repl != null) {
-                this.edges.addAll(repl.edges);
-                this.nodes.putAll(repl.nodes);
-                return repl.root;
+                return repl;
             }
         }
         return ret;
     }
 
-     private long getUniqueNegKey() {
+    private long getUniqueNegKey() {
+        return getUniqueNegKey(this.nodes);
+    }
+
+    public static long getUniqueNegKey(Map<Long, INode> nodes) {
         Random r = new Random();
-         int c = r.nextInt(2000);
+        int c = r.nextInt(2000);
         while (nodes.containsKey((long)c)) {
             c = r.nextInt(2000);
         }
@@ -414,13 +420,18 @@ public class GraphCanvas extends JPanel {
     }
 
     public void paint(Graphics g) {
+        Rectangle oldView = parent.getVisibleRect();
         g.clearRect(0, 0, this.getWidth(), this.getHeight());
         Graphics2D g2D = (Graphics2D) g;
         g2D.scale(scale, scale);
 
-        variables.values().stream().flatMap(Collection::stream).forEach(vNode -> vNode.draw(g2D));
+        Set<VariableNode> varCopy = variables.values().stream().flatMap(Collection::stream).collect(Collectors.toSet());
+        varCopy.forEach(variableNode -> variableNode.draw(g2D));
 
-        for (INode gNode : nodes.values()) {
+        Set<INode> nodeCopy = new HashSet<>(nodes.values());
+        Set<GraphEdge> edgesCopy = new HashSet<>(edges);
+
+        for (INode gNode : nodeCopy) {
             // render nodes whose source edges should be in front
             if (gNode instanceof ObjectMapNode || gNode instanceof ObjectArrayNode || gNode instanceof ObjectSetNode) {
                 gNode.draw(g2D);
@@ -431,11 +442,11 @@ public class GraphCanvas extends JPanel {
             sf.draw(g2D, 1000); // TODO: fix width
         }
 
-        for (GraphEdge edge : edges) {
+        for (GraphEdge edge : edgesCopy) {
             edge.draw(g2D);
         }
 
-        for (INode gNode : nodes.values()) {
+        for (INode gNode : nodeCopy) {
             // Render nodes whose source edges should be behind
             if (!(gNode instanceof ObjectMapNode || gNode instanceof ObjectArrayNode || gNode instanceof ObjectSetNode)) {
                 gNode.draw(g2D);
@@ -450,6 +461,7 @@ public class GraphCanvas extends JPanel {
         resetPreferredSize();
         g2D.dispose();
         init = true;
+        parent.scrollRectToVisible(oldView);
     }
 
     private void resetPreferredSize() {

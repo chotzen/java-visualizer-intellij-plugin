@@ -46,7 +46,6 @@ import static com.aegamesi.java_visualizer.backend.TracerUtils.*;
  */
 public class Tracer {
 	private static final String[] INTERNAL_PACKAGES = {
-			"java.",
 			"javax.",
 			"sun.",
 			"jdk.",

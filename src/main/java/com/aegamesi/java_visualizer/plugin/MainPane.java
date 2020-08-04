@@ -31,6 +31,7 @@ class MainPane extends JPanel {
             viz.setScale(getZoom());
 			JBScrollPane scrollPane = new JBScrollPane(viz);
 			scrollPane.setBorder(null);
+			viz.parent = scrollPane;
 			add(scrollPane);
 			revalidate();
 		}
