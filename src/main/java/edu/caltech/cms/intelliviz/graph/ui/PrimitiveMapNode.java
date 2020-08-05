@@ -11,8 +11,6 @@ import java.util.*;
 public class PrimitiveMapNode extends Node {
 
     private static final int MAX_RENDER_LENGTH = 50;
-    private double x, y;
-    private double width, height;
     private Map<String, String> data;
     private Set<String> highlightedKeys = new HashSet<>();
 
@@ -20,7 +18,7 @@ public class PrimitiveMapNode extends Node {
     private static final int MIN_COL_WIDTH = 40;
     private static final int ROW_HEIGHT = 30;
 
-    public PrimitiveMapNode(double x, double y) {
+    public PrimitiveMapNode(int x, int y) {
         this.x = x;
         this.y = y;
     }
