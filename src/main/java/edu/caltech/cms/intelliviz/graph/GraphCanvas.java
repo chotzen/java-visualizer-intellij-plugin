@@ -461,7 +461,7 @@ public class GraphCanvas extends JPanel {
         for (Node gNode : nodeCopy) {
             // render nodes whose source edges should be in front
             if (gNode instanceof ObjectMapNode || gNode instanceof ObjectArrayNode || gNode instanceof ObjectSetNode || gNode instanceof StackNode) {
-                gNode.draw(g2D);
+                gNode.drawNode(g2D);
             }
         }
 
@@ -476,7 +476,7 @@ public class GraphCanvas extends JPanel {
         for (Node gNode : nodeCopy) {
             // Render nodes whose source edges should be behind
             if (!(gNode instanceof ObjectMapNode || gNode instanceof ObjectArrayNode || gNode instanceof ObjectSetNode || gNode instanceof StackNode)) {
-                gNode.draw(g2D);
+                gNode.drawNode(g2D);
             }
         }
 
@@ -522,7 +522,7 @@ public class GraphCanvas extends JPanel {
 
     // this is the one we call before layout is run. effectively does the same thing, but we don't have
     // layoutTree yet, so we need to follow the edges
-    Set<Node> findDownstreamNodes(Node node) {
+    private Set<Node> findDownstreamNodes(Node node) {
         HashSet<Node> result = new HashSet<Node>();
         findDownstreamNodes(node, result);
         return result;
@@ -568,6 +568,17 @@ public class GraphCanvas extends JPanel {
 
         public void mouseReleased(MouseEvent e) {
             selected = new HashSet<>();
+        }
+
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            if (e.getClickCount() == 2) {
+                Set<Node> downstream = getDownstreamNodes(getNodeInCursor(e.getX(), e.getY()));
+                boolean hide = downstream.stream().noneMatch(Node::isHidden);
+                for (Node node : downstream) {
+                    node.setHidden(hide);
+                }
+            }
         }
 
     }

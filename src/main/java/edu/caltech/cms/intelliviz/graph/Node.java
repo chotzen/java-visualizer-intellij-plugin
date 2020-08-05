@@ -21,6 +21,8 @@ public abstract class Node {
                     width = 0,
                     height = 0;
 
+    protected boolean hidden = false;
+
     public static final Color HIGHLIGHTED_COLOR = Color.decode("#00FAD8");
     protected static final Color YELLOW = Color.decode("#FAF1C8");
     protected static final Color GREEN = Color.decode("#C8FAD8");
@@ -33,8 +35,30 @@ public abstract class Node {
 
     public abstract void draw(Graphics2D g);
 
+    // Target and origin for edges
+    public abstract Point2D getOrigin(GraphEdge edge);
+    public abstract Point2D getTarget(double originX, double originY);
+
+    public abstract List<GraphEdge> getChildren();
+
+    public abstract void highlightChanges(Node ref);
+
+    public void drawNode(Graphics2D g) {
+        if (!hidden) {
+            this.draw(g);
+        }
+    }
+
     public boolean contains(double x, double y) {
         return new Rectangle2D.Double(this.x, this.y, this.width, this.height).contains(x, y);
+    }
+
+    public void setHidden(boolean hidden) {
+        this.hidden = hidden;
+    }
+
+    public boolean isHidden() {
+        return hidden;
     }
 
     public void setPos(double x, double y) {
@@ -57,14 +81,6 @@ public abstract class Node {
     public double getY() {
         return this.y;
     }
-
-    // Target and origin for edges
-    public abstract Point2D getOrigin(GraphEdge edge);
-    public abstract Point2D getTarget(double originX, double originY);
-
-    public abstract List<GraphEdge> getChildren();
-
-    public abstract void highlightChanges(Node ref);
 
     public static void checkReferencesForTypeChange(Node node, Node old) {
         Collector<GraphEdge, ?, Map<String, Node>> graphEdgeMapCollector = Collectors.toMap(edge -> edge.label.toString(), edge -> edge.dest);

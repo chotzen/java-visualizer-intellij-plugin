@@ -28,6 +28,10 @@ public class GraphEdge {
     }
 
     public void draw(Graphics2D g) {
+        if (this.source.isHidden() || this.dest.isHidden()) {
+            return;
+        }
+
         try {
             Point2D origin = source.getOrigin(this);
             Point2D destPt = dest.getTarget(origin.getX(), origin.getY());
