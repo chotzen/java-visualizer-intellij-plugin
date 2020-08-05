@@ -1,7 +1,7 @@
 package com.aegamesi.java_visualizer.ui;
 
 import com.aegamesi.java_visualizer.model.HeapEntity;
-import com.aegamesi.java_visualizer.model.HeapList;
+import com.aegamesi.java_visualizer.model.HeapCollection;
 import com.aegamesi.java_visualizer.model.HeapMap;
 import com.aegamesi.java_visualizer.model.HeapObject;
 import com.aegamesi.java_visualizer.model.Value;
@@ -36,8 +36,8 @@ class HeapEntityComponent extends JPanel {
 		JPanel mainPanel = null;
 		if (entity instanceof HeapObject) {
 			mainPanel = new PanelObject((HeapObject) entity);
-		} else if (entity instanceof HeapList) {
-			mainPanel = new PanelList((HeapList) entity);
+		} else if (entity instanceof HeapCollection) {
+			mainPanel = new PanelList((HeapCollection) entity);
 		} else if (entity instanceof HeapMap) {
 			mainPanel = new PanelMap((HeapMap) entity);
 		}
@@ -100,7 +100,7 @@ class HeapEntityComponent extends JPanel {
 	private class PanelList extends JPanel {
 		private int[] splits;
 
-		PanelList(HeapList e) {
+		PanelList(HeapCollection e) {
 			setBackground(Constants.colorHeapVal);
 			setLayout(null);
 			splits = new int[e.items.size()];

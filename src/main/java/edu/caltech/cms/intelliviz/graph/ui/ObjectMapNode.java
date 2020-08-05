@@ -16,16 +16,11 @@ public class ObjectMapNode implements INode {
     private Map<GraphEdge, GraphEdge> objKeyData;
     private Map<GraphEdge, Integer> rowMap;
 
-    private static final Color headerColor = Color.WHITE;
-    private static final Color lowerColor = Color.decode("#FAF1C8");
-
     private static final int TEXT_PADDING = 4;
     private static final int MIN_COL_WIDTH = 40;
     private static final int POINTER_COL_WIDTH = 40;
     private static final int ROW_HEIGHT = 30;
     private static final int MAX_RENDER_LENGTH = 50;
-
-    private static final Font font = new Font("SanSerif", Font.BOLD | Font.ITALIC, 12);
 
     public ObjectMapNode(double x, double y) {
         this.x = x;
@@ -52,24 +47,24 @@ public class ObjectMapNode implements INode {
     @Override
     public void draw(Graphics2D g) {
         Graphics2D g2d = (Graphics2D) g.create();
-        g2d.setFont(font);
+        g2d.setFont(boldItalic);
         g.setStroke(new BasicStroke(1));
         int keyWidth = calculateMinWidth(primKeyData == null ? Collections.emptyList() : primKeyData.keySet(), g2d.getFontMetrics());
         this.width = keyWidth + POINTER_COL_WIDTH;
         this.height = ((primKeyData == null ? objKeyData.size() : primKeyData.size()) + 1) * ROW_HEIGHT;
 
-        drawRow(g2d, 0, "Key", "Value", keyWidth, POINTER_COL_WIDTH, headerColor);
+        drawRow(g2d, 0, "Key", "Value", keyWidth, POINTER_COL_WIDTH, Color.WHITE);
         int row = 1;
         rowMap.clear();
         if (primKeyData != null) {
             for (String s : primKeyData.keySet()) {
-                drawRow(g2d, row, s, "", keyWidth, POINTER_COL_WIDTH, lowerColor);
+                drawRow(g2d, row, s, "", keyWidth, POINTER_COL_WIDTH, YELLOW);
                 rowMap.put(primKeyData.get(s), row);
                 row++;
             }
         } else {
             for (GraphEdge e : objKeyData.keySet()) {
-                drawRow(g2d, row, "", "", keyWidth, POINTER_COL_WIDTH, lowerColor);
+                drawRow(g2d, row, "", "", keyWidth, POINTER_COL_WIDTH, YELLOW);
                 rowMap.put(objKeyData.get(e), row);
                 rowMap.put(e, row);
                 row++;

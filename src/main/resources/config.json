@@ -19,6 +19,26 @@
         }
       ]
     },
+    "StackVisualization": {
+      "classes": [
+        {
+          "name": "java.util.Stack",
+          "params": {
+            "iteratorMethod": "iterator",
+            "sizeMethod": "size"
+          }
+        }
+      ],
+      "interfaces": [
+        {
+          "name": "edu.caltech.cs2.interfaces.IStack",
+          "params": {
+            "iteratorMethod": "iterator",
+            "sizeMethod": "size"
+          }
+        }
+      ]
+    },
     "MapVisualization":{
       "interfaces": [
         {
@@ -45,6 +65,14 @@
       "classes": [
         {
           "name": "java.util.Scanner",
+          "params": {}
+        }
+      ]
+    },
+    "ArrayListVisualization": {
+      "classes": [
+        {
+          "name": "java.util.ArrayList",
           "params": {}
         }
       ]

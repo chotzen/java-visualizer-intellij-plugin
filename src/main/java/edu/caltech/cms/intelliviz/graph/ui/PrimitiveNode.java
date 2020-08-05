@@ -16,9 +16,6 @@ public class PrimitiveNode implements INode {
 
     private int TEXT_PADDING = 4;
 
-    private static final Font boldItalic = new Font("SanSerif", Font.BOLD | Font.ITALIC, 12);
-    private static final Color LOWER_COLOR = Color.decode("#C8FAD8");
-
     public PrimitiveNode(double x, double y, String label) {
         this.x = x;
         this.y = y;
@@ -35,7 +32,7 @@ public class PrimitiveNode implements INode {
     @Override
     public void draw(Graphics2D g) {
         Graphics2D g2d = (Graphics2D) g;
-        g2d.setColor(LOWER_COLOR);
+        g2d.setColor(GREEN);
         g2d.setFont(boldItalic);
         FontMetrics fm = g2d.getFontMetrics();
 

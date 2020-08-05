@@ -3,8 +3,7 @@ package com.aegamesi.java_visualizer.backend;
 import com.aegamesi.java_visualizer.model.ExecutionTrace;
 import com.aegamesi.java_visualizer.model.Frame;
 import com.aegamesi.java_visualizer.model.HeapEntity;
-import com.aegamesi.java_visualizer.model.HeapList;
-import com.aegamesi.java_visualizer.model.HeapMap;
+import com.aegamesi.java_visualizer.model.HeapCollection;
 import com.aegamesi.java_visualizer.model.HeapObject;
 import com.aegamesi.java_visualizer.model.HeapPrimitive;
 import com.aegamesi.java_visualizer.model.Value;
@@ -32,7 +31,6 @@ import com.sun.jdi.StackFrame;
 import com.sun.jdi.StringReference;
 import com.sun.jdi.ThreadReference;
 import com.sun.jdi.VoidValue;
-import edu.caltech.cms.intelliviz.graph.logicalvisualization.HeapStruct;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.LogicalVisualization;
 
 import java.io.File;
@@ -292,7 +290,7 @@ public class Tracer {
 			ArrayReference ao = (ArrayReference) obj;
 			int length = ao.length();
 
-			HeapList out = new HeapList();
+			HeapCollection out = new HeapCollection();
 			out.type = HeapEntity.Type.LIST;
 			out.label = ao.type().name();
 			for (int i = 0; i < length; i++) {

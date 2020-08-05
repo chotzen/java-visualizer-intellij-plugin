@@ -23,12 +23,7 @@ public class ClassNode implements INode {
     private static final int MIN_WIDTH = 60;
     private static final int HEADER_HEIGHT = 20;
     private static final int TEXT_PADDING = 2;
-    private static final Font boldFont = new Font("SanSerif", Font.BOLD, 12);
-    private static final Font boldItalic = new Font("SanSerif", Font.BOLD | Font.ITALIC, 12);
-    private static final Font normal = new Font("SanSerif", Font.PLAIN, 12);
 
-    private static final Color UPPER_COLOR = Color.decode("#FAF1C8");
-    private static final Color LOWER_COLOR = Color.decode("#C8FAD8");
 
     public ClassNode(double x, double y, String name, HashMap<String, String> fields) {
         this.x = x;
@@ -80,9 +75,9 @@ public class ClassNode implements INode {
 
         // Draw Rectangles
         updateRectangles(g2d);
-        g2d.setColor(UPPER_COLOR);
+        g2d.setColor(YELLOW);
         g2d.fill(upper);
-        g2d.setColor(LOWER_COLOR);
+        g2d.setColor(GREEN);
         g2d.fill(lower);
 
         // highlight squares

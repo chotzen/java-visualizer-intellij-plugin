@@ -15,14 +15,14 @@ public class GraphEdge {
 
     private Line2D line;
 
-    GraphEdge(INode from, Targetable to, String label) {
+    GraphEdge(INode from, INode to, String label) {
         this.source = from;
         this.dest = (INode)to;
         this.label = new TextLabel(label);
         line = new Line2D.Double();
     }
 
-    public GraphEdge(INode from, Targetable to, String label, String declaringType) {
+    public GraphEdge(INode from, INode to, String label, String declaringType) {
         this(from, to, label);
         this.declaringType = declaringType;
     }

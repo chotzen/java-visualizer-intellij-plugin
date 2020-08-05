@@ -16,14 +16,9 @@ public class PrimitiveMapNode implements INode {
     private Map<String, String> data;
     private Set<String> highlightedKeys = new HashSet<>();
 
-    private static final Color headerColor = Color.WHITE;
-    private static final Color lowerColor = Color.decode("#C8FAD8");
-
     private static final int TEXT_PADDING = 4;
     private static final int MIN_COL_WIDTH = 40;
     private static final int ROW_HEIGHT = 30;
-
-    private static final Font font = new Font("SanSerif", Font.BOLD | Font.ITALIC, 12);
 
     public PrimitiveMapNode(double x, double y) {
         this.x = x;
@@ -49,17 +44,17 @@ public class PrimitiveMapNode implements INode {
     @Override
     public void draw(Graphics2D g) {
         Graphics2D g2d = (Graphics2D) g.create();
-        g2d.setFont(font);
+        g2d.setFont(boldItalic);
         g.setStroke(new BasicStroke(1));
         int keyWidth = calculateMinWidth(data.keySet(), g2d.getFontMetrics());
         int valWidth = calculateMinWidth(data.values(), g2d.getFontMetrics());
         this.width = keyWidth + valWidth;
         this.height = (data.size() + 1) * ROW_HEIGHT;
 
-        drawRow(g2d, 0, "Key", "Value", keyWidth, valWidth, headerColor);
+        drawRow(g2d, 0, "Key", "Value", keyWidth, valWidth, Color.WHITE);
         int row = 1;
         for (String s : data.keySet()) {
-            drawRow(g2d, row, s, data.get(s), keyWidth, valWidth, lowerColor);
+            drawRow(g2d, row, s, data.get(s), keyWidth, valWidth, GREEN);
             row++;
         }
     }

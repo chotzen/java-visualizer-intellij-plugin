@@ -4,7 +4,6 @@ import com.aegamesi.java_visualizer.model.*;
 import com.aegamesi.java_visualizer.model.Frame;
 import com.intellij.notification.NotificationDisplayType;
 import com.intellij.notification.NotificationGroup;
-import edu.caltech.cms.intelliviz.graph.logicalvisualization.GraphStruct;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.LogicalVisualization;
 import edu.caltech.cms.intelliviz.graph.ui.*;
 
@@ -16,6 +15,7 @@ import java.awt.event.MouseMotionAdapter;
 import java.awt.geom.Point2D;
 import java.util.*;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class GraphCanvas extends JPanel {
@@ -224,6 +224,9 @@ public class GraphCanvas extends JPanel {
 
     }
 
+
+
+
     private INode renderNode(HeapEntity ent) {
         // if we already have an object, return it!
         if (this.nodes.containsKey(ent.id)) {
@@ -231,8 +234,33 @@ public class GraphCanvas extends JPanel {
         }
         INode ret = null;
         switch (ent.type) {
+            case STACK:
+                HeapCollection heapStack = (HeapCollection) ent;
+                StackNode sn = new StackNode();
+                if (heapStack.items.size() > 0 && heapStack.items.stream().anyMatch(val -> val.type == Value.Type.REFERENCE)) {
+                    sn.pointers = heapStack.items.stream().map(val -> {
+                        INode ref = null;
+                        if (val.type == Value.Type.NULL) {
+                            ref = new NullNode();
+                            this.nodes.put(getUniqueNegKey(), ref);
+                        } else if (val.type == Value.Type.REFERENCE) {
+                            ref = renderNode(this.trace.heap.get(val.reference));
+                        }
+
+                        GraphEdge edge = new GraphEdge(sn, ref, "");
+                        this.edges.add(edge);
+                        return edge;
+                    }).collect(Collectors.toList());
+                    Collections.reverse(sn.pointers);
+                } else {
+                    sn.primData = heapStack.items.stream().map(Value::toString).collect(Collectors.toList());
+                    Collections.reverse(sn.primData);
+                }
+                this.nodes.put(heapStack.id, sn);
+                ret = sn;
+                break;
             case SET:
-                HeapSet heapSet = (HeapSet)ent;
+                HeapCollection heapSet = (HeapCollection) ent;
                 if (heapSet.items.size() > 0 && heapSet.items.stream().anyMatch(val -> val.type == Value.Type.REFERENCE)) {
                     ObjectSetNode osn = new ObjectSetNode();
                     Set<GraphEdge> pointers = heapSet.items.stream().map(val -> {
@@ -259,7 +287,7 @@ public class GraphCanvas extends JPanel {
                 }
                 break;
             case LIST:
-                HeapList heapList = (HeapList)ent;
+                HeapCollection heapList = (HeapCollection)ent;
                 // Reference list (checks for at least one reference)
                 if (heapList.items.size() > 0 && heapList.items.stream().anyMatch(val -> val.type == Value.Type.REFERENCE)) {
                     ObjectArrayNode oan = new ObjectArrayNode(100, 100, heapList.items.size());
@@ -433,7 +461,7 @@ public class GraphCanvas extends JPanel {
 
         for (INode gNode : nodeCopy) {
             // render nodes whose source edges should be in front
-            if (gNode instanceof ObjectMapNode || gNode instanceof ObjectArrayNode || gNode instanceof ObjectSetNode) {
+            if (gNode instanceof ObjectMapNode || gNode instanceof ObjectArrayNode || gNode instanceof ObjectSetNode || gNode instanceof StackNode) {
                 gNode.draw(g2D);
             }
         }
@@ -448,7 +476,7 @@ public class GraphCanvas extends JPanel {
 
         for (INode gNode : nodeCopy) {
             // Render nodes whose source edges should be behind
-            if (!(gNode instanceof ObjectMapNode || gNode instanceof ObjectArrayNode || gNode instanceof ObjectSetNode)) {
+            if (!(gNode instanceof ObjectMapNode || gNode instanceof ObjectArrayNode || gNode instanceof ObjectSetNode || gNode instanceof StackNode)) {
                 gNode.draw(g2D);
             }
         }

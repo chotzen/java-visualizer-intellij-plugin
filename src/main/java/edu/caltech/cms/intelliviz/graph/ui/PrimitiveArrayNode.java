@@ -26,9 +26,6 @@ public class PrimitiveArrayNode implements INode {
 
     private final int MAX_RENDER_LENGTH = 200;
 
-    private Font insideFont = new Font("SanSerif", Font.BOLD | Font.ITALIC, 12);
-    private Color background = Color.decode("#C8FAD8");
-
     public PrimitiveArrayNode(double x, double y, String[] values) {
         this.x = x;
         this.y = y;
@@ -55,7 +52,7 @@ public class PrimitiveArrayNode implements INode {
     @Override
     public void draw(Graphics2D g) {
         Graphics2D g2d = (Graphics2D) g.create();
-        g2d.setFont(insideFont);
+        g2d.setFont(boldItalic);
         FontMetrics fm = g2d.getFontMetrics();
         this.width = 0;
         if (this.values.length != 0) {
@@ -79,7 +76,7 @@ public class PrimitiveArrayNode implements INode {
     }
 
     private void drawCell(Graphics2D g, int x, int y, int width, int textWidth, String text, int idx) {
-        g.setColor(highlightedIndices.contains(idx) ? HIGHLIGHTED_COLOR : background);
+        g.setColor(highlightedIndices.contains(idx) ? HIGHLIGHTED_COLOR : GREEN);
         g.fillRect(x, y, width, BOX_HEIGHT);
 
         g.setColor(Color.BLACK);

@@ -13,7 +13,6 @@ import java.util.Set;
 
 public class ObjectSetNode extends AbstractSetNode {
 
-    private static final Color lowerColor = Color.decode("#FAF1C8");
     private Map<GraphEdge, Rectangle2D> pointerMap = new HashMap<>();
 
     private static final int BOX_WIDTH = 40;
@@ -30,7 +29,7 @@ public class ObjectSetNode extends AbstractSetNode {
 
     @Override
     Color getColor() {
-        return lowerColor;
+        return GREEN;
     }
 
     @Override

@@ -6,13 +6,14 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-public class HeapList extends HeapEntity {
+public class HeapCollection extends HeapEntity {
+
 	public List<Value> items = new ArrayList<>();
 
 	@Override
 	public boolean hasSameStructure(HeapEntity other) {
-		if (other instanceof HeapList) {
-			return items.size() == ((HeapList) other).items.size();
+		if (other instanceof HeapCollection) {
+			return items.size() == ((HeapCollection) other).items.size();
 		}
 		return false;
 	}
@@ -24,8 +25,8 @@ public class HeapList extends HeapEntity {
 		return o;
 	}
 
-	static HeapList fromJson(JSONObject o) {
-		HeapList e = new HeapList();
+	static HeapCollection fromJson(JSONObject o) {
+		HeapCollection e = new HeapCollection();
 		for (Object item : o.getJSONArray("items")) {
 			e.items.add(Value.fromJson((JSONArray) item));
 		}

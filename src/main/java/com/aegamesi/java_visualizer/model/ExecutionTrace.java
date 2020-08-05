@@ -28,7 +28,7 @@ public class ExecutionTrace {
 		switch (ent.type) {
 			case LIST:
 			case SET:
-				HeapList heapList = (HeapList)ent;
+				HeapCollection heapList = (HeapCollection)ent;
 				for (Value v : heapList.items) {
 					System.out.println(pref + "-" + v.toString());
 					if (v.type == Value.Type.REFERENCE) {

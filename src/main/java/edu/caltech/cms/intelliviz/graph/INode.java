@@ -8,14 +8,22 @@ import edu.caltech.cms.intelliviz.graph.ui.NullNode;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
-public interface INode extends Targetable {
+public interface INode {
 
-    static final Color HIGHLIGHTED_COLOR = Color.decode("#00FAD8");
+    Color HIGHLIGHTED_COLOR = Color.decode("#00FAD8");
+    Color YELLOW = Color.decode("#FAF1C8");
+    Color GREEN = Color.decode("#C8FAD8");
+    Color NULLGREY = Color.decode("#DDDDDD");
+
+    Font boldFont = new Font("SanSerif", Font.BOLD, 12);
+    Font boldItalic = new Font("SanSerif", Font.BOLD | Font.ITALIC, 12);
+    Font normal = new Font("SanSerif", Font.PLAIN, 12);
+    Font scanner = new Font("Monospaced", Font.PLAIN, 14);
 
     void setPos(double x, double y);
     void draw(Graphics2D g);
@@ -29,8 +37,9 @@ public interface INode extends Targetable {
 
     // Target and origin for edges
     Point2D getOrigin(GraphEdge edge);
+    Point2D getTarget(double originX, double originY);
 
-    ArrayList<GraphEdge> getChildren();
+    List<GraphEdge> getChildren();
 
     void highlightChanges(INode ref);
 

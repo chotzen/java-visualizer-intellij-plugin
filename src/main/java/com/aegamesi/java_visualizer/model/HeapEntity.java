@@ -8,7 +8,7 @@ public abstract class HeapEntity {
 	public String label;
 
 	public enum Type {
-		LIST, SET, MAP, OBJECT, PRIMITIVE
+		LIST, SET, MAP, OBJECT, PRIMITIVE, STACK
 	}
 
 	public abstract boolean hasSameStructure(HeapEntity other);
@@ -27,7 +27,7 @@ public abstract class HeapEntity {
 		switch (type) {
 			case LIST:
 			case SET:
-				e = HeapList.fromJson(o);
+				e = HeapCollection.fromJson(o);
 				break;
 			case OBJECT:
 				e = HeapObject.fromJson(o);

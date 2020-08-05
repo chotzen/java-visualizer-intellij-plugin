@@ -25,9 +25,6 @@ public class ObjectArrayNode implements INode {
 
     private final int MAX_RENDER_LENGTH = 50;
 
-    private Font insideFont = new Font("SanSerif", Font.BOLD | Font.ITALIC, 12);
-    private Color background = Color.decode("#FAF1C8");
-
     public ObjectArrayNode(double x, double y, int length) {
         this.x = x;
         this.y = y;
@@ -62,7 +59,7 @@ public class ObjectArrayNode implements INode {
     }
 
     private void drawCell(Graphics2D g, int x, int y, int width) {
-        g.setColor(background);
+        g.setColor(YELLOW);
         g.fillRect(x, y, width, BOX_HEIGHT);
 
         g.setColor(Color.BLACK);

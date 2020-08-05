@@ -17,7 +17,6 @@ public class PrimitiveSetNode extends AbstractSetNode {
     private Map<String, Rectangle2D> data = new HashMap<>();
 
     private static final Font boldItalic = new Font("SanSerif", Font.BOLD | Font.ITALIC, 12);
-    private static final Color LOWER_COLOR = Color.decode("#C8FAD8");
     private static final int INNER_PADDING = 5;
     private static final int MIN_WIDTH = 40;
 
@@ -37,7 +36,7 @@ public class PrimitiveSetNode extends AbstractSetNode {
 
     @Override
     Color getColor() {
-        return LOWER_COLOR;
+        return GREEN;
     }
 
     @Override

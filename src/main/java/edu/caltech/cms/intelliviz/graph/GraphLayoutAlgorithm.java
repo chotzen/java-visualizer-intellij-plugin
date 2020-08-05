@@ -154,9 +154,9 @@ public class GraphLayoutAlgorithm {
         // Handle children
         ArrayList<INode> handleLater = new ArrayList<>();
         ArrayList<GraphEdge> handleMuchLater = new ArrayList<>();
-        ArrayList<GraphEdge> children = node.getChildren();
+        List<GraphEdge> children = node.getChildren();
 
-        if (!(node instanceof ObjectMapNode || node instanceof ObjectArrayNode || node instanceof NullNode || node instanceof ObjectSetNode)) { // only sort if there's not a prescribed ordering
+        if (!(node instanceof ObjectMapNode || node instanceof ObjectArrayNode || node instanceof NullNode || node instanceof ObjectSetNode || node instanceof StackNode)) { // only sort if there's not a prescribed ordering
             children.sort((e1, e2) -> {
                 String thisType = declaringTypes.get(node);
                 if (e1.declaringType.equals(thisType)) {

@@ -17,8 +17,6 @@ public class ScannerNode implements INode {
     private String contents;
     private int position;
 
-    private static final Font textFont = new Font("Monospaced", Font.PLAIN, 14);
-    private static final Color textColor = Color.decode("#AAAAAA");
     private static final int PADDING = 3;
 
     private static final char POSITION_CHAR = '\u2588'; // I think this is a solid rectangle. we'll see.
@@ -38,7 +36,7 @@ public class ScannerNode implements INode {
     public void draw(Graphics2D g) {
         Graphics2D g2d = (Graphics2D) g.create();
         String[] rows = convert().split("\n");
-        g2d.setFont(textFont);
+        g2d.setFont(scanner);
         OptionalDouble maxWidth = Arrays.stream(rows).mapToDouble(str -> g2d.getFontMetrics().stringWidth(str)).max();
         if (maxWidth.isPresent()) {
             this.height = 2 * PADDING + g2d.getFontMetrics().getAscent() * convert().split("\n").length;

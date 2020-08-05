@@ -18,7 +18,6 @@ public class NullNode implements INode {
 
     private String type;
 
-    private Color bg = Color.decode("#DDDDDD");
     private Font font = new Font("Monospaced", Font.PLAIN, 12);
 
     public NullNode() {
@@ -33,7 +32,7 @@ public class NullNode implements INode {
     @Override
     public void draw(Graphics2D g) {
         Graphics2D g2d = (Graphics2D) g;
-        g2d.setColor(highlighted ? HIGHLIGHTED_COLOR : bg);
+        g2d.setColor(highlighted ? HIGHLIGHTED_COLOR : NULLGREY);
         g2d.setFont(font);
         FontMetrics fm = g2d.getFontMetrics();
 
