@@ -1,21 +1,15 @@
 package edu.caltech.cms.intelliviz.graph.ui;
 
 import edu.caltech.cms.intelliviz.graph.GraphEdge;
-import edu.caltech.cms.intelliviz.graph.INode;
+import edu.caltech.cms.intelliviz.graph.Node;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
-public class StackNode implements INode {
-
-    private int     x = 0,
-                    y = 0,
-                    width = 0,
-                    height = ROW_HEIGHT;
+public class StackNode extends Node {
 
     public List<String> primData;
     public List<GraphEdge> pointers;
@@ -48,7 +42,7 @@ public class StackNode implements INode {
         g2d.fillRect(this.x, this.y, this.width, this.height);
 
         if (highlightHead) {
-            g2d.setColor(INode.HIGHLIGHTED_COLOR);
+            g2d.setColor(Node.HIGHLIGHTED_COLOR);
             g2d.fillRect(this.x, this.y, this.width, ROW_HEIGHT);
         }
 
@@ -108,7 +102,7 @@ public class StackNode implements INode {
     }
 
     @Override
-    public void highlightChanges(INode ref) {
+    public void highlightChanges(Node ref) {
         if (ref instanceof StackNode) {
             if (this.primData != null && ((StackNode) ref).primData != null && ((StackNode)ref).primData.size() > 0) {
                 StackNode snRef = (StackNode) ref;

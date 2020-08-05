@@ -13,10 +13,10 @@ public class GraphLayoutAlgorithm {
         TREE
     }
 
-    private ArrayList<INode> beingHandled;
-    private Set<INode> nodesToIgnore;
-    public HashMap<INode, ArrayList<GraphEdge>> tree;
-    private HashMap<INode, String> declaringTypes;
+    private ArrayList<Node> beingHandled;
+    private Set<Node> nodesToIgnore;
+    public HashMap<Node, ArrayList<GraphEdge>> tree;
+    private HashMap<Node, String> declaringTypes;
 
     private static final int vSpace = 30;
     private static final int nodeSpace = 70;
@@ -31,7 +31,7 @@ public class GraphLayoutAlgorithm {
     // describe the bounds of the visualization
     private double max_x, max_y;
 
-    GraphLayoutAlgorithm(double originX, double originY, Set<INode> nodesToIgnore) {
+    GraphLayoutAlgorithm(double originX, double originY, Set<Node> nodesToIgnore) {
         this.originX = originX;
         this.originY = originY;
         this.max_x = originX;
@@ -45,7 +45,7 @@ public class GraphLayoutAlgorithm {
     void layoutVariable(VariableNode var)  {
 
         // center vertically based on dimensions of node immediately downstream
-        INode downstream = var.reference;
+        Node downstream = var.reference;
         double ds_center_y = downstream.getHeight() / 2;
 
         var.setPos(originX + indent, max_y + vSpace + ds_center_y);
@@ -59,7 +59,7 @@ public class GraphLayoutAlgorithm {
     }
 
 
-    private boolean layoutNode(INode upstream, INode node, LayoutBehavior layout, double offset) {
+    private boolean layoutNode(Node upstream, Node node, LayoutBehavior layout, double offset) {
 
         if (beingHandled.contains(node) || nodesToIgnore.contains(node) || node instanceof StackFrame) {
             return false;
@@ -152,7 +152,7 @@ public class GraphLayoutAlgorithm {
         }
 
         // Handle children
-        ArrayList<INode> handleLater = new ArrayList<>();
+        ArrayList<Node> handleLater = new ArrayList<>();
         ArrayList<GraphEdge> handleMuchLater = new ArrayList<>();
         List<GraphEdge> children = node.getChildren();
 
@@ -232,7 +232,7 @@ public class GraphLayoutAlgorithm {
         if (layout == LayoutBehavior.TREE) {
             double coveredWidth = 0;
             // start at left edge, continuing rightward and adding space in between
-            for (INode child : handleLater) {
+            for (Node child : handleLater) {
                 translateSubgraph(child, coveredWidth, 0);
                 if (!(child instanceof StackFrame)) {
                     coveredWidth += getSubgraphWidth(child) + treeHorizSpace;
@@ -263,7 +263,7 @@ public class GraphLayoutAlgorithm {
     }
 
 
-    private void translateSubgraph(INode head, double dx, double dy) {
+    private void translateSubgraph(Node head, double dx, double dy) {
         head.setPos(head.getX() + dx, head.getY() + dy);
         if (tree.containsKey(head)) {
             tree.get(head).forEach(edge -> translateSubgraph(edge.dest, dx, dy));
@@ -279,11 +279,11 @@ public class GraphLayoutAlgorithm {
                 .count();
     }
 
-    private double getSubgraphHeight(INode node) {
+    private double getSubgraphHeight(Node node) {
         return getSubgraphMaxY(node) - getSubgraphMinY(node);
     }
 
-    private double getSubgraphMaxY(INode node) {
+    private double getSubgraphMaxY(Node node) {
         double max_y = node.getY() + node.getHeight();
         if (tree.containsKey(node)) {
             for (GraphEdge edge : tree.get(node)) {
@@ -293,7 +293,7 @@ public class GraphLayoutAlgorithm {
         return max_y;
     }
 
-    private double getSubgraphMinY(INode node) {
+    private double getSubgraphMinY(Node node) {
         double min_y = node.getY();
         if (tree.containsKey(node)) {
             for (GraphEdge edge : tree.get(node)) {
@@ -303,14 +303,14 @@ public class GraphLayoutAlgorithm {
         return min_y;
     }
 
-    private double getSubgraphWidth(INode node) {
+    private double getSubgraphWidth(Node node) {
         if (node instanceof StackFrame) {
             throw new IllegalArgumentException("Cannot get width of subgraph involving stackframes!");
         }
         return getSubgraphMaxX(node) - getSubgraphMinX(node);
     }
 
-    private double getSubgraphMaxX(INode node) {
+    private double getSubgraphMaxX(Node node) {
         double max_x = node.getX() + node.getWidth();
         if (tree.containsKey(node)) {
             for (GraphEdge edge : tree.get(node)) {
@@ -320,7 +320,7 @@ public class GraphLayoutAlgorithm {
         return max_x;
     }
 
-    private double getSubgraphMinX(INode node) {
+    private double getSubgraphMinX(Node node) {
         double min_x = node.getX();
         if (tree.containsKey(node)) {
             for (GraphEdge edge : tree.get(node)) {

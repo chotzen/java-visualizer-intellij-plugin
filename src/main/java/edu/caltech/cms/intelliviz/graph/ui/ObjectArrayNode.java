@@ -1,7 +1,7 @@
 package edu.caltech.cms.intelliviz.graph.ui;
 
 import edu.caltech.cms.intelliviz.graph.GraphEdge;
-import edu.caltech.cms.intelliviz.graph.INode;
+import edu.caltech.cms.intelliviz.graph.Node;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
@@ -9,9 +9,7 @@ import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ObjectArrayNode implements INode {
-
-    private double x, y;
+public class ObjectArrayNode extends Node {
 
     private ArrayList<TextLabel> labels;
     private List<GraphEdge> pointers;
@@ -25,11 +23,12 @@ public class ObjectArrayNode implements INode {
 
     private final int MAX_RENDER_LENGTH = 50;
 
-    public ObjectArrayNode(double x, double y, int length) {
+    public ObjectArrayNode(int x, int y, int length) {
         this.x = x;
         this.y = y;
         this.pointers = new ArrayList<GraphEdge>();
         this.length = length;
+        this.height = BOX_HEIGHT;
         labels = new ArrayList<>();
         for (int i = 0; i < length; i++) {
             labels.add(new TextLabel(String.valueOf(i)));
@@ -40,13 +39,13 @@ public class ObjectArrayNode implements INode {
 
     public void setPointers(List<GraphEdge> edges) {
         this.pointers = edges;
-        INode.warnOnClip(this.pointers.size(), MAX_RENDER_LENGTH);
+        Node.warnOnClip(this.pointers.size(), MAX_RENDER_LENGTH);
     }
 
     @Override
     public void setPos(double x, double y) {
-        this.x = x;
-        this.y = y;
+        this.x = (int)x;
+        this.y = (int)y;
     }
 
     @Override
@@ -65,31 +64,6 @@ public class ObjectArrayNode implements INode {
         g.setColor(Color.BLACK);
         g.setStroke(new BasicStroke(1));
         g.drawRect(x, y, width, BOX_HEIGHT);
-    }
-
-    @Override
-    public boolean contains(double x, double y) {
-        return new Rectangle2D.Double(this.x, this.y, this.width, this.BOX_HEIGHT).contains(x, y);
-    }
-
-    @Override
-    public double getWidth() {
-        return this.width;
-    }
-
-    @Override
-    public double getHeight() {
-        return BOX_HEIGHT;
-    }
-
-    @Override
-    public double getX() {
-        return this.x;
-    }
-
-    @Override
-    public double getY() {
-        return this.y;
     }
 
     @Override
@@ -113,8 +87,8 @@ public class ObjectArrayNode implements INode {
     }
 
     @Override
-    public void highlightChanges(INode ref) {
-        INode.checkReferencesForTypeChange( this, ref);
+    public void highlightChanges(Node ref) {
+        Node.checkReferencesForTypeChange( this, ref);
     }
 
 }

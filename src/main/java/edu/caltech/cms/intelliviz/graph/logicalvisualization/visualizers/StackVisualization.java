@@ -10,7 +10,7 @@ import com.sun.jdi.ObjectReference;
 import com.sun.jdi.ThreadReference;
 import com.sun.jdi.Value;
 import edu.caltech.cms.intelliviz.graph.GraphEdge;
-import edu.caltech.cms.intelliviz.graph.INode;
+import edu.caltech.cms.intelliviz.graph.Node;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.LogicalVisualization;
 
 import java.util.Iterator;
@@ -58,7 +58,7 @@ public class StackVisualization extends LogicalVisualization {
     }
 
     @Override
-    protected INode applyOnBuild(INode ref, Map<Long, INode> nodes, List<GraphEdge> edges, Map<String, String> params) {
+    protected Node applyOnBuild(Node ref, Map<Long, Node> nodes, List<GraphEdge> edges, Map<String, String> params) {
         return null; // do nothing
     }
 }

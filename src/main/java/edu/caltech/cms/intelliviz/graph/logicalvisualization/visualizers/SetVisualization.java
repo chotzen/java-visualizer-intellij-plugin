@@ -6,8 +6,7 @@ import com.aegamesi.java_visualizer.model.*;
 import com.sun.jdi.ObjectReference;
 import com.sun.jdi.ThreadReference;
 import edu.caltech.cms.intelliviz.graph.GraphEdge;
-import edu.caltech.cms.intelliviz.graph.INode;
-import edu.caltech.cms.intelliviz.graph.logicalvisualization.GraphStruct;
+import edu.caltech.cms.intelliviz.graph.Node;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.LogicalVisualization;
 
 import java.util.*;
@@ -51,7 +50,7 @@ public class SetVisualization extends LogicalVisualization {
     }
 
     @Override
-    protected INode applyOnBuild(INode ref, Map<Long, INode> nodes, List<GraphEdge> edges, Map<String, String> params) {
+    protected Node applyOnBuild(Node ref, Map<Long, Node> nodes, List<GraphEdge> edges, Map<String, String> params) {
         return null;
     }
 }

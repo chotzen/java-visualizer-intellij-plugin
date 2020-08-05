@@ -1,7 +1,7 @@
 package edu.caltech.cms.intelliviz.graph.ui;
 
 import edu.caltech.cms.intelliviz.graph.GraphEdge;
-import edu.caltech.cms.intelliviz.graph.INode;
+import edu.caltech.cms.intelliviz.graph.Node;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
@@ -54,7 +54,7 @@ public class ObjectSetNode extends AbstractSetNode {
     }
 
     @Override
-    public void highlightChanges(INode ref) {
+    public void highlightChanges(Node ref) {
         // don't do anything
     }
 }

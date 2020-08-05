@@ -1,17 +1,15 @@
 package edu.caltech.cms.intelliviz.graph.ui;
 
-import edu.caltech.cms.intelliviz.graph.INode;
+import edu.caltech.cms.intelliviz.graph.Node;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 
-public abstract class AbstractSetNode implements INode {
+public abstract class AbstractSetNode extends Node {
 
     protected ArrayList<Rectangle2D> rects = new ArrayList<>();
-    protected int x = 100, y = 100;
-    private int width = 0, height = 0;
     private int upperHeight = 0, lowerHeight = 0;
 
     private static final int BOX_PADDING = 3;

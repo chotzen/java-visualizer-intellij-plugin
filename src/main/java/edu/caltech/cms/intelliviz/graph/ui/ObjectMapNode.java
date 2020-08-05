@@ -1,17 +1,15 @@
 package edu.caltech.cms.intelliviz.graph.ui;
 
 import edu.caltech.cms.intelliviz.graph.GraphEdge;
-import edu.caltech.cms.intelliviz.graph.INode;
+import edu.caltech.cms.intelliviz.graph.Node;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.*;
 
-public class ObjectMapNode implements INode {
+public class ObjectMapNode extends Node {
 
-    private double x, y;
-    private double width, height;
     private Map<String, GraphEdge> primKeyData;
     private Map<GraphEdge, GraphEdge> objKeyData;
     private Map<GraphEdge, Integer> rowMap;
@@ -22,7 +20,7 @@ public class ObjectMapNode implements INode {
     private static final int ROW_HEIGHT = 30;
     private static final int MAX_RENDER_LENGTH = 50;
 
-    public ObjectMapNode(double x, double y) {
+    public ObjectMapNode(int x, int y) {
         this.x = x;
         this.y = y;
         rowMap = new HashMap<GraphEdge, Integer>();
@@ -30,8 +28,8 @@ public class ObjectMapNode implements INode {
 
     @Override
     public void setPos(double x, double y) {
-        this.x = x;
-        this.y = y;
+        this.x = (int)x;
+        this.y = (int)y;
     }
 
     private int calculateMinWidth(Collection<String> strings, FontMetrics fm) {
@@ -88,31 +86,6 @@ public class ObjectMapNode implements INode {
     }
 
     @Override
-    public boolean contains(double x, double y) {
-        return new Rectangle2D.Double(this.x, this.y, this.width, this.height).contains(x, y);
-    }
-
-    @Override
-    public double getWidth() {
-        return this.width;
-    }
-
-    @Override
-    public double getHeight() {
-        return this.height;
-    }
-
-    @Override
-    public double getX() {
-        return this.x;
-    }
-
-    @Override
-    public double getY() {
-        return this.y;
-    }
-
-    @Override
     public Point2D getTarget(double originX, double originY) {
         return GraphEdge.getCenterTargetingProjection(this,originX, originY);
     }
@@ -138,19 +111,19 @@ public class ObjectMapNode implements INode {
     }
 
     @Override
-    public void highlightChanges(INode ref) {
-        INode.checkReferencesForTypeChange( this, ref);
+    public void highlightChanges(Node ref) {
+        Node.checkReferencesForTypeChange( this, ref);
     }
 
     public void setPrimData(Map<String, GraphEdge> data) {
-        INode.warnOnClip(data.size(), MAX_RENDER_LENGTH);
-        this.primKeyData = INode.clipToLength(data, MAX_RENDER_LENGTH);
+        Node.warnOnClip(data.size(), MAX_RENDER_LENGTH);
+        this.primKeyData = Node.clipToLength(data, MAX_RENDER_LENGTH);
         this.objKeyData = null;
     }
 
     public void setObjData(Map<GraphEdge, GraphEdge> data) {
-        INode.warnOnClip(data.size(), MAX_RENDER_LENGTH);
-        this.objKeyData = INode.clipToLength(data, MAX_RENDER_LENGTH);
+        Node.warnOnClip(data.size(), MAX_RENDER_LENGTH);
+        this.objKeyData = Node.clipToLength(data, MAX_RENDER_LENGTH);
         this.primKeyData = null;
     }
 }

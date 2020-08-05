@@ -1,16 +1,15 @@
 package edu.caltech.cms.intelliviz.graph.ui;
 
 import edu.caltech.cms.intelliviz.graph.GraphEdge;
-import edu.caltech.cms.intelliviz.graph.INode;
+import edu.caltech.cms.intelliviz.graph.Node;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.*;
 
-public class ClassNode implements INode {
+public class ClassNode extends Node {
 
-    private double x, y, width, height;
     public String name;
     public Set<String> implementedInterfaces = new HashSet<>();
     private String displayName;
@@ -25,7 +24,7 @@ public class ClassNode implements INode {
     private static final int TEXT_PADDING = 2;
 
 
-    public ClassNode(double x, double y, String name, HashMap<String, String> fields) {
+    public ClassNode(int x, int y, String name, HashMap<String, String> fields) {
         this.x = x;
         this.y = y;
         this.name = name;
@@ -33,12 +32,6 @@ public class ClassNode implements INode {
         this.pointers = new ArrayList<>();
         upper = new Rectangle2D.Double(x, y, HEADER_HEIGHT, MIN_WIDTH);
         lower = new Rectangle2D.Double(x, y + HEADER_HEIGHT, HEADER_HEIGHT, MIN_WIDTH);
-    }
-
-    @Override
-    public void setPos(double x, double y) {
-        this.x = x;
-        this.y = y;
     }
 
     private void updateRectangles(Graphics2D g) {
@@ -58,7 +51,7 @@ public class ClassNode implements INode {
             widths[i] += g2d.getFontMetrics().stringWidth(fields.get(keys[i - 1].toString()) + "\"\"");
         }
 
-        double maxWidth = Collections.max(Arrays.asList(widths)) + 2 * TEXT_PADDING;
+        int maxWidth = (int)Math.round(Collections.max(Arrays.asList(widths)) + 2 * TEXT_PADDING);
         this.width = Math.max(MIN_WIDTH, maxWidth);
         this.height = (1 + this.fields.size()) * HEADER_HEIGHT;
         upper.setFrame(x, y, this.width, HEADER_HEIGHT);
@@ -119,33 +112,13 @@ public class ClassNode implements INode {
     }
 
     @Override
-    public double getWidth() {
-        return this.width;
-    }
-
-    @Override
-    public double getHeight() {
-        return this.height;
-    }
-
-    @Override
-    public double getX() {
-        return this.x;
-    }
-
-    @Override
-    public double getY() {
-        return this.y;
-    }
-
-    @Override
     public Point2D getTarget(double originX, double originY) {
         return GraphEdge.getCenterTargetingProjection(this, originX, originY);
     }
 
     @Override
     public Point2D getOrigin(GraphEdge edge) {
-        return new Point2D.Double(this.x + this.width / 2, this.y + this.height / 2);
+        return new Point2D.Double(this.x + this.width / 2d, this.y + this.height / 2d);
     }
 
     @Override
@@ -154,7 +127,7 @@ public class ClassNode implements INode {
     }
 
     @Override
-    public void highlightChanges(INode ref) {
+    public void highlightChanges(Node ref) {
         highlightedFields.clear();
         if (ref instanceof ClassNode) {
             ClassNode node = (ClassNode) ref;
@@ -169,7 +142,7 @@ public class ClassNode implements INode {
             System.out.println("Hey! IDs can change type. Cool, huh? Bet you didn't expect that.");
         }
 
-        INode.checkReferencesForTypeChange(this, ref);
+        Node.checkReferencesForTypeChange(this, ref);
     }
 
     public void addPointer(GraphEdge e) {

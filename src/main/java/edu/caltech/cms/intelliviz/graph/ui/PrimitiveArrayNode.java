@@ -1,7 +1,7 @@
 package edu.caltech.cms.intelliviz.graph.ui;
 
 import edu.caltech.cms.intelliviz.graph.GraphEdge;
-import edu.caltech.cms.intelliviz.graph.INode;
+import edu.caltech.cms.intelliviz.graph.Node;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
@@ -10,14 +10,11 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-public class PrimitiveArrayNode implements INode {
-
-    private double x, y;
+public class PrimitiveArrayNode extends Node {
 
     private ArrayList<TextLabel> labels;
     private String[] values;
     private Set<Integer> highlightedIndices = new HashSet<>();
-    private double width;
     private int MIN_BOX_WIDTH = 20;
     private int TEXT_PADDING = 3;
     private int BOX_HEIGHT = 20;
@@ -26,27 +23,22 @@ public class PrimitiveArrayNode implements INode {
 
     private final int MAX_RENDER_LENGTH = 200;
 
-    public PrimitiveArrayNode(double x, double y, String[] values) {
+    public PrimitiveArrayNode(int x, int y, String[] values) {
         this.x = x;
         this.y = y;
         this.values = values;
+        this.height = BOX_HEIGHT;
         labels = new ArrayList<>();
         for (int i = 0; i < Math.min(values.length, MAX_RENDER_LENGTH); i++) {
             labels.add(new TextLabel(String.valueOf(i)));
 
         }
         if (values.length > MAX_RENDER_LENGTH) {
-            INode.warnOnClip(values.length, MAX_RENDER_LENGTH);
+            Node.warnOnClip(values.length, MAX_RENDER_LENGTH);
         }
 
         // Estimate width before it's calculated on draw, as we don't have a Graphics2D here
         this.width = values.length * MIN_BOX_WIDTH;
-    }
-
-    @Override
-    public void setPos(double x, double y) {
-        this.x = x;
-        this.y = y;
     }
 
     @Override
@@ -90,31 +82,6 @@ public class PrimitiveArrayNode implements INode {
     }
 
     @Override
-    public boolean contains(double x, double y) {
-        return new Rectangle2D.Double(this.x, this.y, this.width, this.BOX_HEIGHT).contains(x, y);
-    }
-
-    @Override
-    public double getWidth() {
-        return this.width;
-    }
-
-    @Override
-    public double getHeight() {
-        return BOX_HEIGHT;
-    }
-
-    @Override
-    public double getX() {
-        return this.x;
-    }
-
-    @Override
-    public double getY() {
-        return this.y;
-    }
-
-    @Override
     public Point2D getTarget(double originX, double originY) {
         return new Point2D.Double(this.x, this.y + BOX_HEIGHT / 2d);
     }
@@ -130,7 +97,7 @@ public class PrimitiveArrayNode implements INode {
     }
 
     @Override
-    public void highlightChanges(INode ref) {
+    public void highlightChanges(Node ref) {
         highlightedIndices.clear();
         if (ref instanceof PrimitiveArrayNode) {
             PrimitiveArrayNode pan = (PrimitiveArrayNode) ref;

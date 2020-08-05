@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 
-public class StackFrame implements INode {
+public class StackFrame extends Node {
 
     static final int HEIGHT = 20;
     private static final int TEXT_OFFSET = 2;
@@ -135,7 +135,7 @@ public class StackFrame implements INode {
     }
 
     @Override
-    public void highlightChanges(INode ref) {
+    public void highlightChanges(Node ref) {
         // nothing
     }
 }

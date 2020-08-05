@@ -8,22 +8,16 @@ import com.aegamesi.java_visualizer.model.HeapObject;
 import com.aegamesi.java_visualizer.model.Value;
 import com.sun.jdi.ObjectReference;
 import com.sun.jdi.ThreadReference;
-import com.thoughtworks.qdox.model.expression.LogicalAnd;
 import edu.caltech.cms.intelliviz.graph.GraphEdge;
 import edu.caltech.cms.intelliviz.graph.ui.ClassNode;
-import edu.caltech.cms.intelliviz.graph.INode;
+import edu.caltech.cms.intelliviz.graph.Node;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.*;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-import java.util.stream.Stream;
 
 public abstract class LogicalVisualization {
 
@@ -43,7 +37,7 @@ public abstract class LogicalVisualization {
 
     protected abstract String getDisplayName();
     protected abstract HeapEntity applyOnTrace(ObjectReference ref, ThreadReference thread, ExecutionTrace trace, Map<String, String> params);
-    protected abstract INode applyOnBuild(INode ref, Map<Long, INode> nodes, List<GraphEdge> edges, Map<String, String> params);
+    protected abstract Node applyOnBuild(Node ref, Map<Long, Node> nodes, List<GraphEdge> edges, Map<String, String> params);
 
     public static void main(String[] args) {
         try {
@@ -116,7 +110,7 @@ public abstract class LogicalVisualization {
      * already been built. Does nothing if the visualization is not appropriate.
      * @param ref the node to apply the reference to
      */
-    public INode applyBuild(INode ref, Map<Long, INode> nodes, List<GraphEdge> edges) {
+    public Node applyBuild(Node ref, Map<Long, Node> nodes, List<GraphEdge> edges) {
         if (ref instanceof ClassNode) {
             ClassNode obj = (ClassNode) ref;
             if (this.classes.containsKey(obj.name)) {

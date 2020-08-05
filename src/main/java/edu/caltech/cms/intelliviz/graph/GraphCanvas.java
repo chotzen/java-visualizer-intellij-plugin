@@ -15,7 +15,6 @@ import java.awt.event.MouseMotionAdapter;
 import java.awt.geom.Point2D;
 import java.util.*;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class GraphCanvas extends JPanel {
@@ -26,13 +25,13 @@ public class GraphCanvas extends JPanel {
 
     private Map<Frame, StackFrame> frameMap;
     private LinkedHashMap<StackFrame, List<VariableNode>> variables;
-    private Map<Long, INode> nodes;
-    private Map<Long, INode> lastNodes;
+    private Map<Long, Node> nodes;
+    private Map<Long, Node> lastNodes;
     private List<GraphEdge> edges;
-    private Map<INode, List<GraphEdge>> layoutTree;
+    private Map<Node, List<GraphEdge>> layoutTree;
 
 
-    private Set<INode> selected;
+    private Set<Node> selected;
     private Cursor curCursor;
 
     private ExecutionTrace trace;
@@ -140,8 +139,8 @@ public class GraphCanvas extends JPanel {
 
         init = false;
 
-        Set<INode> allDownstream = new HashSet<>();
-        Map<StackFrame, Set<INode>> downstreams = new HashMap<>();
+        Set<Node> allDownstream = new HashSet<>();
+        Map<StackFrame, Set<Node>> downstreams = new HashMap<>();
 
         List<Map.Entry<StackFrame, List<VariableNode>>> list = new ArrayList<>(this.variables.entrySet());
         Collections.reverse(list);
@@ -176,7 +175,7 @@ public class GraphCanvas extends JPanel {
 
             double spacing = 20;
 
-            HashMap<INode, List<GraphEdge>> tree = new HashMap<>();
+            HashMap<Node, List<GraphEdge>> tree = new HashMap<>();
             double vertOffset = spacing;
             double horizOffset = 0;
             if (finalThisNode != null) {
@@ -227,19 +226,19 @@ public class GraphCanvas extends JPanel {
 
 
 
-    private INode renderNode(HeapEntity ent) {
+    private Node renderNode(HeapEntity ent) {
         // if we already have an object, return it!
         if (this.nodes.containsKey(ent.id)) {
             return this.nodes.get(ent.id);
         }
-        INode ret = null;
+        Node ret = null;
         switch (ent.type) {
             case STACK:
                 HeapCollection heapStack = (HeapCollection) ent;
                 StackNode sn = new StackNode();
                 if (heapStack.items.size() > 0 && heapStack.items.stream().anyMatch(val -> val.type == Value.Type.REFERENCE)) {
                     sn.pointers = heapStack.items.stream().map(val -> {
-                        INode ref = null;
+                        Node ref = null;
                         if (val.type == Value.Type.NULL) {
                             ref = new NullNode();
                             this.nodes.put(getUniqueNegKey(), ref);
@@ -264,7 +263,7 @@ public class GraphCanvas extends JPanel {
                 if (heapSet.items.size() > 0 && heapSet.items.stream().anyMatch(val -> val.type == Value.Type.REFERENCE)) {
                     ObjectSetNode osn = new ObjectSetNode();
                     Set<GraphEdge> pointers = heapSet.items.stream().map(val -> {
-                        INode ref = null;
+                        Node ref = null;
                         if (val.type == Value.Type.NULL) {
                             ref = new NullNode();
                             this.nodes.put(getUniqueNegKey(), ref);
@@ -294,7 +293,7 @@ public class GraphCanvas extends JPanel {
                     this.nodes.put(heapList.id, oan);
                     List<GraphEdge> pointers = new ArrayList<>();
                     for (int i = 0; i < heapList.items.size(); i++) {
-                        INode ref;
+                        Node ref;
                         if (heapList.items.get(i).type == Value.Type.REFERENCE) {
                             ref = renderNode(trace.heap.get(heapList.items.get(i).reference));
                         } else {
@@ -426,7 +425,7 @@ public class GraphCanvas extends JPanel {
 
         // apply applicable logical visualizations.
         for (LogicalVisualization viz : LogicalVisualization.vizList) {
-            INode repl = viz.applyBuild(ret, this.nodes, this.edges);
+            Node repl = viz.applyBuild(ret, this.nodes, this.edges);
             if (repl != null) {
                 return repl;
             }
@@ -438,7 +437,7 @@ public class GraphCanvas extends JPanel {
         return getUniqueNegKey(this.nodes);
     }
 
-    public static long getUniqueNegKey(Map<Long, INode> nodes) {
+    public static long getUniqueNegKey(Map<Long, Node> nodes) {
         Random r = new Random();
         int c = r.nextInt(2000);
         while (nodes.containsKey((long)c)) {
@@ -456,10 +455,10 @@ public class GraphCanvas extends JPanel {
         Set<VariableNode> varCopy = variables.values().stream().flatMap(Collection::stream).collect(Collectors.toSet());
         varCopy.forEach(variableNode -> variableNode.draw(g2D));
 
-        Set<INode> nodeCopy = new HashSet<>(nodes.values());
+        Set<Node> nodeCopy = new HashSet<>(nodes.values());
         Set<GraphEdge> edgesCopy = new HashSet<>(edges);
 
-        for (INode gNode : nodeCopy) {
+        for (Node gNode : nodeCopy) {
             // render nodes whose source edges should be in front
             if (gNode instanceof ObjectMapNode || gNode instanceof ObjectArrayNode || gNode instanceof ObjectSetNode || gNode instanceof StackNode) {
                 gNode.draw(g2D);
@@ -474,7 +473,7 @@ public class GraphCanvas extends JPanel {
             edge.draw(g2D);
         }
 
-        for (INode gNode : nodeCopy) {
+        for (Node gNode : nodeCopy) {
             // Render nodes whose source edges should be behind
             if (!(gNode instanceof ObjectMapNode || gNode instanceof ObjectArrayNode || gNode instanceof ObjectSetNode || gNode instanceof StackNode)) {
                 gNode.draw(g2D);
@@ -508,8 +507,8 @@ public class GraphCanvas extends JPanel {
         setSize(new Dimension((int) (max_x * scale), (int) (max_y * scale)));
     }
 
-    private INode getNodeInCursor(double x, double y) {
-        for (INode g : nodes.values()) {
+    private Node getNodeInCursor(double x, double y) {
+        for (Node g : nodes.values()) {
             if (g.contains(x, y))
                 return g;
         }
@@ -523,13 +522,13 @@ public class GraphCanvas extends JPanel {
 
     // this is the one we call before layout is run. effectively does the same thing, but we don't have
     // layoutTree yet, so we need to follow the edges
-    Set<INode> findDownstreamNodes(INode node) {
-        HashSet<INode> result = new HashSet<INode>();
+    Set<Node> findDownstreamNodes(Node node) {
+        HashSet<Node> result = new HashSet<Node>();
         findDownstreamNodes(node, result);
         return result;
     }
 
-    private void findDownstreamNodes(INode node, Set<INode> result) {
+    private void findDownstreamNodes(Node node, Set<Node> result) {
         result.add(node);
         if (node == null || node.getChildren() == null) return;
 
@@ -539,12 +538,12 @@ public class GraphCanvas extends JPanel {
         }
     }
 
-    private Set<INode> getDownstreamNodes(INode head) {
+    private Set<Node> getDownstreamNodes(Node head) {
         if (layoutTree != null) {
             if (layoutTree.containsKey(head)) {
-                Set<INode> downstream = new HashSet<>(Arrays.<INode>asList(layoutTree.get(head).stream().map((edge) -> edge.dest).toArray(INode[]::new)));
-                Set<INode> further = new HashSet<>();
-                for (INode n : downstream) {
+                Set<Node> downstream = new HashSet<>(Arrays.<Node>asList(layoutTree.get(head).stream().map((edge) -> edge.dest).toArray(Node[]::new)));
+                Set<Node> further = new HashSet<>();
+                for (Node n : downstream) {
                     further.addAll(getDownstreamNodes(n));
                 }
                 downstream.addAll(further);
@@ -559,7 +558,7 @@ public class GraphCanvas extends JPanel {
 
     class MyMouseListener extends MouseAdapter {
         public void mousePressed(MouseEvent e) {
-            INode n = getNodeInCursor(e.getX() / scale, e.getY() / scale);
+            Node n = getNodeInCursor(e.getX() / scale, e.getY() / scale);
             selected = getDownstreamNodes(getNodeInCursor(e.getX()/scale, e.getY()/scale));
             selected.add(n);
             GraphCanvas.this.repaint();
@@ -578,7 +577,7 @@ public class GraphCanvas extends JPanel {
             if (selected != null) {
                 double x2 = e.getX() / scale;
                 double y2 = e.getY() / scale;
-                for (INode n : selected) {
+                for (Node n : selected) {
                     if (n != null)
                         n.setPos(n.getX() + x2 - x1, n.getY() + y2 - y1);
                 }

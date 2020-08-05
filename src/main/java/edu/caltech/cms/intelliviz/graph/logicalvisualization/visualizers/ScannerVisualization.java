@@ -2,18 +2,16 @@ package edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers;
 
 import com.aegamesi.java_visualizer.model.ExecutionTrace;
 import com.aegamesi.java_visualizer.model.HeapEntity;
-import com.google.common.graph.Graph;
 import com.sun.jdi.ObjectReference;
 import com.sun.jdi.ThreadReference;
 import edu.caltech.cms.intelliviz.graph.GraphCanvas;
 import edu.caltech.cms.intelliviz.graph.GraphEdge;
-import edu.caltech.cms.intelliviz.graph.INode;
+import edu.caltech.cms.intelliviz.graph.Node;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.LogicalVisualization;
 import edu.caltech.cms.intelliviz.graph.ui.ClassNode;
 import edu.caltech.cms.intelliviz.graph.ui.ScannerNode;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class ScannerVisualization extends LogicalVisualization {
@@ -33,7 +31,7 @@ public class ScannerVisualization extends LogicalVisualization {
     }
 
     @Override
-    protected INode applyOnBuild(INode ref, Map<Long, INode> nodes, List<GraphEdge> edges, Map<String, String> params) {
+    protected Node applyOnBuild(Node ref, Map<Long, Node> nodes, List<GraphEdge> edges, Map<String, String> params) {
         // no need for params, since this only acts on java.util.Scanner
         if (ref instanceof ClassNode) {
             ClassNode scanner = (ClassNode) ref;
@@ -68,7 +66,7 @@ public class ScannerVisualization extends LogicalVisualization {
         return null; // shouldn't happen
     }
 
-    private void prune(INode root, Map<Long, INode> nodes, List<GraphEdge> edges) {
+    private void prune(Node root, Map<Long, Node> nodes, List<GraphEdge> edges) {
         // remove this node from the map
         Set<Long> toRemove = nodes.entrySet().stream()
                 .filter(ent -> ent.getValue().equals(root))

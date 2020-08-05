@@ -6,7 +6,7 @@ import com.aegamesi.java_visualizer.model.HeapEntity;
 import com.sun.jdi.ObjectReference;
 import com.sun.jdi.ThreadReference;
 import edu.caltech.cms.intelliviz.graph.GraphEdge;
-import edu.caltech.cms.intelliviz.graph.INode;
+import edu.caltech.cms.intelliviz.graph.Node;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.LogicalVisualization;
 import edu.caltech.cms.intelliviz.graph.ui.ClassNode;
 
@@ -29,7 +29,7 @@ public class ArrayListVisualization extends LogicalVisualization {
     }
 
     @Override
-    protected INode applyOnBuild(INode ref, Map<Long, INode> nodes, List<GraphEdge> edges, Map<String, String> params) {
+    protected Node applyOnBuild(Node ref, Map<Long, Node> nodes, List<GraphEdge> edges, Map<String, String> params) {
         // java.util.ArrayList
         if (ref instanceof ClassNode) {
             // remove modCount from fields. that's all.

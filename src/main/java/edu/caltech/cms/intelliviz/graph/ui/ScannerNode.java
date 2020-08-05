@@ -1,7 +1,7 @@
 package edu.caltech.cms.intelliviz.graph.ui;
 
 import edu.caltech.cms.intelliviz.graph.GraphEdge;
-import edu.caltech.cms.intelliviz.graph.INode;
+import edu.caltech.cms.intelliviz.graph.Node;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
@@ -10,10 +10,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.OptionalDouble;
 
-public class ScannerNode implements INode {
+public class ScannerNode extends Node {
 
-    private int x = 100, y = 100,
-        width = 0, height = 0;
     private String contents;
     private int position;
 
@@ -24,12 +22,6 @@ public class ScannerNode implements INode {
     public ScannerNode(String contents, int position) {
         this.contents = contents;
         this.position = position;
-    }
-
-    @Override
-    public void setPos(double x, double y) {
-        this.x = (int)x;
-        this.y = (int)y;
     }
 
     @Override
@@ -59,31 +51,6 @@ public class ScannerNode implements INode {
     }
 
     @Override
-    public boolean contains(double x, double y) {
-        return new Rectangle2D.Double(this.x, this.y, this.width, this.height).contains(x, y);
-    }
-
-    @Override
-    public double getWidth() {
-        return this.width;
-    }
-
-    @Override
-    public double getHeight() {
-        return this.height;
-    }
-
-    @Override
-    public double getX() {
-        return this.x;
-    }
-
-    @Override
-    public double getY() {
-        return this.y;
-    }
-
-    @Override
     public Point2D getOrigin(GraphEdge edge) {
         return new Point2D.Double(this.x, this.y);
     }
@@ -94,7 +61,7 @@ public class ScannerNode implements INode {
     }
 
     @Override
-    public void highlightChanges(INode ref) {
+    public void highlightChanges(Node ref) {
         // not needed
     }
 

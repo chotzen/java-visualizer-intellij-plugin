@@ -1,14 +1,14 @@
 package edu.caltech.cms.intelliviz.graph.ui;
 
 import edu.caltech.cms.intelliviz.graph.GraphEdge;
-import edu.caltech.cms.intelliviz.graph.INode;
+import edu.caltech.cms.intelliviz.graph.Node;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.*;
 
-public class PrimitiveMapNode implements INode {
+public class PrimitiveMapNode extends Node {
 
     private static final int MAX_RENDER_LENGTH = 50;
     private double x, y;
@@ -21,12 +21,6 @@ public class PrimitiveMapNode implements INode {
     private static final int ROW_HEIGHT = 30;
 
     public PrimitiveMapNode(double x, double y) {
-        this.x = x;
-        this.y = y;
-    }
-
-    @Override
-    public void setPos(double x, double y) {
         this.x = x;
         this.y = y;
     }
@@ -75,31 +69,6 @@ public class PrimitiveMapNode implements INode {
     }
 
     @Override
-    public boolean contains(double x, double y) {
-        return new Rectangle2D.Double(this.x, this.y, this.width, this.height).contains(x, y);
-    }
-
-    @Override
-    public double getWidth() {
-        return this.width;
-    }
-
-    @Override
-    public double getHeight() {
-        return this.height;
-    }
-
-    @Override
-    public double getX() {
-        return this.x;
-    }
-
-    @Override
-    public double getY() {
-        return this.y;
-    }
-
-    @Override
     public Point2D getTarget(double originX, double originY) {
         return GraphEdge.getCenterTargetingProjection(this,originX, originY);
     }
@@ -115,7 +84,7 @@ public class PrimitiveMapNode implements INode {
     }
 
     @Override
-    public void highlightChanges(INode ref) {
+    public void highlightChanges(Node ref) {
         highlightedKeys.clear();
         if (ref instanceof PrimitiveMapNode) {
             for (Map.Entry<String, String> ent : this.data.entrySet()) {
@@ -127,8 +96,8 @@ public class PrimitiveMapNode implements INode {
     }
 
     public void setData(Map<String, String> data) {
-        INode.warnOnClip(data.size(), MAX_RENDER_LENGTH);
-        this.data = INode.clipToLength(data, MAX_RENDER_LENGTH);
+        Node.warnOnClip(data.size(), MAX_RENDER_LENGTH);
+        this.data = Node.clipToLength(data, MAX_RENDER_LENGTH);
     }
 
     public Map<String, String> getData() {

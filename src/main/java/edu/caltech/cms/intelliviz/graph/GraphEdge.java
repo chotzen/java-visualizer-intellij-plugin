@@ -8,21 +8,21 @@ import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 
 public class GraphEdge {
-    public INode source;
-    public INode dest;
+    public Node source;
+    public Node dest;
     public String declaringType;
     public TextLabel label;
 
     private Line2D line;
 
-    GraphEdge(INode from, INode to, String label) {
+    GraphEdge(Node from, Node to, String label) {
         this.source = from;
-        this.dest = (INode)to;
+        this.dest = (Node)to;
         this.label = new TextLabel(label);
         line = new Line2D.Double();
     }
 
-    public GraphEdge(INode from, INode to, String label, String declaringType) {
+    public GraphEdge(Node from, Node to, String label, String declaringType) {
         this(from, to, label);
         this.declaringType = declaringType;
     }
@@ -66,7 +66,7 @@ public class GraphEdge {
         }
     }
 
-    public static Point2D getCenterTargetingProjection(INode dest, double originX, double originY) {
+    public static Point2D getCenterTargetingProjection(Node dest, double originX, double originY) {
         double  x2_c = dest.getX() + dest.getWidth() / 2,
                 y2_c = dest.getY() + dest.getHeight() / 2,
                 x2 = 0, y2 = 0;

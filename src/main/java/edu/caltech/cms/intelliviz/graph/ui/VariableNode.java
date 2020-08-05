@@ -1,28 +1,26 @@
 package edu.caltech.cms.intelliviz.graph.ui;
 
 import edu.caltech.cms.intelliviz.graph.GraphEdge;
-import edu.caltech.cms.intelliviz.graph.INode;
+import edu.caltech.cms.intelliviz.graph.Node;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 
-public class VariableNode implements INode {
+public class VariableNode extends Node {
 
-    public INode reference;
+    public Node reference;
     public String name;
     public String declaringType;
     private String label;
-    private double x, y;
-    private double height, width;
     private static final Font font = new Font("Monospaced", Font.BOLD, 13);
     private static final float dash1[] = {5.0f};
     private static final BasicStroke stroke = new BasicStroke(2.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash1, 0.0f);
     private static final int DD_PADDING = 5;
 
 
-    public VariableNode(double x, double y, String label, INode reference, String declaringType) {
+    public VariableNode(int x, int y, String label, Node reference, String declaringType) {
         this.x = x;
         this.y = y;
         this.label = label + " =";
@@ -33,12 +31,6 @@ public class VariableNode implements INode {
         // Guess height/width before first display tick
         this.width = 40;
         this.height = 20;
-    }
-
-    @Override
-    public void setPos(double x, double y) {
-        this.x = x;
-        this.y = y;
     }
 
     @Override
@@ -79,16 +71,6 @@ public class VariableNode implements INode {
     }
 
     @Override
-    public double getX() {
-        return this.x;
-    }
-
-    @Override
-    public double getY() {
-        return this.y;
-    }
-
-    @Override
     public Point2D getTarget(double originX, double originY) {
         return new Point2D.Double(this.x, this.y + this.height / 2);
     }
@@ -104,7 +86,7 @@ public class VariableNode implements INode {
     }
 
     @Override
-    public void highlightChanges(INode ref) {
+    public void highlightChanges(Node ref) {
         //INode.checkReferencesForTypeChange(this, ref);
     }
 }
