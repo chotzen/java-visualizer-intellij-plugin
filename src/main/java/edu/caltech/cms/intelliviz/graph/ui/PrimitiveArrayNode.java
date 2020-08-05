@@ -13,7 +13,7 @@ import java.util.Set;
 public class PrimitiveArrayNode extends Node {
 
     private ArrayList<TextLabel> labels;
-    private String[] values;
+    public String[] values;
     private Set<Integer> highlightedIndices = new HashSet<>();
     private int MIN_BOX_WIDTH = 20;
     private int TEXT_PADDING = 3;
@@ -102,7 +102,11 @@ public class PrimitiveArrayNode extends Node {
         if (ref instanceof PrimitiveArrayNode) {
             PrimitiveArrayNode pan = (PrimitiveArrayNode) ref;
             for (int i = 0; i < this.values.length; i++) {
-                if (!this.values[i].equals(pan.values[i])) {
+                if (i < pan.values.length) {
+                    if (!this.values[i].equals(pan.values[i])) {
+                        highlightedIndices.add(i);
+                    }
+                } else {
                     highlightedIndices.add(i);
                 }
             }

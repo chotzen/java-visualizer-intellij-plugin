@@ -12,8 +12,7 @@ import java.util.List;
 public class ObjectArrayNode extends Node {
 
     private ArrayList<TextLabel> labels;
-    private List<GraphEdge> pointers;
-    private double width;
+    public List<GraphEdge> pointers;
     private int length;
     private int BOX_WIDTH = 30;
     private int TEXT_PADDING = 3;

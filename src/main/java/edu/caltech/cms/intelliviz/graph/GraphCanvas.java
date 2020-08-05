@@ -574,13 +574,12 @@ public class GraphCanvas extends JPanel {
         public void mouseClicked(MouseEvent e) {
             if (e.getClickCount() == 2) {
                 Set<Node> downstream = getDownstreamNodes(getNodeInCursor(e.getX(), e.getY()));
-                boolean hide = downstream.stream().noneMatch(Node::isHidden);
+                boolean hide = getNodeInCursor(e.getX(), e.getY()).getChildren().stream().map(edge -> edge.dest).noneMatch(Node::isHidden);
                 for (Node node : downstream) {
                     node.setHidden(hide);
                 }
             }
         }
-
     }
 
     class MyMouseMotionListener extends MouseMotionAdapter {
