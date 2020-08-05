@@ -19,6 +19,8 @@ import java.util.Map;
 
 public class StackVisualization extends LogicalVisualization {
 
+    private static final long FACTOR = 487L;
+
     public StackVisualization(Map<String, Map<String, String>> classParams, Map<String, Map<String, String>> interfaceParams) {
         super(classParams, interfaceParams);
     }
@@ -40,8 +42,8 @@ public class StackVisualization extends LogicalVisualization {
             data.items.add(Tracer.convertValue(i.next()));
         }
 
-        // link two things with a reference
-        Long id = getUniqueNegKey(trace);
+        // link two things with a reference, while abusing the heck out of large numbers/longs...
+        Long id = FACTOR * ref.uniqueID();
         data.id = id;
         trace.heap.put(id, data);
 

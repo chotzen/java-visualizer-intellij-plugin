@@ -110,9 +110,9 @@ public class StackNode implements INode {
     @Override
     public void highlightChanges(INode ref) {
         if (ref instanceof StackNode) {
-            if (this.primData != null && ((StackNode) ref).primData != null) {
+            if (this.primData != null && ((StackNode) ref).primData != null && ((StackNode)ref).primData.size() > 0) {
                 StackNode snRef = (StackNode) ref;
-                this.highlightHead = snRef.primData.get(0).equals(this.primData.get(0)) && snRef.primData.size() == this.primData.size();
+                this.highlightHead = snRef.primData.size() != this.primData.size();
             }
         }
     }

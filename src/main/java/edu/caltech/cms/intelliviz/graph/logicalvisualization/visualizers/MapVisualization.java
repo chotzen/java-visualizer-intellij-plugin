@@ -49,7 +49,7 @@ public class MapVisualization extends LogicalVisualization {
             child.pairs.add(pair);
         }
 
-        Long id = getUniqueNegKey(trace);
+        Long id = 479L * ref.uniqueID();
         child.id = id;
         trace.heap.put(id, child);
 
