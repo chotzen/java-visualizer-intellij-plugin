@@ -9,6 +9,7 @@ import edu.caltech.cms.intelliviz.graph.GraphEdge;
 import edu.caltech.cms.intelliviz.graph.Node;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.LogicalVisualization;
 import edu.caltech.cms.intelliviz.graph.ui.ClassNode;
+import edu.caltech.cms.intelliviz.graph.ui.PrimitiveArrayNode;
 import edu.caltech.cms.intelliviz.graph.ui.ScannerNode;
 
 import java.util.*;
@@ -36,13 +37,16 @@ public class ScannerVisualization extends LogicalVisualization {
         if (ref instanceof ClassNode) {
             ClassNode scanner = (ClassNode) ref;
             int position = Integer.parseInt(scanner.fields.get("position"));
-            // source (type StringReader), has a field called `str` which is what we want to read.
-            ClassNode sourceNode = (ClassNode) scanner.getChildren().stream().filter(edge -> edge.label.toString().equals("source"))
+            // scanner -> buf (type HeapCharBuffer or something) -> children[0], which is a primitivearraynode
+            ClassNode bufNode = (ClassNode) scanner.getChildren().stream().filter(edge -> edge.label.toString().equals("buf"))
                     .map(edge -> edge.dest).findFirst().get();
-            String content = sourceNode.fields.get("str");
-            if (content.length() > 2) {
-                content = content.substring(1, content.length() - 2); // we can assume this because length >= 2
+            PrimitiveArrayNode charArray = (PrimitiveArrayNode)bufNode.getChildren().get(0).dest;
+            StringBuilder sb = new StringBuilder();
+            for (String str : charArray.values) {
+                char c = str.charAt(1);
+                sb.append(c);
             }
+            String content = sb.toString();
 
             // cleanse the canvas of our sins
             scanner.pointers.forEach(edge -> {

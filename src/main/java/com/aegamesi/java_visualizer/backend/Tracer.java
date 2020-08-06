@@ -45,7 +45,6 @@ import static com.aegamesi.java_visualizer.backend.TracerUtils.*;
 public class Tracer {
 	private static final String[] INTERNAL_PACKAGES = {
 			"javax.",
-			"sun.",
 			"jdk.",
 			"com.sun.",
 			"com.intellij.",
@@ -70,7 +69,6 @@ public class Tracer {
 
 	public Tracer(ThreadReference thread) {
 		this.thread = thread;
-		LogicalVisualization.loadFromCfg();
 	}
 
 	public ExecutionTrace getModel() throws IncompatibleThreadStateException {
@@ -342,7 +340,7 @@ public class Tracer {
 
 		boolean appliedViz = false;
 
-		for (LogicalVisualization viz : LogicalVisualization.vizList) {
+		for (LogicalVisualization viz : LogicalVisualization.getEnabledVisualizations()) {
 			HeapEntity he = viz.applyTrace(obj, thread, model);
 			if (he != null) {
 			    // avoid index conflicts with generation

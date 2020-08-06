@@ -6,11 +6,15 @@ import com.aegamesi.java_visualizer.model.ExecutionTrace;
 import com.aegamesi.java_visualizer.model.HeapEntity;
 import com.aegamesi.java_visualizer.model.HeapObject;
 import com.aegamesi.java_visualizer.model.Value;
+import com.intellij.openapi.actionSystem.ToggleAction;
 import com.sun.jdi.ObjectReference;
 import com.sun.jdi.ThreadReference;
 import edu.caltech.cms.intelliviz.graph.GraphEdge;
+import edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers.ScannerVisualization;
+import edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers.actions.VisualizationToggler;
 import edu.caltech.cms.intelliviz.graph.ui.ClassNode;
 import edu.caltech.cms.intelliviz.graph.Node;
+import org.jdesktop.swingx.action.ActionManager;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.*;
@@ -26,7 +30,8 @@ public abstract class LogicalVisualization {
         ON_BUILD
     }
 
-    public static List<LogicalVisualization> vizList = new ArrayList<>();
+    private static List<LogicalVisualization> vizList = new ArrayList<>();
+    private static Set<LogicalVisualization> enabledVisualizations = new HashSet<>();
 
     private Map<String, Map<String, String>> classes, interfaces;
 
@@ -82,6 +87,7 @@ public abstract class LogicalVisualization {
                 Constructor[] constructors = vizClass.getConstructors();
                 LogicalVisualization viz = (LogicalVisualization)constructors[0].newInstance(classParams, interfaceParams);
                 vizList.add(viz);
+                enabledVisualizations.add(viz);
             }
         } catch (ParseException | ClassNotFoundException | ClassCastException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
             System.err.println("Error: Could not parse config.json");
@@ -111,7 +117,7 @@ public abstract class LogicalVisualization {
      * @param ref the node to apply the reference to
      */
     public Node applyBuild(Node ref, Map<Long, Node> nodes, List<GraphEdge> edges) {
-        if (ref instanceof ClassNode) {
+        if (ref instanceof ClassNode && enabledVisualizations.contains(this)) {
             ClassNode obj = (ClassNode) ref;
             if (this.classes.containsKey(obj.name)) {
                 return this.applyOnBuild(obj, nodes, edges, this.classes.get(obj.name));
@@ -136,7 +142,7 @@ public abstract class LogicalVisualization {
      * @return a small "heap" to be merged with the heap model
      */
     public HeapEntity applyTrace(ObjectReference ref, ThreadReference thread, ExecutionTrace model) {
-        if (this.classes.containsKey(TracerUtils.displayNameForType(ref))) {
+        if (this.classes.containsKey(TracerUtils.displayNameForType(ref)) && enabledVisualizations.contains(this)) {
             return this.applyOnTrace(ref, thread, model, this.classes.get(TracerUtils.displayNameForType(ref)));
         }
 
@@ -174,5 +180,41 @@ public abstract class LogicalVisualization {
         return parent;
     }
 
+    public static Set<LogicalVisualization> getEnabledVisualizations() {
+        String[] ACTIONS = new String[] {
+                "JavaVisualizer.ToggleCollectionsAction",
+                "JavaVisualizer.ToggleMapsAction"
+        };
+
+        Class[] ALWAYS_ENABLED = new Class[] {
+                ScannerVisualization.class
+        };
+
+        Set<LogicalVisualization> result = new HashSet<>();
+
+        for (String actionID : ACTIONS) {
+            VisualizationToggler ta = (VisualizationToggler) ActionManager.getInstance().getAction(actionID);
+            if (ta.isSelected(null)) {
+                Class[] visualizerClasses = ta.getVisualizers();
+                for (Class visualizerClass : visualizerClasses) {
+                    vizList.forEach(viz -> {
+                        if (visualizerClass.equals(viz.getClass())) {
+                            result.add(viz);
+                        }
+                    });
+                }
+            }
+        }
+
+        for (Class a : ALWAYS_ENABLED) {
+            vizList.forEach(viz -> {
+                if (a.equals(viz.getClass())) {
+                    result.add(viz);
+                }
+            });
+        }
+
+        return result;
+    }
 }
 

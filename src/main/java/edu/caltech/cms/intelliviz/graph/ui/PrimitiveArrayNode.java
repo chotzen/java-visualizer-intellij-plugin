@@ -21,7 +21,7 @@ public class PrimitiveArrayNode extends Node {
     private final int LABEL_VERT_OFFSET = 8;
     private final int LABEL_HORIZ_OFFSET = 2;
 
-    private final int MAX_RENDER_LENGTH = 200;
+    private final int MAX_RENDER_LENGTH = 2048;
 
     public PrimitiveArrayNode(int x, int y, String[] values) {
         this.x = x;

@@ -53,6 +53,8 @@ public class GraphCanvas extends JPanel {
         this.edges = new ArrayList<>();
         this.frameMap = new HashMap<>();
 
+        LogicalVisualization.loadFromCfg();
+
         setBackground(Color.WHITE);
         setVisible(true);
         addMouseListener(new MyMouseListener());
@@ -424,7 +426,7 @@ public class GraphCanvas extends JPanel {
         }
 
         // apply applicable logical visualizations.
-        for (LogicalVisualization viz : LogicalVisualization.vizList) {
+        for (LogicalVisualization viz : LogicalVisualization.getEnabledVisualizations()) {
             Node repl = viz.applyBuild(ret, this.nodes, this.edges);
             if (repl != null) {
                 return repl;

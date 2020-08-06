@@ -1,7 +1,7 @@
 <idea-plugin>
-  <id>com.aegamesi.java_visualizer.plugin</id>
-  <name>Java Visualizer</name>
-  <vendor email="eli.lipsitz@berkeley.edu" url="https://github.com/aegamesi">Eli Lipsitz</vendor>
+  <id>edu.caltech.cms.intelliviz</id>
+  <name>Intelliviz</name>
+  <vendor email="dchotzen@caltech.edu" url="https://github.com/chotzen">Devin Hartzell</vendor>
 
   <description><![CDATA[
       A tool to visualize the call stack and objects on the heap (as a box and
@@ -19,7 +19,6 @@
   <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
        on how to target different products -->
 
-
   <project-components>
     <component>
       <implementation-class>com.aegamesi.java_visualizer.plugin.JavaVisualizerComponent</implementation-class>
@@ -31,17 +30,17 @@
   <actions>
     <group id="JavaVisualizer.VisualizerToolbar" popup="false">
       <action
-              id="JavaVisualizer.ZoomInAction"
-              class="com.aegamesi.java_visualizer.plugin.ZoomInAction"
-              text="Zoom In"
-              description="Zoom in visualizer"
+              id="JavaVisualizer.ToggleCollectionsAction"
+              class="edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers.actions.ToggleCollectionsAction"
+              text="Toggle Collection Visualization"
+              description="Switch between implementation and abstract representations of collections"
               icon="/icons/magnify-plus.svg"
       />
       <action
-              id="JavaVisualizer.ZoomOutAction"
-              class="com.aegamesi.java_visualizer.plugin.ZoomOutAction"
-              text="Zoom Out"
-              description="Zoom out visualizer"
+              id="JavaVisualizer.ToggleMapsAction"
+              class="edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers.actions.ToggleMapsAction"
+              text="Toggle Map Visualization"
+              description="Switch between implementation and abstract representations of maps"
               icon="/icons/magnify-minus.svg"
       />
     </group>
