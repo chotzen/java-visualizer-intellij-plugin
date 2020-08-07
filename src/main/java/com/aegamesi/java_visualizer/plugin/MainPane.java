@@ -10,9 +10,9 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import java.awt.BorderLayout;
 
-class MainPane extends JPanel {
+public class MainPane extends JPanel {
 	private JLabel placeholderLabel;
-	private GraphCanvas viz;
+	public GraphCanvas viz;
 
     private final float[] ZOOM_LEVELS = {0.25f, 0.333f, 0.5f, 0.666f, 0.75f, 0.8f, 0.9f, 1.0f, 1.1f, 1.25f, 1.5f, 1.75f, 2.0f, 2.5f, 3.0f, 4.0f};
 

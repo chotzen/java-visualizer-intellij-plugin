@@ -73,7 +73,7 @@ public class GraphCanvas extends JPanel {
         }
     }
 
-    private void refreshUI() {
+    public void refreshUI() {
         //nodes.clear();
         edges.clear();
         variables.clear();
@@ -86,7 +86,7 @@ public class GraphCanvas extends JPanel {
         repaint();
     }
 
-    private void buildUI() {
+    public void buildUI() {
         this.lastNodes = this.nodes;
         this.nodes = new HashMap<>();
 

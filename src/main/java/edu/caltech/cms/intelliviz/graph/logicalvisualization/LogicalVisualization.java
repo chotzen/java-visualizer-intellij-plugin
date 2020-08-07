@@ -7,6 +7,7 @@ import com.aegamesi.java_visualizer.model.HeapEntity;
 import com.aegamesi.java_visualizer.model.HeapObject;
 import com.aegamesi.java_visualizer.model.Value;
 import com.intellij.openapi.actionSystem.ToggleAction;
+import com.intellij.openapi.actionSystem.ex.ActionManagerEx;
 import com.sun.jdi.ObjectReference;
 import com.sun.jdi.ThreadReference;
 import edu.caltech.cms.intelliviz.graph.GraphEdge;
@@ -193,8 +194,8 @@ public abstract class LogicalVisualization {
         Set<LogicalVisualization> result = new HashSet<>();
 
         for (String actionID : ACTIONS) {
-            VisualizationToggler ta = (VisualizationToggler) ActionManager.getInstance().getAction(actionID);
-            if (ta.isSelected(null)) {
+            VisualizationToggler ta = (VisualizationToggler) ActionManagerEx.getInstance().getAction(actionID);
+            if (ta.toggled) {
                 Class[] visualizerClasses = ta.getVisualizers();
                 for (Class visualizerClass : visualizerClasses) {
                     vizList.forEach(viz -> {
