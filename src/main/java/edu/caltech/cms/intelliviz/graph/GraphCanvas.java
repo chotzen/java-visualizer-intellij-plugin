@@ -322,34 +322,53 @@ public class GraphCanvas extends JPanel {
             case MAP:
                 HeapMap heapMap = (HeapMap)ent;
                 // check for any references
-                if (heapMap.pairs.size() > 0 && heapMap.pairs.stream().anyMatch(pair -> pair.val.type == Value.Type.REFERENCE)) {
+                if (heapMap.pairs.size() > 0 && heapMap.pairs.stream().anyMatch(pair -> pair.val.type == Value.Type.REFERENCE || pair.key.type == Value.Type.REFERENCE)) {
                     ObjectMapNode omn = new ObjectMapNode(100, 100);
                     if (heapMap.pairs.stream().anyMatch(pair -> pair.key.type == Value.Type.REFERENCE)) {
-                        HashMap<GraphEdge, GraphEdge> vals = new HashMap<>();
-                        for (HeapMap.Pair p : heapMap.pairs) {
-                            GraphEdge valEdge = new GraphEdge(omn, null, "", p.val.referenceType);
-                            if (p.val.type == Value.Type.REFERENCE) {
-                                valEdge.dest = renderNode(trace.heap.get(p.val.reference));
-                            } else {
-                                NullNode to = new NullNode();
-                                valEdge.dest = to;
-                                this.nodes.put(getUniqueNegKey(), to);
-                            }
+                        if (heapMap.pairs.stream().anyMatch(pair -> pair.val.type == Value.Type.REFERENCE)) {
+                            HashMap<GraphEdge, GraphEdge> vals = new HashMap<>();
+                            for (HeapMap.Pair p : heapMap.pairs) {
+                                GraphEdge valEdge = new GraphEdge(omn, null, "", p.val.referenceType);
+                                if (p.val.type == Value.Type.REFERENCE) {
+                                    valEdge.dest = renderNode(trace.heap.get(p.val.reference));
+                                } else {
+                                    NullNode to = new NullNode();
+                                    valEdge.dest = to;
+                                    this.nodes.put(getUniqueNegKey(), to);
+                                }
 
-                            GraphEdge keyEdge = new GraphEdge(omn, null, "", p.val.referenceType);
-                            if (p.key.type == Value.Type.REFERENCE) {
-                                keyEdge.dest = renderNode(trace.heap.get(p.key.reference));
-                            } else {
-                                NullNode to = new NullNode();
-                                keyEdge.dest = to;
-                                this.nodes.put(getUniqueNegKey(), to);
-                            }
-                            this.edges.add(keyEdge);
-                            this.edges.add(valEdge);
+                                GraphEdge keyEdge = new GraphEdge(omn, null, "", p.val.referenceType);
+                                if (p.key.type == Value.Type.REFERENCE) {
+                                    keyEdge.dest = renderNode(trace.heap.get(p.key.reference));
+                                } else {
+                                    NullNode to = new NullNode();
+                                    keyEdge.dest = to;
+                                    this.nodes.put(getUniqueNegKey(), to);
+                                }
+                                this.edges.add(keyEdge);
+                                this.edges.add(valEdge);
 
-                            vals.put(keyEdge, valEdge);
+                                vals.put(keyEdge, valEdge);
+                            }
+                            omn.setObjData(vals);
+                            // ref-ref map
+                        } else {
+                            HashMap<GraphEdge, String> vals = new HashMap<>();
+                            for (HeapMap.Pair p : heapMap.pairs) {
+                                GraphEdge keyEdge = new GraphEdge(omn, null, "", p.val.referenceType);
+                                if (p.key.type == Value.Type.REFERENCE) {
+                                    keyEdge.dest = renderNode(trace.heap.get(p.key.reference));
+                                } else {
+                                    NullNode to = new NullNode();
+                                    keyEdge.dest = to;
+                                    this.nodes.put(getUniqueNegKey(), to);
+                                }
+
+                                this.edges.add(keyEdge);
+                                vals.put(keyEdge, p.val.toString());
+                            }
+                            omn.setPrimValData(vals);
                         }
-                        omn.setObjData(vals);
                     } else {
                         HashMap<String, GraphEdge> vals = new HashMap<>();
                         for (HeapMap.Pair p : heapMap.pairs) {

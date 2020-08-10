@@ -83,16 +83,21 @@ public abstract class Node {
     }
 
     public static void checkReferencesForTypeChange(Node node, Node old) {
-        Collector<GraphEdge, ?, Map<String, Node>> graphEdgeMapCollector = Collectors.toMap(edge -> edge.label.toString(), edge -> edge.dest);
-        Map<String, Node> oldChildren = old.getChildren().stream().collect(graphEdgeMapCollector);
-        Map<String, Node> nodeChildren = node.getChildren().stream().collect(graphEdgeMapCollector);
+        try {
+            Collector<GraphEdge, ?, Map<String, Node>> graphEdgeMapCollector = Collectors.toMap(edge -> edge.label.toString(), edge -> edge.dest);
+            Map<String, Node> oldChildren = old.getChildren().stream().collect(graphEdgeMapCollector);
+            Map<String, Node> nodeChildren = node.getChildren().stream().collect(graphEdgeMapCollector);
 
-        for (Map.Entry<String, Node> ent : nodeChildren.entrySet()) {
-            if (oldChildren.containsKey(ent.getKey())) {
-                if (!(oldChildren.get(ent.getKey()) instanceof NullNode) && ent.getValue() instanceof NullNode) {
-                    ent.getValue().highlightChanges(null);
+            for (Map.Entry<String, Node> ent : nodeChildren.entrySet()) {
+                if (oldChildren.containsKey(ent.getKey())) {
+                    if (!(oldChildren.get(ent.getKey()) instanceof NullNode) && ent.getValue() instanceof NullNode) {
+                        ent.getValue().highlightChanges(null);
+                    }
                 }
             }
+        } catch (Exception e) {
+            // TODO: this doesn't properly handle children of object map nodes, which don't have a label on their edge.
+            // suppressing for now
         }
     }
 
