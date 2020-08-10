@@ -57,7 +57,7 @@ public class Tracer {
 
 	// These are prefixed by `java.util.` and are regex
 	private static final String[] EXCLUDE_JAVA_UTIL = {
-	        ".*Map",
+	        ".*Map(\\$Node)?", // render internal map nodes
 			".*List",
 			".*Set",
 			".*Deque",
@@ -320,36 +320,6 @@ public class Tracer {
 
 		String typeName = obj.referenceType().name();
 
-		/*if ((doesImplementInterface(obj, "java.util.List")
-				|| doesImplementInterface(obj, "java.util.Set"))
-				&& isInternalPackage(typeName)) {
-			HeapList out = new HeapList();
-			out.type = HeapEntity.Type.LIST; // XXX: or SET
-			out.label = displayNameForType(obj);
-			Iterator<com.sun.jdi.Value> i = getIterator(thread, obj);
-			while (i.hasNext()) {
-				out.items.add(convertValue(i.next()));
-			}
-			return out;
-		} */
-
-		/*if (doesImplementInterface(obj, "java.util.Map") && isInternalPackage(typeName)) {
-			HeapMap out = new HeapMap();
-			out.type = HeapEntity.Type.MAP;
-			out.label = displayNameForType(obj);
-
-			ObjectReference entrySet = (ObjectReference) invokeSimple(thread, obj, "entrySet");
-			Iterator<com.sun.jdi.Value> i = getIterator(thread, entrySet);
-			while (i.hasNext()) {
-				ObjectReference entry = (ObjectReference) i.next();
-				HeapMap.Pair pair = new HeapMap.Pair();
-				pair.key = convertValue(invokeSimple(thread, entry, "getKey"));
-				pair.val = convertValue(invokeSimple(thread, entry, "getValue"));
-				out.pairs.add(pair);
-			}
-			return out;
-		}*/
-
 		boolean appliedViz = false;
 
 		for (LogicalVisualization viz : LogicalVisualization.getEnabledVisualizations()) {
@@ -474,6 +444,6 @@ public class Tracer {
 	}
 
 	private static boolean shouldShowDetails(ReferenceType type) {
-		return !isInternalPackage(type.name()) || Arrays.stream(EXCLUDE_JAVA_UTIL).anyMatch(name -> type.name().contains("java\\.util\\." + name));
+		return !isInternalPackage(type.name()) || Arrays.stream(EXCLUDE_JAVA_UTIL).anyMatch(name -> type.name().matches("java\\.util\\." + name));
 	}
 }
