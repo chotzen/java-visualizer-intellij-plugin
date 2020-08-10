@@ -195,7 +195,7 @@ public abstract class LogicalVisualization {
 
         for (String actionID : ACTIONS) {
             VisualizationToggler ta = (VisualizationToggler) ActionManagerEx.getInstance().getAction(actionID);
-            if (ta.toggled) {
+            if (!ta.toggled) {
                 Class[] visualizerClasses = ta.getVisualizers();
                 for (Class visualizerClass : visualizerClasses) {
                     vizList.forEach(viz -> {

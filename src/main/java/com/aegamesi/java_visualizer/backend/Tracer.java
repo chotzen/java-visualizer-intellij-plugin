@@ -44,6 +44,7 @@ import static com.aegamesi.java_visualizer.backend.TracerUtils.*;
  */
 public class Tracer {
 	private static final String[] INTERNAL_PACKAGES = {
+			"java.",
 			"javax.",
 			"jdk.",
 			"com.sun.",
@@ -53,6 +54,17 @@ public class Tracer {
 			"jh61b.junit.",
 			"jh61b.",
 	};
+
+	// These are prefixed by `java.util.` and are regex
+	private static final String[] EXCLUDE_JAVA_UTIL = {
+	        ".*Map",
+			".*List",
+			".*Set",
+			".*Deque",
+			"Stack",
+			"Scanner"
+	};
+
 	private static final List<String> BOXED_TYPES = Arrays.asList("Byte", "Short", "Integer", "Long", "Float", "Double", "Character", "Boolean");
 	private static final boolean SHOW_ALL_FIELDS = false;
 	private static final List<ReferenceType> STATIC_LISTABLE = new ArrayList<>();
@@ -429,8 +441,12 @@ public class Tracer {
 			// for some reason we get backslashes here.
 			String fPath = frame.location().sourcePath().replaceAll("\\\\", "/");
 
-			// Assume (incorrectly?) that we're working in src/
-			in = new Scanner(new File(cPath.substring(7) + "/src/" + fPath));
+			// Assume (incorrectly?) that we're working in src/ and if it fails, look in tests/
+			try {
+				in = new Scanner(new File(cPath.substring(7) + "/src/" + fPath));
+			} catch (FileNotFoundException e) {
+				in = new Scanner(new File(cPath.substring(7) + "/tests/" + fPath));
+			}
 			while (in.hasNextLine() && lnN < lineNumber) {
 				line = in.nextLine();
 				lnN++;
@@ -449,7 +465,7 @@ public class Tracer {
 
 	// input format: [package.]ClassName:lineno or [package.]ClassName
 	private static boolean isInternalPackage(final String name) {
-		return Arrays.stream(INTERNAL_PACKAGES).anyMatch(name::startsWith);
+		return Arrays.stream(INTERNAL_PACKAGES).anyMatch(pkg -> name.startsWith(pkg));
 	}
 
 	private static boolean shouldShowFrame(StackFrame frame) {
@@ -458,6 +474,6 @@ public class Tracer {
 	}
 
 	private static boolean shouldShowDetails(ReferenceType type) {
-		return !isInternalPackage(type.name());
+		return !isInternalPackage(type.name()) || Arrays.stream(EXCLUDE_JAVA_UTIL).anyMatch(name -> type.name().contains("java\\.util\\." + name));
 	}
 }
