@@ -69,15 +69,15 @@ public class Tracer {
 	private static final boolean SHOW_ALL_FIELDS = false;
 	private static final List<ReferenceType> STATIC_LISTABLE = new ArrayList<>();
 
-	private ThreadReference thread;
-	private ExecutionTrace model;
+	public ThreadReference thread;
+	public ExecutionTrace model;
 
 	/*
 	Converting actual heap objects requires running code on the suspended VM thread.
 	However, once we start running code on the thread, we can no longer read frame locals.
 	Therefore, we have to convert all heap objects at the very end.
 	*/
-	private static TreeMap<Long, ObjectReference> pendingConversion = new TreeMap<>();
+	private TreeMap<Long, ObjectReference> pendingConversion = new TreeMap<>();
 
 	public Tracer(ThreadReference thread) {
 		this.thread = thread;
@@ -277,7 +277,7 @@ public class Tracer {
 		return output;
 	}
 
-	public static Value convertReference(ObjectReference obj) {
+	public Value convertReference(ObjectReference obj) {
 		// Special handling for boxed types
 		if (obj.referenceType().name().startsWith("java.lang.")
 				&& BOXED_TYPES.contains(obj.referenceType().name().substring(10))) {
@@ -323,7 +323,7 @@ public class Tracer {
 		boolean appliedViz = false;
 
 		for (LogicalVisualization viz : LogicalVisualization.getEnabledVisualizations()) {
-			HeapEntity he = viz.applyTrace(obj, thread, model);
+			HeapEntity he = viz.applyTrace(obj, this);
 			if (he != null) {
 			    // avoid index conflicts with generation
                 // TODO HERE
@@ -360,7 +360,7 @@ public class Tracer {
 		return out;
 	}
 
-	public static Value convertValue(com.sun.jdi.Value v) {
+	public Value convertValue(com.sun.jdi.Value v) {
 		Value out = new Value();
 		if (v instanceof BooleanValue) {
 			out.type = Value.Type.BOOLEAN;

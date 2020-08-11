@@ -1,5 +1,6 @@
 package edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers;
 
+import com.aegamesi.java_visualizer.backend.Tracer;
 import com.aegamesi.java_visualizer.backend.TracerUtils;
 import com.aegamesi.java_visualizer.model.ExecutionTrace;
 import com.aegamesi.java_visualizer.model.HeapEntity;
@@ -14,7 +15,6 @@ import edu.caltech.cms.intelliviz.graph.logicalvisualization.LogicalVisualizatio
 
 import java.util.*;
 
-import static com.aegamesi.java_visualizer.backend.Tracer.convertValue;
 import static com.aegamesi.java_visualizer.backend.TracerUtils.invokeSimple;
 
 public class MapVisualization extends LogicalVisualization {
@@ -29,27 +29,27 @@ public class MapVisualization extends LogicalVisualization {
     }
 
     @Override
-    protected HeapEntity applyOnTrace(ObjectReference ref, ThreadReference thread, ExecutionTrace trace, Map<String, String> params) {
-        HeapObject parent = convertParent(ref, thread, trace, params);
+    protected HeapEntity applyOnTrace(ObjectReference ref, Tracer tracer, Map<String, String> params) {
+        HeapObject parent = convertParent(ref, tracer, params);
 
         HeapMap child = new HeapMap();
         child.type = HeapEntity.Type.MAP;
         child.label = TracerUtils.displayNameForType(ref);
 
-        ObjectReference keySet = (ObjectReference) invokeSimple(thread, ref, params.get("keySetMethod"));
-        Iterator<Value> i = TracerUtils.getIterator(thread, keySet, params.get("keySetIteratorMethod"));
+        ObjectReference keySet = (ObjectReference) invokeSimple(tracer.thread, ref, params.get("keySetMethod"));
+        Iterator<Value> i = TracerUtils.getIterator(tracer.thread, keySet, params.get("keySetIteratorMethod"));
 
         while (i.hasNext()) {
             ObjectReference key = (ObjectReference) i.next();
             HeapMap.Pair pair = new HeapMap.Pair();
-            pair.key = convertValue(key);
-            pair.val = convertValue(invokeGet(thread, ref, params.get("getMethod"), key));
+            pair.key = tracer.convertValue(key);
+            pair.val = tracer.convertValue(invokeGet(tracer.thread, ref, params.get("getMethod"), key));
             child.pairs.add(pair);
         }
 
         Long id = 479L * ref.uniqueID();
         child.id = id;
-        trace.heap.put(id, child);
+        tracer.model.heap.put(id, child);
 
         com.aegamesi.java_visualizer.model.Value refValue = new com.aegamesi.java_visualizer.model.Value();
         refValue.type = com.aegamesi.java_visualizer.model.Value.Type.REFERENCE;

@@ -23,21 +23,21 @@ public class SetVisualization extends LogicalVisualization {
     }
 
     @Override
-    protected HeapEntity applyOnTrace(ObjectReference ref, ThreadReference thread, ExecutionTrace trace, Map<String, String> params) {
-        HeapObject parent = convertParent(ref, thread, trace, params);
+    protected HeapEntity applyOnTrace(ObjectReference ref, Tracer tracer, Map<String, String> params) {
+        HeapObject parent = convertParent(ref, tracer, params);
 
         HeapCollection data = new HeapCollection();
         data.type = HeapEntity.Type.SET; // XXX: or SET
-        Iterator<com.sun.jdi.Value> i = TracerUtils.getIterator(thread, ref, params.get("iteratorMethod"));
+        Iterator<com.sun.jdi.Value> i = TracerUtils.getIterator(tracer.thread, ref, params.get("iteratorMethod"));
         data.label = "INTERNAL SET";
         while (i.hasNext()) {
-            data.items.add(Tracer.convertValue(i.next()));
+            data.items.add(tracer.convertValue(i.next()));
         }
 
         // link two things with a reference
-        Long id = getUniqueNegKey(trace);
+        Long id = getUniqueNegKey(tracer.model);
         data.id = id;
-        trace.heap.put(id, data);
+        tracer.model.heap.put(id, data);
 
         Value refValue = new Value();
         refValue.type = Value.Type.REFERENCE;

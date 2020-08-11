@@ -49,15 +49,6 @@
             "keySetIteratorMethod": "iterator",
             "sizeMethod": "size"
           }
-        },
-        {
-          "name": "edu.caltech.cs2.interfaces.IDictionary",
-          "params": {
-            "keySetMethod": "keySet",
-            "getMethod": "get",
-            "keySetIteratorMethod": "iterator",
-            "sizeMethod": "size"
-          }
         }
       ]
     },
@@ -73,6 +64,14 @@
       "classes": [
         {
           "name": "java.util.ArrayList",
+          "params": {}
+        }
+      ]
+    },
+    "TrieVisualization": {
+      "classes": [
+        {
+          "name": "edu.caltech.cs2.datastructures.TrieMap$TrieNode",
           "params": {}
         }
       ]

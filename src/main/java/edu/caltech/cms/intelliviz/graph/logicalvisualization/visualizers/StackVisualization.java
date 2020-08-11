@@ -31,21 +31,21 @@ public class StackVisualization extends LogicalVisualization {
     }
 
     @Override
-    protected HeapEntity applyOnTrace(ObjectReference ref, ThreadReference thread, ExecutionTrace trace, Map<String, String> params) {
-        HeapObject parent = convertParent(ref, thread, trace, params);
+    protected HeapEntity applyOnTrace(ObjectReference ref, Tracer tracer, Map<String, String> params) {
+        HeapObject parent = convertParent(ref, tracer, params);
 
         HeapCollection data = new HeapCollection();
         data.type = HeapEntity.Type.STACK; // XXX: or SET
-        Iterator<Value> i = TracerUtils.getIterator(thread, ref, params.get("iteratorMethod"));
+        Iterator<Value> i = TracerUtils.getIterator(tracer.thread, ref, params.get("iteratorMethod"));
         data.label = "INTERNAL STACK";
         while (i.hasNext()) {
-            data.items.add(Tracer.convertValue(i.next()));
+            data.items.add(tracer.convertValue(i.next()));
         }
 
         // link two things with a reference, while abusing the heck out of large numbers/longs...
         Long id = FACTOR * ref.uniqueID();
         data.id = id;
-        trace.heap.put(id, data);
+        tracer.model.heap.put(id, data);
 
         com.aegamesi.java_visualizer.model.Value refValue = new com.aegamesi.java_visualizer.model.Value();
         refValue.type = com.aegamesi.java_visualizer.model.Value.Type.REFERENCE;

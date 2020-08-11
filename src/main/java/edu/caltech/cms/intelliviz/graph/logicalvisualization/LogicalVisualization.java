@@ -12,6 +12,7 @@ import com.sun.jdi.ObjectReference;
 import com.sun.jdi.ThreadReference;
 import edu.caltech.cms.intelliviz.graph.GraphEdge;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers.ScannerVisualization;
+import edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers.TrieVisualization;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers.actions.VisualizationToggler;
 import edu.caltech.cms.intelliviz.graph.ui.ClassNode;
 import edu.caltech.cms.intelliviz.graph.Node;
@@ -42,7 +43,7 @@ public abstract class LogicalVisualization {
     }
 
     protected abstract String getDisplayName();
-    protected abstract HeapEntity applyOnTrace(ObjectReference ref, ThreadReference thread, ExecutionTrace trace, Map<String, String> params);
+    protected abstract HeapEntity applyOnTrace(ObjectReference ref, Tracer tracer, Map<String, String> params);
     protected abstract Node applyOnBuild(Node ref, Map<Long, Node> nodes, List<GraphEdge> edges, Map<String, String> params);
 
     public static void main(String[] args) {
@@ -139,19 +140,19 @@ public abstract class LogicalVisualization {
      * This means we can actually reflect/call methods on the thing, which has its benefits for accessing interface methods
      * Does nothing if the entity is improper.
      * @param ref the heap entity the visualization can be applied to
-     * @param thread the thread to search
+     * @param tracer the tracer to search
      * @return a small "heap" to be merged with the heap model
      */
-    public HeapEntity applyTrace(ObjectReference ref, ThreadReference thread, ExecutionTrace model) {
-        if (this.classes.containsKey(TracerUtils.displayNameForType(ref)) && enabledVisualizations.contains(this)) {
-            return this.applyOnTrace(ref, thread, model, this.classes.get(TracerUtils.displayNameForType(ref)));
+    public HeapEntity applyTrace(ObjectReference ref, Tracer tracer) {
+        if (this.classes.containsKey(ref.type().name()) && enabledVisualizations.contains(this)) {
+            return this.applyOnTrace(ref, tracer, this.classes.get(TracerUtils.displayNameForType(ref)));
         }
 
         Optional<String> matched = this.interfaces.keySet().stream().filter(iface -> TracerUtils.doesImplementInterface(ref, iface)).findFirst();
 
         if (matched.isPresent()) {
             String iface = matched.get();
-            return this.applyOnTrace(ref, thread, model, this.interfaces.get(iface));
+            return this.applyOnTrace(ref, tracer, this.interfaces.get(iface));
         }
 
         return null;
@@ -167,11 +168,11 @@ public abstract class LogicalVisualization {
         return c;
     }
 
-    protected static HeapObject convertParent(ObjectReference ref, ThreadReference thread, ExecutionTrace model, Map<String, String> params) {
+    protected static HeapObject convertParent(ObjectReference ref, Tracer tracer, Map<String, String> params) {
         HeapObject parent = new HeapObject();
         parent.fields = new HashMap<>();
-        com.sun.jdi.Value sizeValue = TracerUtils.invokeSimple(thread, ref, params.get("sizeMethod"));
-        Value convSize = Tracer.convertValue(sizeValue);
+        com.sun.jdi.Value sizeValue = TracerUtils.invokeSimple(tracer.thread, ref, params.get("sizeMethod"));
+        Value convSize = tracer.convertValue(sizeValue);
         parent.fields.put("size", convSize);
         parent.interfaces = new HashSet<>();
         parent.id = ref.uniqueID();
@@ -188,7 +189,8 @@ public abstract class LogicalVisualization {
         };
 
         Class[] ALWAYS_ENABLED = new Class[] {
-                ScannerVisualization.class
+                ScannerVisualization.class,
+                TrieVisualization.class
         };
 
         Set<LogicalVisualization> result = new HashSet<>();

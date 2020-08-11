@@ -1,6 +1,7 @@
 package edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers;
 
 
+import com.aegamesi.java_visualizer.backend.Tracer;
 import com.aegamesi.java_visualizer.model.ExecutionTrace;
 import com.aegamesi.java_visualizer.model.HeapEntity;
 import com.sun.jdi.ObjectReference;
@@ -29,7 +30,7 @@ public class ArrayListVisualization extends LogicalVisualization {
     }
 
     @Override
-    protected HeapEntity applyOnTrace(ObjectReference ref, ThreadReference thread, ExecutionTrace trace, Map<String, String> params) {
+    protected HeapEntity applyOnTrace(ObjectReference ref, Tracer tracer, Map<String, String> params) {
         return null; // do nothing
     }
 
