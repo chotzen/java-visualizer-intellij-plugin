@@ -214,14 +214,14 @@ public class GraphCanvas extends JPanel {
 
                 tree.putAll(lowerLayout.tree);
                 vertOffset = lowerLayout.getMaxY() + (ent.getValue().size() > 0 ? spacing : 0);
-
-
             }
 
             this.layoutTree = tree;
             resetPreferredSize();
             this.repaint();
+            Collections.reverse(this.trace.frames);
         });
+
 
     }
 

@@ -2,10 +2,8 @@ package edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers;
 
 
 import com.aegamesi.java_visualizer.backend.Tracer;
-import com.aegamesi.java_visualizer.model.ExecutionTrace;
 import com.aegamesi.java_visualizer.model.HeapEntity;
 import com.sun.jdi.ObjectReference;
-import com.sun.jdi.ThreadReference;
 import edu.caltech.cms.intelliviz.graph.GraphEdge;
 import edu.caltech.cms.intelliviz.graph.Node;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.LogicalVisualization;

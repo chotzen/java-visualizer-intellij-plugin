@@ -1,9 +1,6 @@
-package edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers.actions;
+package edu.caltech.cms.intelliviz.graph.logicalvisualization.actions;
 
-import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.actionSystem.ToggleAction;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers.MapVisualization;
-import org.jetbrains.annotations.NotNull;
 
 public class ToggleMapsAction extends VisualizationToggler {
 

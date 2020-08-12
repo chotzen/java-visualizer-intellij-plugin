@@ -1,10 +1,9 @@
-package edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers.actions;
+package edu.caltech.cms.intelliviz.graph.logicalvisualization.actions;
 
 import com.aegamesi.java_visualizer.plugin.MainPane;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
 import com.intellij.openapi.actionSystem.ToggleAction;
-import edu.caltech.cms.intelliviz.graph.logicalvisualization.LogicalVisualization;
 import org.jetbrains.annotations.NotNull;
 
 public abstract class VisualizationToggler extends ToggleAction {
@@ -23,7 +22,7 @@ public abstract class VisualizationToggler extends ToggleAction {
         toggled = state;
 
         MainPane pane = (MainPane) e.getData(PlatformDataKeys.CONTEXT_COMPONENT);
-        pane.viz.refreshUI();
+        pane.getManager().traceAndVisualize();
     }
 }
 

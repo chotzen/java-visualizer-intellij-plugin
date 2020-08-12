@@ -1,4 +1,4 @@
-package edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers.actions;
+package edu.caltech.cms.intelliviz.graph.logicalvisualization.actions;
 
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers.ArrayListVisualization;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers.SetVisualization;

@@ -25,7 +25,7 @@ public class ObjectMapNode extends Node {
     public ObjectMapNode(int x, int y) {
         this.x = x;
         this.y = y;
-        rowMap = new HashMap<GraphEdge, Integer>();
+        rowMap = new LinkedHashMap<GraphEdge, Integer>();
     }
 
     @Override

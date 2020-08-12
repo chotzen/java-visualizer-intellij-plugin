@@ -6,17 +6,14 @@ import com.aegamesi.java_visualizer.model.ExecutionTrace;
 import com.aegamesi.java_visualizer.model.HeapEntity;
 import com.aegamesi.java_visualizer.model.HeapObject;
 import com.aegamesi.java_visualizer.model.Value;
-import com.intellij.openapi.actionSystem.ToggleAction;
 import com.intellij.openapi.actionSystem.ex.ActionManagerEx;
 import com.sun.jdi.ObjectReference;
-import com.sun.jdi.ThreadReference;
 import edu.caltech.cms.intelliviz.graph.GraphEdge;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers.ScannerVisualization;
-import edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers.TrieVisualization;
-import edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers.actions.VisualizationToggler;
+import edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers.TrieMapVisualization;
+import edu.caltech.cms.intelliviz.graph.logicalvisualization.actions.VisualizationToggler;
 import edu.caltech.cms.intelliviz.graph.ui.ClassNode;
 import edu.caltech.cms.intelliviz.graph.Node;
-import org.jdesktop.swingx.action.ActionManager;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.*;
@@ -33,7 +30,7 @@ public abstract class LogicalVisualization {
     }
 
     private static List<LogicalVisualization> vizList = new ArrayList<>();
-    private static Set<LogicalVisualization> enabledVisualizations = new HashSet<>();
+    private static List<LogicalVisualization> enabledVisualizations = new ArrayList<>();
 
     private Map<String, Map<String, String>> classes, interfaces;
 
@@ -182,18 +179,19 @@ public abstract class LogicalVisualization {
         return parent;
     }
 
-    public static Set<LogicalVisualization> getEnabledVisualizations() {
+    public static List<LogicalVisualization> getEnabledVisualizations() {
         String[] ACTIONS = new String[] {
                 "JavaVisualizer.ToggleCollectionsAction",
-                "JavaVisualizer.ToggleMapsAction"
+                "JavaVisualizer.ToggleMapsAction",
+                "JavaVisualizer.ToggleTrieAction"
         };
 
         Class[] ALWAYS_ENABLED = new Class[] {
                 ScannerVisualization.class,
-                TrieVisualization.class
+                TrieMapVisualization.class
         };
 
-        Set<LogicalVisualization> result = new HashSet<>();
+        List<LogicalVisualization> result = new ArrayList<>();
 
         for (String actionID : ACTIONS) {
             VisualizationToggler ta = (VisualizationToggler) ActionManagerEx.getInstance().getAction(actionID);

@@ -2,26 +2,25 @@ package edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers;
 
 import com.aegamesi.java_visualizer.backend.Tracer;
 import com.aegamesi.java_visualizer.backend.TracerUtils;
-import com.aegamesi.java_visualizer.model.ExecutionTrace;
 import com.aegamesi.java_visualizer.model.HeapEntity;
 import com.aegamesi.java_visualizer.model.HeapObject;
 import com.sun.jdi.Field;
 import com.sun.jdi.ObjectReference;
-import com.sun.jdi.ThreadReference;
 import com.sun.jdi.Value;
 import edu.caltech.cms.intelliviz.graph.GraphEdge;
 import edu.caltech.cms.intelliviz.graph.Node;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.LogicalVisualization;
-import edu.caltech.cms.intelliviz.graph.ui.ObjectArrayNode;
-import kotlin.jvm.internal.Ref;
 
 import java.util.*;
 
-public class TrieVisualization extends LogicalVisualization {
+public abstract class TrieVisualization extends LogicalVisualization {
+
 
     public TrieVisualization(Map<String, Map<String, String>> classParams, Map<String, Map<String, String>> interfaceParams) {
         super(classParams, interfaceParams);
     }
+
+    public abstract void addField(HeapObject obj, String key, com.aegamesi.java_visualizer.model.Value newRef);
 
     @Override
     protected String getDisplayName() {
@@ -76,7 +75,8 @@ public class TrieVisualization extends LogicalVisualization {
             Value valVal = TracerUtils.invokeSimple(tracer.thread, entr, "getValue");
             com.aegamesi.java_visualizer.model.Value newRef =  tracer.convertValue(valVal); // next TrieNode
 
-            nodeObj.mapFields.put(key, newRef);
+            addField(nodeObj, key, newRef);
+            //
         }
 
         return nodeObj;

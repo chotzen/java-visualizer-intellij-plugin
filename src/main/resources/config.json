@@ -72,7 +72,15 @@
         }
       ]
     },
-    "TrieVisualization": {
+    "TrieMapVisualization": {
+      "classes": [
+        {
+          "name": "edu.caltech.cs2.datastructures.TrieMap$TrieNode",
+          "params": {}
+        }
+      ]
+    },
+    "SimpleTrieVisualization": {
       "classes": [
         {
           "name": "edu.caltech.cs2.datastructures.TrieMap$TrieNode",

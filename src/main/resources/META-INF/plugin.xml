@@ -31,16 +31,23 @@
     <group id="JavaVisualizer.VisualizerToolbar" popup="false">
       <action
               id="JavaVisualizer.ToggleCollectionsAction"
-              class="edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers.actions.ToggleCollectionsAction"
+              class="edu.caltech.cms.intelliviz.graph.logicalvisualization.actions.ToggleCollectionsAction"
               text="Toggle Collection Visualization"
               description="Switch between implementation and abstract representations of collections"
               icon="/icons/magnify-plus.svg"
       />
       <action
               id="JavaVisualizer.ToggleMapsAction"
-              class="edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers.actions.ToggleMapsAction"
+              class="edu.caltech.cms.intelliviz.graph.logicalvisualization.actions.ToggleMapsAction"
               text="Toggle Map Visualization"
               description="Switch between implementation and abstract representations of maps"
+              icon="/icons/magnify-minus.svg"
+      />
+      <action
+              id="JavaVisualizer.ToggleTrieAction"
+              class="edu.caltech.cms.intelliviz.graph.logicalvisualization.actions.ToggleTrieAction"
+              text="Toggle Trie Visualization"
+              description="Switch between two abstract representations of TrieNodes"
               icon="/icons/magnify-minus.svg"
       />
     </group>

@@ -6,10 +6,8 @@ import edu.caltech.cms.intelliviz.graph.Node;
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 public class HorizontalClassMapNode extends Node {
 
@@ -17,6 +15,7 @@ public class HorizontalClassMapNode extends Node {
     public Map<String, String> fields;
     public List<GraphEdge> pointers;
     private Map<GraphEdge, Integer> pointerOffsets = new HashMap<>();
+    private Set<String> highlightedFields = new HashSet<>();
     public String label;
     private String displayName;
 
@@ -68,26 +67,28 @@ public class HorizontalClassMapNode extends Node {
         Rectangle2D mapArea = new Rectangle2D.Double(this.x, this.y + (1 + this.fields.size()) * HEADER_HEIGHT,  this.width, MAP_HEIGHT * 2);
         g2d.fill(mapArea);
 
-        g2d.setColor(Color.BLACK);
-        g2d.setStroke(new BasicStroke(2));
-        g2d.draw(header);
-        g2d.draw(fields);
-        g2d.draw(mapArea);
 
         // draw header text
         g2d.setFont(boldFont);
+        g2d.setColor(Color.BLACK);
         int offset = g2d.getFontMetrics().getAscent();
         g2d.drawString(this.displayName, this.x + TEXT_PADDING, this.y + TEXT_PADDING + offset);
 
         // draw field texts
         int count = 1;
         for (Map.Entry<String, String> fieldEntry : this.fields.entrySet()) {
+            if (highlightedFields.contains(fieldEntry.getKey())) {
+                g2d.setColor(HIGHLIGHTED_COLOR);
+                g2d.fillRect(this.x, this.y + count * HEADER_HEIGHT, this.width, HEADER_HEIGHT);
+            }
             g2d.setFont(normal);
+            g2d.setColor(Color.BLACK);
             String in = fieldEntry.getKey() + ": ";
             int keyWidth = g2d.getFontMetrics().stringWidth(in);
             g2d.drawString(in, x + TEXT_PADDING, y + TEXT_PADDING + count * HEADER_HEIGHT + offset);
             g2d.setFont(boldItalic);
             g2d.drawString(fieldEntry.getValue(), x + TEXT_PADDING + keyWidth, y + TEXT_PADDING + offset + count * HEADER_HEIGHT);
+
             count++;
         }
 
@@ -109,6 +110,12 @@ public class HorizontalClassMapNode extends Node {
 
             xOffset += boxSize;
         }
+
+        g2d.setColor(Color.BLACK);
+        g2d.setStroke(new BasicStroke(2));
+        g2d.draw(header);
+        g2d.draw(fields);
+        g2d.draw(mapArea);
     }
 
     int calculateFieldWidth(Map.Entry<String, String> entr, Graphics2D g2D) {
@@ -146,7 +153,17 @@ public class HorizontalClassMapNode extends Node {
 
     @Override
     public void highlightChanges(Node ref) {
-        // TODO
+        if (ref instanceof HorizontalClassMapNode) {
+            HorizontalClassMapNode href = (HorizontalClassMapNode) ref;
+
+            this.highlightedFields.clear();
+
+            for (Map.Entry<String, String> ent : href.fields.entrySet()) {
+                if (!ent.getValue().equals(this.fields.get(ent.getKey()))) {
+                    this.highlightedFields.add(ent.getKey());
+                }
+            }
+        }
     }
 
     @Override

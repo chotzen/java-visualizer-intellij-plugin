@@ -128,7 +128,7 @@ public class JavaVisualizerManager implements XDebugSessionListener {
 		}
 	}
 
-	private void traceAndVisualize() {
+	public void traceAndVisualize() {
 		try {
 			SuspendContext sc = (SuspendContext) debugSession.getSuspendContext();
 			if (sc == null || sc.getThread() == null) {
@@ -137,7 +137,7 @@ public class JavaVisualizerManager implements XDebugSessionListener {
 			ThreadReference thread = sc.getThread().getThreadReference();
 
 			Tracer t = new Tracer(thread);
-			panel.setTrace(t.getModel());
+			panel.setTrace(t.getModel(), this);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
