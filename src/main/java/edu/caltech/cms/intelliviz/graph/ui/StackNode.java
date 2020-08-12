@@ -110,4 +110,9 @@ public class StackNode extends Node {
             }
         }
     }
+
+    @Override
+    public RenderBehavior getRenderBehavior() {
+        return RenderBehavior.BEFORE_EDGES;
+    }
 }

@@ -8,7 +8,7 @@ public abstract class HeapEntity {
 	public String label;
 
 	public enum Type {
-		LIST, SET, MAP, OBJECT, PRIMITIVE, STACK
+		LIST, SET, MAP, OBJECT, PRIMITIVE, STACK, TRIE
 	}
 
 	public abstract boolean hasSameStructure(HeapEntity other);

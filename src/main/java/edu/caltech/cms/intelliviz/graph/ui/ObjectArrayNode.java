@@ -90,4 +90,9 @@ public class ObjectArrayNode extends Node {
         Node.checkReferencesForTypeChange( this, ref);
     }
 
+    @Override
+    public RenderBehavior getRenderBehavior() {
+        return RenderBehavior.BEFORE_EDGES;
+    }
+
 }

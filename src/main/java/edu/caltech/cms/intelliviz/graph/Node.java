@@ -33,6 +33,13 @@ public abstract class Node {
     protected static final Font normal = new Font("SanSerif", Font.PLAIN, 12);
     protected static final Font scanner = new Font("Monospaced", Font.PLAIN, 14);
 
+    public enum RenderBehavior {
+        BEFORE_EDGES,
+        AFTER_EDGES
+    }
+
+    protected static final int HEADER_HEIGHT = 20;
+
     public abstract void draw(Graphics2D g);
 
     // Target and origin for edges
@@ -80,6 +87,10 @@ public abstract class Node {
 
     public double getY() {
         return this.y;
+    }
+
+    public RenderBehavior getRenderBehavior() {
+        return RenderBehavior.AFTER_EDGES;
     }
 
     public static void checkReferencesForTypeChange(Node node, Node old) {

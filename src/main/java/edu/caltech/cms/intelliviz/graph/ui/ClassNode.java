@@ -20,7 +20,6 @@ public class ClassNode extends Node {
     private Rectangle2D upper, lower;
 
     private static final int MIN_WIDTH = 60;
-    private static final int HEADER_HEIGHT = 20;
     private static final int TEXT_PADDING = 2;
 
 

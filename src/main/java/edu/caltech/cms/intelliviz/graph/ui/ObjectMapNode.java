@@ -155,4 +155,9 @@ public class ObjectMapNode extends Node {
         this.primKeyData = null;
         this.objKeyData = null;
     }
+
+    @Override
+    public RenderBehavior getRenderBehavior() {
+        return RenderBehavior.BEFORE_EDGES;
+    }
 }

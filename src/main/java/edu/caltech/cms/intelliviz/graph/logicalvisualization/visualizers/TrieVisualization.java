@@ -39,7 +39,7 @@ public class TrieVisualization extends LogicalVisualization {
         HeapObject nodeObj = new HeapObject();
         nodeObj.type = HeapEntity.Type.OBJECT;
         nodeObj.id = ref.uniqueID();
-        nodeObj.label = ref.type().name();
+        nodeObj.label = "edu.caltech.cs2.datastructures.TrieNode";
 
         Map<Field, com.sun.jdi.Value> fields = ref.getValues(ref.referenceType().allFields());
         for (Map.Entry<Field, Value> entry : fields.entrySet()) {
@@ -76,7 +76,7 @@ public class TrieVisualization extends LogicalVisualization {
             Value valVal = TracerUtils.invokeSimple(tracer.thread, entr, "getValue");
             com.aegamesi.java_visualizer.model.Value newRef =  tracer.convertValue(valVal); // next TrieNode
 
-            nodeObj.fields.put(key, newRef);
+            nodeObj.mapFields.put(key, newRef);
         }
 
         return nodeObj;

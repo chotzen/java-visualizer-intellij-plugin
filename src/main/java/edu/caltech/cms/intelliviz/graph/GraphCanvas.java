@@ -403,31 +403,48 @@ public class GraphCanvas extends JPanel {
             case OBJECT:
                 HeapObject obj = (HeapObject)ent;
                 HashMap<String, String> fields = new HashMap<>();
-                ClassNode cn = new ClassNode(100, 100, obj.label, fields);
-                this.nodes.put(obj.id, cn);
+                if (obj.mapFields.size () != 0) {
+                    ret = new HorizontalClassMapNode(obj.label);
+                    ((HorizontalClassMapNode)ret).fields = fields;
+                    for (Map.Entry<String, Value> entry : obj.mapFields.entrySet()) {
+                        if (entry.getValue().type == Value.Type.REFERENCE) {
+                            GraphEdge ref = new GraphEdge(ret, renderNode(this.trace.heap.get(entry.getValue().reference)), entry.getKey(), entry.getValue().referenceType);
+                            ((HorizontalClassMapNode)ret).refs.put(entry.getKey(), ref);
+                            this.edges.add(ref);
+                        }
+                    }
+                } else {
+                    ret = new ClassNode(100, 100, obj.label, fields);
+                }
+                this.nodes.put(obj.id, ret);
                 for (String key : obj.fields.keySet()) {
+                    GraphEdge edge = null;
                     if (obj.fields.get(key).type == Value.Type.REFERENCE) {
-                        GraphEdge edge = new GraphEdge(cn, renderNode(this.trace.heap.get(obj.fields.get(key).reference)), key, obj.fields.get(key).referenceType);
-                        cn.addPointer(edge);
+                        edge = new GraphEdge(ret, renderNode(this.trace.heap.get(obj.fields.get(key).reference)), key, obj.fields.get(key).referenceType);
                         this.edges.add(edge);
                     } else if (obj.fields.get(key).type == Value.Type.HOLE) {
                         StackFrame fr = this.frameMap.get(obj.fields.get(key).holeDest);
                         fr.targeted = true;
-                        GraphEdge edge = new GraphEdge(cn, fr, key, obj.fields.get(key).referenceType);
-                        cn.addPointer(edge);
+                        edge = new GraphEdge(ret, fr, key, obj.fields.get(key).referenceType);
                         this.edges.add(edge);
                     } else if (obj.fields.get(key).type == Value.Type.NULL) {
-                        NullNode nn = new NullNode();
-                        GraphEdge edge = new GraphEdge(cn, nn, key, obj.fields.get(key).referenceType);
-                        cn.addPointer(edge);
-                        this.edges.add(edge);
-                        this.nodes.put(getUniqueNegKey(), nn);
+                        if (obj.fields.get(key).referenceType.equals("*INTERNAL*")) {
+                            fields.put(key, "null");
+                        } else {
+                            NullNode nn = new NullNode();
+                            edge = new GraphEdge(ret, nn, key, obj.fields.get(key).referenceType);
+                            this.edges.add(edge);
+                            this.nodes.put(getUniqueNegKey(), nn);
+                        }
                     } else {
                         fields.put(key, obj.fields.get(key).toString());
                     }
+                    if (ret instanceof HorizontalClassMapNode && edge != null) {
+                        ((HorizontalClassMapNode)ret).pointers.add(edge);
+                    } else if (edge != null) {
+                        ((ClassNode)ret).addPointer(edge);
+                    }
                 }
-                //cn.init();
-                ret = cn;
                 break;
             case PRIMITIVE:
                 HeapPrimitive prim = (HeapPrimitive)ent;
@@ -481,7 +498,7 @@ public class GraphCanvas extends JPanel {
 
         for (Node gNode : nodeCopy) {
             // render nodes whose source edges should be in front
-            if (gNode instanceof ObjectMapNode || gNode instanceof ObjectArrayNode || gNode instanceof ObjectSetNode || gNode instanceof StackNode) {
+            if (gNode.getRenderBehavior() == Node.RenderBehavior.BEFORE_EDGES) {
                 gNode.drawNode(g2D);
             }
         }
@@ -496,7 +513,7 @@ public class GraphCanvas extends JPanel {
 
         for (Node gNode : nodeCopy) {
             // Render nodes whose source edges should be behind
-            if (!(gNode instanceof ObjectMapNode || gNode instanceof ObjectArrayNode || gNode instanceof ObjectSetNode || gNode instanceof StackNode)) {
+            if (gNode.getRenderBehavior() == Node.RenderBehavior.AFTER_EDGES) {
                 gNode.drawNode(g2D);
             }
         }

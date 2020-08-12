@@ -65,6 +65,10 @@
         {
           "name": "java.util.ArrayList",
           "params": {}
+        },
+        {
+          "name": "java.util.Arrays$ArrayList",
+          "params": {}
         }
       ]
     },

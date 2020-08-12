@@ -70,12 +70,12 @@ public class GraphLayoutAlgorithm {
 
         boolean stepIn = false;
         LayoutBehavior prevBehavior = null;
-        if (node instanceof ClassNode && getChildrenOfSameType((ClassNode)node) >= 2)  {
+        if ((node instanceof ClassNode || node instanceof HorizontalClassMapNode) && getChildrenOfSameType(node) >= 2)  {
             String[] prevHeuristics = {"prev", "pre", "last"};
             String[] nextHeuristics = {"next"}; // TODO: think of better things to put here
 
             Predicate<String> p = s -> node.getChildren().stream().anyMatch(edge -> edge.label.toString().contains(s));
-            if (Arrays.stream(prevHeuristics).anyMatch(p) && Arrays.stream(nextHeuristics).anyMatch(p) && getChildrenOfSameType((ClassNode)node) == 2) {
+            if (Arrays.stream(prevHeuristics).anyMatch(p) && Arrays.stream(nextHeuristics).anyMatch(p) && getChildrenOfSameType(node) == 2) {
                 // drop everything, it's a doubly linked list!
                 if (layout != LayoutBehavior.DOUBLY_LINKED) {
 
@@ -232,6 +232,9 @@ public class GraphLayoutAlgorithm {
         if (layout == LayoutBehavior.TREE) {
             double coveredWidth = 0;
             // start at left edge, continuing rightward and adding space in between
+            if (node instanceof HorizontalClassMapNode) {
+                Collections.reverse(handleLater);
+            }
             for (Node child : handleLater) {
                 translateSubgraph(child, coveredWidth, 0);
                 if (!(child instanceof StackFrame)) {
@@ -270,7 +273,7 @@ public class GraphLayoutAlgorithm {
         }
     }
 
-    private int getChildrenOfSameType(ClassNode node) {
+    private int getChildrenOfSameType(Node node) {
         // Checks nodes immediately downstream to see if they're the same type
         return (int)node.getChildren().stream()
                 // want to only search down the tree

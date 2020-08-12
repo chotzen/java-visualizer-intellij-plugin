@@ -62,28 +62,6 @@ public class TracerUtils {
 	// TODO clean up!!
 	public static String displayNameForType(ObjectReference obj) {
 		String fullName = obj.referenceType().name();
-		if (fullName.indexOf("$") > 0) {
-			// inner, local, anonymous or lambda class
-			if (fullName.contains("$$Lambda")) {
-				fullName = "&lambda;" + fullName.substring(fullName.indexOf("$$Lambda") + 9); // skip $$lambda$
-				try {
-					String interf = ((ClassType) obj.referenceType()).interfaces().get(0).name();
-					if (interf.startsWith("java.util.function."))
-						interf = interf.substring(19);
-
-					fullName += " [" + interf + "]";
-				} catch (Exception e) {
-				}
-			}
-			// more cases here?
-			else {
-				fullName = fullName.substring(1 + fullName.indexOf('$'));
-				if (fullName.matches("[0-9]+"))
-					fullName = "anonymous class " + fullName;
-				else if (fullName.substring(0, 1).matches("[0-9]+"))
-					fullName = "local class " + fullName.substring(1);
-			}
-		}
 		return fullName;
 	}
 }

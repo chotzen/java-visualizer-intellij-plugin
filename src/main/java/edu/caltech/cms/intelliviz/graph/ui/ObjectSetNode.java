@@ -57,4 +57,9 @@ public class ObjectSetNode extends AbstractSetNode {
     public void highlightChanges(Node ref) {
         // don't do anything
     }
+
+    @Override
+    public RenderBehavior getRenderBehavior() {
+        return RenderBehavior.BEFORE_EDGES;
+    }
 }

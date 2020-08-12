@@ -9,10 +9,7 @@ import com.sun.jdi.ThreadReference;
 import edu.caltech.cms.intelliviz.graph.GraphEdge;
 import edu.caltech.cms.intelliviz.graph.Node;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.LogicalVisualization;
-import edu.caltech.cms.intelliviz.graph.ui.ClassNode;
-import edu.caltech.cms.intelliviz.graph.ui.NullNode;
-import edu.caltech.cms.intelliviz.graph.ui.ObjectArrayNode;
-import edu.caltech.cms.intelliviz.graph.ui.PrimitiveArrayNode;
+import edu.caltech.cms.intelliviz.graph.ui.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -42,11 +39,17 @@ public class ArrayListVisualization extends LogicalVisualization {
             ClassNode cRef = (ClassNode) ref;
             cRef.fields.remove("modCount");
             Node arrRef = cRef.pointers.get(0).dest;
+            if (!cRef.pointers.get(0).label.toString().equals("elementData")) {
+                cRef.pointers.get(0).label = new TextLabel("elementData");
+            }
             if (arrRef instanceof PrimitiveArrayNode) {
                 PrimitiveArrayNode pan = (PrimitiveArrayNode) arrRef;
                 String[] newValues = Arrays.stream(pan.values).filter(val -> !val.equals("null")).toArray(String[]::new);
                 cRef.pointers.get(0).dest = new PrimitiveArrayNode((int)pan.getX(), (int)pan.getY(), newValues);
                 nodes.put(getID(nodes, pan), cRef.pointers.get(0).dest);
+                if (!cRef.fields.containsKey("size")) {
+                    cRef.fields.put("size", String.valueOf(newValues.length));
+                }
             } else if (arrRef instanceof ObjectArrayNode){
                 ObjectArrayNode oan = (ObjectArrayNode) arrRef;
                 List<GraphEdge> newPointers = oan.pointers.stream().filter(edge -> {
@@ -62,6 +65,9 @@ public class ArrayListVisualization extends LogicalVisualization {
                 ((ObjectArrayNode)cRef.pointers.get(0).dest).pointers = newPointers;
                 newPointers.forEach(edge -> edge.source = cRef.pointers.get(0).dest);
                 nodes.put(getID(nodes, oan), cRef.pointers.get(0).dest);
+                if (!cRef.fields.containsKey("size")) {
+                    cRef.fields.put("size", String.valueOf(newPointers.size()));
+                }
             }
             return ref;
         }

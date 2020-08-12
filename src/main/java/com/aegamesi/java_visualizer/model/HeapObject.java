@@ -3,14 +3,12 @@ package com.aegamesi.java_visualizer.model;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 
 public class HeapObject extends HeapEntity {
 	public Map<String, Value> fields = new TreeMap<>();
 	public Set<String> interfaces = new HashSet<>();
+	public Map<String, Value> mapFields = new HashMap<>();
 
 	@Override
 	public boolean hasSameStructure(HeapEntity other) {
