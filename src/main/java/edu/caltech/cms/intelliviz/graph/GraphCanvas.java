@@ -353,7 +353,7 @@ public class GraphCanvas extends JPanel {
                             omn.setObjData(vals);
                             // ref-ref map
                         } else {
-                            HashMap<GraphEdge, String> vals = new HashMap<>();
+                            LinkedHashMap<GraphEdge, String> vals = new LinkedHashMap<>();
                             for (HeapMap.Pair p : heapMap.pairs) {
                                 GraphEdge keyEdge = new GraphEdge(omn, null, "", p.val.referenceType);
                                 if (p.key.type == Value.Type.REFERENCE) {

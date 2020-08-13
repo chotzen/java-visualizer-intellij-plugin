@@ -12,6 +12,7 @@ public class HeapMap extends HeapEntity{
 	public static class Pair {
 		public Value key;
 		public Value val;
+		public String id;
 	}
 
 	@Override

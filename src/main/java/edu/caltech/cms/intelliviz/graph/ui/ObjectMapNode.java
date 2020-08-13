@@ -77,9 +77,11 @@ public class ObjectMapNode extends Node {
                 row++;
             }
         } else if (primValData != null) {
-            for (Map.Entry<GraphEdge, String> entry : primValData.entrySet()) {
-                drawRow(g2d, row, "", entry.getValue(), keyWidth, valWidth, YELLOW);
-                rowMap.put(entry.getKey(), row);
+            Iterator<GraphEdge> iter = primValData.keySet().iterator();
+            while (iter.hasNext()) {
+                GraphEdge nextEdge = iter.next();
+                drawRow(g2d, row, "", primValData.get(nextEdge), keyWidth, valWidth, YELLOW);
+                rowMap.put(nextEdge, row);
                 row++;
             }
         }

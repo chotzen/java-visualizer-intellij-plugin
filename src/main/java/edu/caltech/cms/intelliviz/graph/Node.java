@@ -4,11 +4,14 @@ package edu.caltech.cms.intelliviz.graph;
 import com.intellij.notification.Notification;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.ui.MessageType;
+import com.intellij.util.ui.JBUI;
 import edu.caltech.cms.intelliviz.graph.ui.NullNode;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collector;
@@ -124,7 +127,15 @@ public abstract class Node {
     }
 
     public static <A, B> Map<A, B> clipToLength(Map<A, B> map, int length) {
-        return map.entrySet().stream().limit(length)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        Iterator<A> iter = map.keySet().iterator();
+        Map<A, B> result = new LinkedHashMap<>();
+        int count = 0;
+        while (iter.hasNext() && count < length) {
+            A next = iter.next();
+            result.put(next, map.get(next));
+            count++;
+        }
+
+        return result;
     }
 }
