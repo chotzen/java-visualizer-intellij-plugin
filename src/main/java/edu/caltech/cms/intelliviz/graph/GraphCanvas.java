@@ -456,10 +456,6 @@ public class GraphCanvas extends JPanel {
                 return null;
         }
 
-        // we've already laid out this element. highlight changes.
-        if (this.lastNodes.containsKey(ent.id)) {
-            ret.highlightChanges(this.lastNodes.get(ent.id));
-        }
 
         // apply applicable logical visualizations.
         for (LogicalVisualization viz : LogicalVisualization.getEnabledVisualizations()) {
@@ -467,6 +463,11 @@ public class GraphCanvas extends JPanel {
             if (repl != null) {
                 return repl;
             }
+        }
+
+        // we've already laid out this element. highlight changes.
+        if (this.lastNodes.containsKey(ent.id)) {
+            ret.highlightChanges(this.lastNodes.get(ent.id));
         }
         return ret;
     }
