@@ -6,13 +6,14 @@ import edu.caltech.cms.intelliviz.graph.Node;
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
 
 public class ObjectArrayNode extends Node {
 
     private ArrayList<TextLabel> labels;
-    public List<GraphEdge> pointers;
+    public Map<GraphEdge, Integer> pointers = new HashMap<>();
+    public Set<Integer> nullIndices = new HashSet<>();
     private int length;
     private int BOX_WIDTH = 30;
     private int TEXT_PADDING = 3;
@@ -22,10 +23,11 @@ public class ObjectArrayNode extends Node {
 
     private final int MAX_RENDER_LENGTH = 50;
 
+    private Font font = new Font("Monospaced", Font.PLAIN, 11);
+
     public ObjectArrayNode(int x, int y, int length) {
         this.x = x;
         this.y = y;
-        this.pointers = new ArrayList<GraphEdge>();
         this.length = length;
         this.height = BOX_HEIGHT;
         labels = new ArrayList<>();
@@ -36,7 +38,7 @@ public class ObjectArrayNode extends Node {
         this.width = length * BOX_WIDTH;
     }
 
-    public void setPointers(List<GraphEdge> edges) {
+    public void setPointers(Map<GraphEdge, Integer> edges) {
         this.pointers = edges;
         Node.warnOnClip(this.pointers.size(), MAX_RENDER_LENGTH);
     }
@@ -51,18 +53,27 @@ public class ObjectArrayNode extends Node {
     public void draw(Graphics2D g) {
         Graphics2D g2d = (Graphics2D) g.create();
         for (int i = 0; i < length; i++) {
-            drawCell(g2d, (int)(x + i * BOX_WIDTH), (int)y, BOX_WIDTH);
+            drawCell(g2d, (int)(x + i * BOX_WIDTH), (int)y, BOX_WIDTH, i);
             labels.get(i).draw(g, x + (i + 0.5) * BOX_WIDTH + LABEL_HORIZ_OFFSET, y + BOX_HEIGHT + LABEL_VERT_OFFSET);
         }
     }
 
-    private void drawCell(Graphics2D g, int x, int y, int width) {
-        g.setColor(YELLOW);
+    private void drawCell(Graphics2D g, int x, int y, int width, int i) {
+        if (nullIndices.contains(i)) {
+            g.setColor(Color.WHITE);
+        } else {
+            g.setColor(YELLOW);
+        }
         g.fillRect(x, y, width, BOX_HEIGHT);
 
         g.setColor(Color.BLACK);
         g.setStroke(new BasicStroke(1));
         g.drawRect(x, y, width, BOX_HEIGHT);
+
+        if (nullIndices.contains(i)) {
+            g.setFont(font);
+            g.drawString("null", x + 2, y + BOX_HEIGHT * 2 / 3);
+        }
     }
 
     @Override
@@ -72,17 +83,16 @@ public class ObjectArrayNode extends Node {
 
     @Override
     public Point2D getOrigin(GraphEdge edge) {
-        for (int i = 0; i < pointers.size(); i++) {
-            if (edge.equals(pointers.get(i))) {
-                return new Point2D.Double(x + (i + 0.5) * BOX_WIDTH, y + 0.5 * BOX_HEIGHT);
-            }
+        if (pointers.containsKey(edge)) {
+            return new Point2D.Double(x + (pointers.get(edge) + 0.5) * BOX_WIDTH, y + 0.5 * BOX_HEIGHT);
+        } else {
+            return new Point2D.Double(0, 0);
         }
-        return null;
     }
 
     @Override
     public ArrayList<GraphEdge> getChildren() {
-        return new ArrayList<>(pointers);
+        return new ArrayList<>(pointers.keySet());
     }
 
     @Override

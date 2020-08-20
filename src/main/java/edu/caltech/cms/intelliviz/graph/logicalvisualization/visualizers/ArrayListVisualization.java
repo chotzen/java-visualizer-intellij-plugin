@@ -50,18 +50,18 @@ public class ArrayListVisualization extends LogicalVisualization {
                 }
             } else if (arrRef instanceof ObjectArrayNode){
                 ObjectArrayNode oan = (ObjectArrayNode) arrRef;
-                List<GraphEdge> newPointers = oan.pointers.stream().filter(edge -> {
-                   if (!(edge.dest instanceof NullNode)) {
+                Map<GraphEdge, Integer> newPointers = oan.pointers.entrySet().stream().filter(entry -> {
+                   if (!(entry.getKey().dest instanceof NullNode)) {
                        return true;
                    } else {
-                       edges.remove(edge);
-                       nodes.remove(getID(nodes, edge.dest));
+                       edges.remove(entry.getKey());
+                       nodes.remove(getID(nodes, entry.getKey().dest));
                        return false;
                    }
-                }).collect(Collectors.toList());
+                }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
                 cRef.pointers.get(0).dest = new ObjectArrayNode((int)oan.getX(), (int)oan.getY(), newPointers.size());
                 ((ObjectArrayNode)cRef.pointers.get(0).dest).pointers = newPointers;
-                newPointers.forEach(edge -> edge.source = cRef.pointers.get(0).dest);
+                newPointers.entrySet().forEach(entry -> entry.getKey().source = cRef.pointers.get(0).dest);
                 nodes.put(getID(nodes, oan), cRef.pointers.get(0).dest);
                 if (!cRef.fields.containsKey("size")) {
                     cRef.fields.put("size", String.valueOf(newPointers.size()));

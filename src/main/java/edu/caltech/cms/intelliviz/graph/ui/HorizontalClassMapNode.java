@@ -11,7 +11,7 @@ import java.util.List;
 
 public class HorizontalClassMapNode extends Node {
 
-    public Map<String, GraphEdge> refs;
+    public TreeMap<String, GraphEdge> refs;
     public Map<String, String> fields;
     public List<GraphEdge> pointers;
     private Map<GraphEdge, Integer> pointerOffsets = new HashMap<>();
@@ -26,7 +26,7 @@ public class HorizontalClassMapNode extends Node {
 
     public HorizontalClassMapNode(String label) {
         super();
-        refs = new HashMap<>();
+        refs = new TreeMap<>(String::compareTo);
         fields = new HashMap<>();
         pointers = new ArrayList<>();
         this.label = label;

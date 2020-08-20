@@ -293,18 +293,17 @@ public class GraphCanvas extends JPanel {
                 if (heapList.items.size() > 0 && heapList.items.stream().anyMatch(val -> val.type == Value.Type.REFERENCE)) {
                     ObjectArrayNode oan = new ObjectArrayNode(100, 100, heapList.items.size());
                     this.nodes.put(heapList.id, oan);
-                    List<GraphEdge> pointers = new ArrayList<>();
+                    Map<GraphEdge, Integer> pointers = new HashMap<>();
                     for (int i = 0; i < heapList.items.size(); i++) {
                         Node ref;
                         if (heapList.items.get(i).type == Value.Type.REFERENCE) {
                             ref = renderNode(trace.heap.get(heapList.items.get(i).reference));
+                            GraphEdge ge = new GraphEdge(oan, ref, "[" + i + "]", heapList.items.get(i).referenceType);
+                            pointers.put(ge, i);
+                            edges.add(ge);
                         } else {
-                            ref = new NullNode();
-                            this.nodes.put(getUniqueNegKey(), ref);
+                            oan.nullIndices.add(i);
                         }
-                        GraphEdge ge = new GraphEdge(oan, ref, "[" + i + "]", heapList.items.get(i).referenceType);
-                        pointers.add(ge);
-                        edges.add(ge);
                     }
                     oan.setPointers(pointers);
                     ret = oan;

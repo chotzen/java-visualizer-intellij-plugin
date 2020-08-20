@@ -444,6 +444,8 @@ public class Tracer {
 	}
 
 	private static boolean shouldShowDetails(ReferenceType type) {
-		return !isInternalPackage(type.name()) || Arrays.stream(EXCLUDE_JAVA_UTIL).anyMatch(name -> type.name().matches("java\\.util\\." + name));
+		return !isInternalPackage(type.name()) || type.name().contains("java.nio") || Arrays.stream(EXCLUDE_JAVA_UTIL).anyMatch(name ->
+				type.name().matches("java\\.util\\." + name)
+		);
 	}
 }

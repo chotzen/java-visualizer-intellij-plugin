@@ -167,6 +167,8 @@ public class GraphLayoutAlgorithm {
                 }
                 return 0;
             });
+        } else if (node instanceof ObjectArrayNode) {
+            children.sort(Comparator.comparing(child -> ((ObjectArrayNode)node).pointers.get(child)));
         }
         if (layout == LayoutBehavior.HORIZONTAL && children.size() > 0) {
             bound += (node.getHeight() - children.get(0).dest.getHeight()) / 2;
