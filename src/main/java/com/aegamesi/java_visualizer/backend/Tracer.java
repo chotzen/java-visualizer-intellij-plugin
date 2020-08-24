@@ -176,6 +176,7 @@ public class Tracer {
 	private Frame convertFrame(StackFrame sf) {
 		Frame output = new Frame();
 		output.name = sf.location().method().name() + ":" + sf.location().lineNumber();
+		output.lineNumber = sf.location().lineNumber();
 
 		if (sf.thisObject() != null) {
 			output.locals.put("this", convertValue(sf.thisObject()));

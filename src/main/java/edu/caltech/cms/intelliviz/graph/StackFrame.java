@@ -31,7 +31,7 @@ public class StackFrame extends Node {
     public StackFrame(Map<Long, HeapEntity> heap, Frame fr, int depth, boolean active) {
         this.depth = depth;
         this.active = active;
-        this.displayString = fr.name.split(":")[0] + "(";
+        this.displayString = fr.name.split(":")[0] + ':' + fr.lineNumber + "(";
         Iterator<Map.Entry<String, Value>> iter = fr.locals.entrySet().stream()
                 .filter(map -> map.getValue().isArg)
                 .iterator();
