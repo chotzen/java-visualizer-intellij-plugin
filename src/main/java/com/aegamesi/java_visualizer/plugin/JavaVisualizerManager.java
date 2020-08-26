@@ -21,10 +21,13 @@ import com.intellij.util.ui.UIUtil;
 import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugSession;
 import com.intellij.xdebugger.XDebugSessionListener;
+import com.sun.jdi.Location;
 import com.sun.jdi.ThreadReference;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.event.AncestorEvent;
+import java.awt.*;
+import java.util.Stack;
 
 public class JavaVisualizerManager implements XDebugSessionListener {
 	private static final String CONTENT_ID = "aegamesi.JavaVisualizerContent2";
@@ -36,6 +39,8 @@ public class JavaVisualizerManager implements XDebugSessionListener {
 	private Content content;
 	private MainPane panel;
 	private Project project;
+	private int stackSize = 0;
+	private Stack<Location> locationStack = new Stack<>();
 
 	JavaVisualizerManager(Project project, XDebugProcess debugProcess) {
 		this.project = project;
@@ -133,6 +138,24 @@ public class JavaVisualizerManager implements XDebugSessionListener {
 			SuspendContext sc = (SuspendContext) debugSession.getSuspendContext();
 			if (sc == null || sc.getThread() == null) {
 				return;
+			}
+			int currentFrameCount = stackSize;
+			int newFrameCount = sc.getThread().frameCount();
+			this.stackSize = newFrameCount;
+			while (this.locationStack.size() > newFrameCount) {
+				this.locationStack.pop();
+			}
+			Location newL = sc.getThread().frame(0).location();
+			if (!this.locationStack.isEmpty() && newFrameCount < currentFrameCount) {
+				Location oldL = this.locationStack.peek();
+				this.locationStack.pop();
+				this.locationStack.push(newL);
+				if (oldL.lineNumber() == newL.lineNumber()) {
+					EventQueue.invokeLater(() -> debugSession.stepInto());
+				}
+			}
+			else {
+				this.locationStack.push(newL);
 			}
 			ThreadReference thread = sc.getThread().getThreadReference();
 
