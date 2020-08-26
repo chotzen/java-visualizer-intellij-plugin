@@ -1,8 +1,10 @@
-package edu.caltech.cms.intelliviz.graph;
+package edu.caltech.cms.intelliviz.graph.ui;
 
 import com.aegamesi.java_visualizer.model.Frame;
 import com.aegamesi.java_visualizer.model.HeapEntity;
 import com.aegamesi.java_visualizer.model.Value;
+import edu.caltech.cms.intelliviz.graph.GraphEdge;
+import edu.caltech.cms.intelliviz.graph.Node;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
@@ -31,7 +33,7 @@ public class StackFrame extends Node {
     public StackFrame(Map<Long, HeapEntity> heap, Frame fr, int depth, boolean active) {
         this.depth = depth;
         this.active = active;
-        this.displayString = fr.name.split(":")[0] + ':' + fr.lineNumber + "(";
+        this.displayString = fr.name.split(":")[0] + "(";
         Iterator<Map.Entry<String, Value>> iter = fr.locals.entrySet().stream()
                 .filter(map -> map.getValue().isArg)
                 .iterator();
@@ -52,6 +54,8 @@ public class StackFrame extends Node {
             }
         }
         this.displayString += ")";
+
+        this.displayString += " [line " + fr.lineNumber + "]";
     }
 
     public void draw(Graphics g, int width) {

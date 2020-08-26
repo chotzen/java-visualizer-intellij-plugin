@@ -11,6 +11,7 @@ public class Value {
 	public boolean booleanValue;
 	public String stringValue;
 	public char charValue;
+	public String codeValue;
 	public long reference;
 	public String referenceType;
 	public Frame holeDest;
@@ -40,7 +41,7 @@ public class Value {
 	}
 
 	public enum Type {
-		NULL, VOID, LONG, DOUBLE, BOOLEAN, STRING, CHAR, REFERENCE, HOLE;
+		NULL, VOID, LONG, DOUBLE, BOOLEAN, STRING, CHAR, REFERENCE, HOLE, CODE;
 	}
 
 	JSONArray toJson() {

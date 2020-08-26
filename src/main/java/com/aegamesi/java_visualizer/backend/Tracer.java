@@ -43,6 +43,16 @@ import static com.aegamesi.java_visualizer.backend.TracerUtils.*;
  * Some code from traceprinter, written by David Pritchard (daveagp@gmail.com)
  */
 public class Tracer {
+
+	public static void main(String[] args) {
+		add(2 , 1);
+	}
+
+	public static int add(int a, int b) {
+		return a + b;
+	}
+
+
 	private static final String[] INTERNAL_PACKAGES = {
 			"java.",
 			"javax.",
@@ -94,6 +104,7 @@ public class Tracer {
 				frameMap.put(e, frame);
 				model.frames.add(e);
 			}
+
 		}
 
 		// Convert (some) statics
@@ -267,7 +278,19 @@ public class Tracer {
 						LocalVariable lv = me.getValue();
 						output.locals.put(lv.name(), convertValue(sf.getValue(lv)));
 					} catch (IllegalArgumentException exc) {
-						// variable not yet defined, don't list it
+						// variable not yet defined. heuristics time
+						String[] pieces = getCurrentLine(sf).split("[^=]=[^=]");
+						if (pieces.length >= 2) { // suppose, hypothetically, for the sake of argument, that we have assignment
+						    // want to make sure that we're actually assigning the right variable
+							if (pieces[0].contains(me.getValue().name())) {
+							    String rightSide = String.join("", Arrays.copyOfRange(pieces, 1, pieces.length));
+							    rightSide = rightSide.substring(0, rightSide.length() - 1);
+							    Value v = new Value();
+							    v.type = Value.Type.CODE;
+							    v.codeValue = rightSide;
+							    output.locals.put(me.getValue().name(), v);
+							}
+						}
 					}
 				}
 			}
