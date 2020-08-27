@@ -155,6 +155,9 @@ public class JavaVisualizerManager implements XDebugSessionListener {
 				}
 			}
 			else {
+			    if (currentFrameCount > 0 && currentFrameCount == newFrameCount) {
+					this.locationStack.pop();
+				}
 				this.locationStack.push(newL);
 			}
 			ThreadReference thread = sc.getThread().getThreadReference();
