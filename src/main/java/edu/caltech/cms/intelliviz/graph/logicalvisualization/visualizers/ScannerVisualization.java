@@ -45,7 +45,9 @@ public class ScannerVisualization extends LogicalVisualization {
             StringBuilder sb = new StringBuilder();
             for (String str : charArray.values) {
                 char c = str.charAt(1);
-                sb.append(c);
+                if ((32 <= c && c <= 126) || c == 10 || c == 13) {
+                    sb.append(c);
+                }
             }
             String content = sb.toString();
 

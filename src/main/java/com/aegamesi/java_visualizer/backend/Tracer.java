@@ -44,15 +44,6 @@ import static com.aegamesi.java_visualizer.backend.TracerUtils.*;
  */
 public class Tracer {
 
-	public static void main(String[] args) {
-		add(2 , 1);
-	}
-
-	public static int add(int a, int b) {
-		return a + b;
-	}
-
-
 	private static final String[] INTERNAL_PACKAGES = {
 			"java.",
 			"javax.",
@@ -104,20 +95,21 @@ public class Tracer {
 				frameMap.put(e, frame);
 				model.frames.add(e);
 			}
-
 		}
 
+
 		// Convert (some) statics
-		for (ReferenceType rt : STATIC_LISTABLE) {
-			if (rt.isInitialized() && !isInternalPackage(rt.name())) {
-				for (Field f : rt.visibleFields()) {
-					if (f.isStatic()) {
-						String name = rt.name() + "." + f.name();
-						model.statics.put(name, convertValue(rt.getValue(f)));
-					}
+        /*
+		if (rt.isInitialized() && !isInternalPackage(rt.name())) {
+			for (Field f : rt.visibleFields()) {
+				if (f.isStatic()) {
+					String name = rt.name() + "." + f.name();
+					model.statics.put(name, convertValue(rt.getValue(f)));
 				}
 			}
 		}
+
+         */
 
 		// Convert heap
 		Set<Long> heapDone = new HashSet<>();
@@ -284,7 +276,7 @@ public class Tracer {
 						    // want to make sure that we're actually assigning the right variable
 							if (pieces[0].contains(me.getValue().name())) {
 							    String rightSide = String.join("", Arrays.copyOfRange(pieces, 1, pieces.length));
-							    rightSide = rightSide.substring(0, rightSide.length() - 1);
+							    rightSide = rightSide.split(";")[0];
 							    Value v = new Value();
 							    v.type = Value.Type.CODE;
 							    v.codeValue = rightSide;
