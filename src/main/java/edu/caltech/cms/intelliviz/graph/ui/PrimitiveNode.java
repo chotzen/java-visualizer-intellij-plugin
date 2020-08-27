@@ -13,6 +13,7 @@ public class PrimitiveNode extends Node {
     private String label;
 
     private int TEXT_PADDING = 4;
+    private boolean highlighted = false;
 
     public PrimitiveNode(int x, int y, String label) {
         this.x = x;
@@ -21,10 +22,18 @@ public class PrimitiveNode extends Node {
         this.height = 20;
     }
 
+    public String getLabel()  {
+        return label;
+    }
+
     @Override
     public void draw(Graphics2D g) {
         Graphics2D g2d = (Graphics2D) g;
-        g2d.setColor(GREEN);
+        if (highlighted) {
+            g2d.setColor(HIGHLIGHTED_COLOR);
+        } else {
+            g2d.setColor(GREEN);
+        }
         g2d.setFont(boldItalic);
         FontMetrics fm = g2d.getFontMetrics();
 
@@ -55,6 +64,11 @@ public class PrimitiveNode extends Node {
 
     @Override
     public void highlightChanges(Node ref) {
-
+        if (ref instanceof PrimitiveNode) {
+            PrimitiveNode other = (PrimitiveNode)ref;
+            if (!other.getLabel().equals(this.label)) {
+                highlighted = true;
+            }
+        }
     }
 }

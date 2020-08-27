@@ -269,6 +269,7 @@ public class Tracer {
 					try {
 						LocalVariable lv = me.getValue();
 						output.locals.put(lv.name(), convertValue(sf.getValue(lv)));
+						output.locals.get(lv.name()).hashCode = lv.hashCode();
 					} catch (IllegalArgumentException exc) {
 						// variable not yet defined. heuristics time
 						String[] pieces = getCurrentLine(sf).split("[^=]=[^=]");

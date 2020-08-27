@@ -25,8 +25,10 @@ public class GraphCanvas extends JPanel {
 
     private Map<Frame, StackFrame> frameMap;
     private LinkedHashMap<StackFrame, List<VariableNode>> variables;
+    private LinkedHashMap<StackFrame, List<VariableNode>> lastVariables;
     private Map<Long, Node> nodes;
     private Map<Long, Node> lastNodes;
+    private Map<Long, VariableNode> locals;
     private List<GraphEdge> edges;
     private Map<Node, List<GraphEdge>> layoutTree;
 
@@ -52,6 +54,7 @@ public class GraphCanvas extends JPanel {
         this.nodes = new HashMap<>();
         this.edges = new ArrayList<>();
         this.frameMap = new HashMap<>();
+        this.locals = new HashMap<>();
 
         LogicalVisualization.loadFromCfg();
 
@@ -87,7 +90,10 @@ public class GraphCanvas extends JPanel {
     }
 
     public void buildUI() {
+        Map<Long, VariableNode> oldLocals = this.locals;
+        this.locals = new HashMap<>();
         this.lastNodes = this.nodes;
+        this.lastVariables = this.variables;
         this.nodes = new HashMap<>();
 
         int depth = 0;
@@ -132,6 +138,11 @@ public class GraphCanvas extends JPanel {
                     VariableNode var = new VariableNode(0, 0, v, node, fr.locals.get(v).type.toString());
                     this.variables.get(convert).add(var);
                     this.nodes.put(getUniqueNegKey(), node);
+                    this.locals.put(fr.locals.get(v).hashCode, var);
+
+                    if (oldLocals.containsKey(fr.locals.get(v).hashCode)) {
+                        node.highlightChanges(oldLocals.get(fr.locals.get(v).hashCode).reference);
+                    }
                 }
             }
         }
