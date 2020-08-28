@@ -15,6 +15,7 @@ import java.awt.event.MouseMotionAdapter;
 import java.awt.geom.Point2D;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class GraphCanvas extends JPanel {
@@ -50,7 +51,7 @@ public class GraphCanvas extends JPanel {
         this.grRef = getGraphics();
 
         this.variables = new LinkedHashMap<>();
-        this.nodes = new HashMap<>();
+        this.nodes = new ConcurrentHashMap<>();
         this.edges = new ArrayList<>();
         this.frameMap = new HashMap<>();
         this.locals = new HashMap<>();
@@ -125,9 +126,9 @@ public class GraphCanvas extends JPanel {
 
     public void buildUI() {
         Map<Long, VariableNode> oldLocals = this.locals;
-        this.locals = new HashMap<>();
+        this.locals = new ConcurrentHashMap<>();
         this.lastNodes = this.nodes;
-        this.nodes = new HashMap<>();
+        this.nodes = new ConcurrentHashMap<>();
 
         int depth = 0;
         VariableNode thisNode = null;
@@ -184,7 +185,7 @@ public class GraphCanvas extends JPanel {
             VariableNode finalThisNode1 = thisNode;
             downstreams.put(ent.getKey(), new HashSet<>(
                     ent.getValue().stream()
-                            .filter(node -> !node.name.equals("this"))
+                            .filter(node -> node != null && !node.name.equals("this"))
                             .flatMap(vNode -> findDownstreamNodes(vNode.reference).stream())
                             .filter(node -> !allDownstream.contains(node) && !(finalThisNode1 != null && node.equals(finalThisNode1.reference)))
                             .collect(Collectors.toSet())
@@ -232,6 +233,12 @@ public class GraphCanvas extends JPanel {
 
                 // sort variables to put holes last.
                 ent.getValue().sort((v1, v2) -> {
+                    if (v1 == null) {
+                        return -1;
+                    }
+                    if (v2 == null) {
+                        return 1;
+                    }
                     if (v1.reference instanceof StackFrame) {
                         return 1;
                     }
@@ -242,7 +249,7 @@ public class GraphCanvas extends JPanel {
                 });
 
                 for (VariableNode v: ent.getValue()) {
-                    if (!v.equals(finalThisNode) && !otherVariables.contains(v)) {
+                    if (v != null && !v.equals(finalThisNode) && !otherVariables.contains(v)) {
                         lowerLayout.layoutVariable(v);
                     }
                 }
@@ -440,7 +447,7 @@ public class GraphCanvas extends JPanel {
                 }
             case OBJECT:
                 HeapObject obj = (HeapObject)ent;
-                HashMap<String, String> fields = new HashMap<>();
+                ConcurrentHashMap<String, String> fields = new ConcurrentHashMap<>();
                 if (obj.mapFields.size () != 0) {
                     ret = new HorizontalClassMapNode(obj.label);
                     ((HorizontalClassMapNode)ret).fields = fields;
@@ -538,7 +545,11 @@ public class GraphCanvas extends JPanel {
 
         Set<VariableNode> varCopy = variables.values().stream().flatMap(Collection::stream).collect(Collectors.toSet());
         varCopy.addAll(otherVariables);
-        varCopy.forEach(variableNode -> variableNode.draw(g2D));
+        varCopy.forEach(variableNode -> {
+            if (variableNode != null) {
+                variableNode.draw(g2D);
+            }
+        });
 
         Set<Node> nodeCopy = new HashSet<>(nodes.values());
         Set<GraphEdge> edgesCopy = new HashSet<>(edges);
@@ -599,7 +610,7 @@ public class GraphCanvas extends JPanel {
         }
 
         for (VariableNode g : variables.values().stream().flatMap(Collection::stream).collect(Collectors.toSet())) {
-            if (g.contains(x, y))
+            if (g != null && g.contains(x, y))
                 return g;
         }
         return null;
