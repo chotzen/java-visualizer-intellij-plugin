@@ -25,13 +25,12 @@ public class GraphCanvas extends JPanel {
 
     private Map<Frame, StackFrame> frameMap;
     private LinkedHashMap<StackFrame, List<VariableNode>> variables;
-    private LinkedHashMap<StackFrame, List<VariableNode>> lastVariables;
+    private List<VariableNode> otherVariables = new ArrayList<>();
     private Map<Long, Node> nodes;
     private Map<Long, Node> lastNodes;
     private Map<Long, VariableNode> locals;
     private List<GraphEdge> edges;
     private Map<Node, List<GraphEdge>> layoutTree;
-
 
     private Set<Node> selected;
     private Cursor curCursor;
@@ -80,6 +79,7 @@ public class GraphCanvas extends JPanel {
         //nodes.clear();
         edges.clear();
         variables.clear();
+        otherVariables.clear();
 
         removeAll();
 
@@ -89,11 +89,44 @@ public class GraphCanvas extends JPanel {
         repaint();
     }
 
+    public VariableNode buildVariable(Frame fr, String v, Map<Long, VariableNode> oldLocals, boolean isStatic) {
+        Value val = isStatic ? fr.statics.get(v) : fr.locals.get(v);
+        if (val.type == Value.Type.REFERENCE) {
+            if (!v.equals("this")) {
+                VariableNode var = new VariableNode(0, 0, v, renderNode(trace.heap.get(val.reference)), val.referenceType);
+                return var;
+            }
+        } else if (val.type == Value.Type.HOLE) {
+            StackFrame dest = this.frameMap.get(val.holeDest);
+            CodeNode cn = new CodeNode(0, 0, val.holeString);
+            cn.holeDest = dest;
+            VariableNode var = new VariableNode(0, 0, v, cn, val.type.toString());
+            this.nodes.put(getUniqueNegKey(), cn);
+            dest.targeted = true;
+            return var;
+        } else if (val.type == Value.Type.CODE) {
+            CodeNode dest = new CodeNode(0, 0, val.codeValue);
+            VariableNode var = new VariableNode(0, 0, v, dest, val.type.toString());
+            this.nodes.put(getUniqueNegKey(), dest);
+            return var;
+        } else {
+            PrimitiveNode node = new PrimitiveNode(0, 0, val.toString());
+            VariableNode var = new VariableNode(0, 0, v, node, val.type.toString());
+            this.nodes.put(getUniqueNegKey(), node);
+            this.locals.put(val.hashCode, var);
+
+            if (oldLocals.containsKey(val.hashCode)) {
+                node.highlightChanges(oldLocals.get(val.hashCode).reference);
+            }
+            return var;
+        }
+        return null;
+    }
+
     public void buildUI() {
         Map<Long, VariableNode> oldLocals = this.locals;
         this.locals = new HashMap<>();
         this.lastNodes = this.nodes;
-        this.lastVariables = this.variables;
         this.nodes = new HashMap<>();
 
         int depth = 0;
@@ -118,32 +151,7 @@ public class GraphCanvas extends JPanel {
                                                         .collect(Collectors.toSet())) {
             StackFrame convert = frameMap.get(fr);
             for (String v : fr.locals.keySet()) {
-                if (fr.locals.get(v).type == Value.Type.REFERENCE) {
-                    if (!v.equals("this")) {
-                        VariableNode var = new VariableNode(0, 0, v, renderNode(trace.heap.get(fr.locals.get(v).reference)), fr.locals.get(v).referenceType);
-                        this.variables.get(convert).add(var);
-                    }
-                } else if (fr.locals.get(v).type == Value.Type.HOLE) {
-                    StackFrame dest = this.frameMap.get(fr.locals.get(v).holeDest);
-                    VariableNode var = new VariableNode(0, 0, v, dest, fr.locals.get(v).type.toString());
-                    dest.targeted = true;
-                    this.variables.get(convert).add(var);
-                } else if (fr.locals.get(v).type == Value.Type.CODE) {
-                    CodeNode dest = new CodeNode(0, 0, fr.locals.get(v).codeValue);
-                    VariableNode var = new VariableNode(0, 0, v, dest, fr.locals.get(v).type.toString());
-                    this.variables.get(convert).add(var);
-                    this.nodes.put(getUniqueNegKey(), dest);
-                } else {
-                    PrimitiveNode node = new PrimitiveNode(0, 0, fr.locals.get(v).toString());
-                    VariableNode var = new VariableNode(0, 0, v, node, fr.locals.get(v).type.toString());
-                    this.variables.get(convert).add(var);
-                    this.nodes.put(getUniqueNegKey(), node);
-                    this.locals.put(fr.locals.get(v).hashCode, var);
-
-                    if (oldLocals.containsKey(fr.locals.get(v).hashCode)) {
-                        node.highlightChanges(oldLocals.get(fr.locals.get(v).hashCode).reference);
-                    }
-                }
+                this.variables.get(convert).add(buildVariable(fr, v, oldLocals, false));
             }
         }
 
@@ -153,6 +161,12 @@ public class GraphCanvas extends JPanel {
             VariableNode var = new VariableNode(0, 0, "this", renderNode(trace.heap.get(last.locals.get("this").reference)), last.locals.get("this").referenceType);
             this.variables.get(conv).add(var);
             thisNode = var;
+        }
+
+        for (String key : last.statics.keySet()) {
+            VariableNode vNode = buildVariable(last, key, oldLocals, true);
+            otherVariables.add(vNode);
+            this.variables.get(conv).add(vNode);
         }
 
         init = false;
@@ -196,9 +210,14 @@ public class GraphCanvas extends JPanel {
             HashMap<Node, List<GraphEdge>> tree = new HashMap<>();
             double vertOffset = spacing;
             double horizOffset = 0;
-            if (finalThisNode != null) {
+            if (finalThisNode != null || otherVariables.size() != 0) {
                 GraphLayoutAlgorithm upperLayout = new GraphLayoutAlgorithm(20, 20, allDownstream);
-                upperLayout.layoutVariable(finalThisNode);
+                if (finalThisNode != null)
+                    upperLayout.layoutVariable(finalThisNode);
+                for (VariableNode v : otherVariables) {
+                    allDownstream.remove(v.reference);
+                    upperLayout.layoutVariable(v);
+                }
                 tree.putAll(upperLayout.tree);
                 vertOffset = upperLayout.getMaxY() + spacing;
             }
@@ -223,7 +242,7 @@ public class GraphCanvas extends JPanel {
                 });
 
                 for (VariableNode v: ent.getValue()) {
-                    if (!v.equals(finalThisNode)) {
+                    if (!v.equals(finalThisNode) && !otherVariables.contains(v)) {
                         lowerLayout.layoutVariable(v);
                     }
                 }
@@ -245,6 +264,10 @@ public class GraphCanvas extends JPanel {
 
 
     private Node renderNode(HeapEntity ent) {
+        return renderNode(ent, 200);
+    }
+
+    private Node renderNode(HeapEntity ent, int clipLength) {
         // if we already have an object, return it!
         if (this.nodes.containsKey(ent.id)) {
             return this.nodes.get(ent.id);
@@ -423,7 +446,11 @@ public class GraphCanvas extends JPanel {
                     ((HorizontalClassMapNode)ret).fields = fields;
                     for (Map.Entry<String, Value> entry : obj.mapFields.entrySet()) {
                         if (entry.getValue().type == Value.Type.REFERENCE) {
-                            GraphEdge ref = new GraphEdge(ret, renderNode(this.trace.heap.get(entry.getValue().reference)), entry.getKey(), entry.getValue().referenceType);
+                            int clipLen = 200;
+                            if (obj.label.contains("HeapCharBuffer")) {
+                                clipLen = 2048;
+                            }
+                            GraphEdge ref = new GraphEdge(ret, renderNode(this.trace.heap.get(entry.getValue().reference), clipLen), entry.getKey(), entry.getValue().referenceType);
                             ((HorizontalClassMapNode)ret).refs.put(entry.getKey(), ref);
                             this.edges.add(ref);
                         }
@@ -439,8 +466,11 @@ public class GraphCanvas extends JPanel {
                         this.edges.add(edge);
                     } else if (obj.fields.get(key).type == Value.Type.HOLE) {
                         StackFrame fr = this.frameMap.get(obj.fields.get(key).holeDest);
+                        CodeNode cn = new CodeNode(0, 0, obj.fields.get(key).holeString);
+                        this.nodes.put(getUniqueNegKey(), cn);
                         fr.targeted = true;
-                        edge = new GraphEdge(ret, fr, key, obj.fields.get(key).referenceType);
+                        edge = new GraphEdge(ret, cn, key, obj.fields.get(key).referenceType);
+                        cn.holeDest = fr;
                         this.edges.add(edge);
                     } else if (obj.fields.get(key).type == Value.Type.NULL) {
                         if (obj.fields.get(key).referenceType.equals("*INTERNAL*")) {
@@ -507,6 +537,7 @@ public class GraphCanvas extends JPanel {
         g2D.scale(scale, scale);
 
         Set<VariableNode> varCopy = variables.values().stream().flatMap(Collection::stream).collect(Collectors.toSet());
+        varCopy.addAll(otherVariables);
         varCopy.forEach(variableNode -> variableNode.draw(g2D));
 
         Set<Node> nodeCopy = new HashSet<>(nodes.values());

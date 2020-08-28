@@ -10,32 +10,13 @@ import com.aegamesi.java_visualizer.model.Value;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.roots.ModuleRootManager;
-import com.sun.jdi.AbsentInformationException;
-import com.sun.jdi.ArrayReference;
-import com.sun.jdi.BooleanValue;
-import com.sun.jdi.ByteValue;
-import com.sun.jdi.CharValue;
-import com.sun.jdi.DoubleValue;
-import com.sun.jdi.Field;
-import com.sun.jdi.FloatValue;
-import com.sun.jdi.IncompatibleThreadStateException;
-import com.sun.jdi.IntegerValue;
-import com.sun.jdi.InvalidStackFrameException;
-import com.sun.jdi.LocalVariable;
-import com.sun.jdi.Location;
-import com.sun.jdi.LongValue;
-import com.sun.jdi.ObjectReference;
-import com.sun.jdi.ReferenceType;
-import com.sun.jdi.ShortValue;
-import com.sun.jdi.StackFrame;
-import com.sun.jdi.StringReference;
-import com.sun.jdi.ThreadReference;
-import com.sun.jdi.VoidValue;
+import com.sun.jdi.*;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.LogicalVisualization;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.aegamesi.java_visualizer.backend.TracerUtils.*;
 
@@ -164,6 +145,8 @@ public class Tracer {
 						if (cur != null) {
 							cur.type = Value.Type.HOLE;
 							cur.holeDest = model.frames.get(i - 1); // last frame converted is in position 0
+							cur.holeString = pieces[1].substring(0, pieces[1].length() - 1);
+							cur.holeString = cur.holeString.replaceFirst(" ", "");
 						}
 					}
 				}
@@ -192,6 +175,12 @@ public class Tracer {
            However, sometimes some args have names but not all. Such as within synthetic
            lambda methods like "lambda$inc$0". For an unknown reason, trying .arguments()
            causes a JDWP error in such frames. So sadly, those frames are incomplete. */
+
+		// Try to convert statics.
+		List<Field> fieldList = sf.location().method().declaringType().allFields().stream().filter(TypeComponent::isStatic).collect(Collectors.toList());
+		for (Field f : fieldList) {
+			output.statics.put(f.name(), convertValue(sf.location().method().declaringType().getValue(f)));
+		}
 
 		boolean JDWPerror = false;
 		try {
@@ -275,7 +264,7 @@ public class Tracer {
 						String[] pieces = getCurrentLine(sf).split("[^=]=[^=]");
 						if (pieces.length >= 2) { // suppose, hypothetically, for the sake of argument, that we have assignment
 						    // want to make sure that we're actually assigning the right variable
-							if (pieces[0].contains(me.getValue().name())) {
+							if (pieces[0].contains(" " + me.getValue().name() + " ")) {
 							    String rightSide = String.join("", Arrays.copyOfRange(pieces, 1, pieces.length));
 							    rightSide = rightSide.split(";")[0];
 							    Value v = new Value();

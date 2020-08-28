@@ -7,6 +7,7 @@ import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -20,21 +21,25 @@ public class PrimitiveArrayNode extends Node {
     private int BOX_HEIGHT = 20;
     private final int LABEL_VERT_OFFSET = 8;
     private final int LABEL_HORIZ_OFFSET = 2;
-
-    private final int MAX_RENDER_LENGTH = 2048;
+    private int maxRenderLength;
 
     public PrimitiveArrayNode(int x, int y, String[] values) {
+        this(x, y, values, 200);
+    }
+
+    public PrimitiveArrayNode(int x, int y, String[] values, int maxRenderLength) {
+        this.maxRenderLength = maxRenderLength;
         this.x = x;
         this.y = y;
         this.values = values;
         this.height = BOX_HEIGHT;
         labels = new ArrayList<>();
-        for (int i = 0; i < Math.min(values.length, MAX_RENDER_LENGTH); i++) {
+        for (int i = 0; i < Math.min(values.length, maxRenderLength); i++) {
             labels.add(new TextLabel(String.valueOf(i)));
-
         }
-        if (values.length > MAX_RENDER_LENGTH) {
-            Node.warnOnClip(values.length, MAX_RENDER_LENGTH);
+        if (values.length > maxRenderLength) {
+            Node.warnOnClip(values.length, maxRenderLength);
+            values = Arrays.copyOfRange(values, 0, maxRenderLength, String[].class);
         }
 
         // Estimate width before it's calculated on draw, as we don't have a Graphics2D here
@@ -48,7 +53,7 @@ public class PrimitiveArrayNode extends Node {
         FontMetrics fm = g2d.getFontMetrics();
         this.width = 0;
         if (this.values.length != 0) {
-            for (int i = 0; i < Math.min(values.length, MAX_RENDER_LENGTH); i++) {
+            for (int i = 0; i < Math.min(values.length, maxRenderLength); i++) {
                 int textWidth = fm.stringWidth(values[i]) + 2 * TEXT_PADDING;
                 if (textWidth + 2 * TEXT_PADDING < MIN_BOX_WIDTH) {
                     drawCell(g2d, (int)(x + this.width), (int)y, MIN_BOX_WIDTH, textWidth, values[i], i);

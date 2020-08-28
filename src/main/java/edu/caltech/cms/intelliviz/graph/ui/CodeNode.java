@@ -16,6 +16,8 @@ public class CodeNode extends Node {
 
     private static final Color ACTIVE_COLOR = Color.decode("#B9C8D2");
 
+    public StackFrame holeDest = null;
+
     public CodeNode(int x, int y, String label) {
         this.x = x;
         this.y = y;
@@ -26,6 +28,11 @@ public class CodeNode extends Node {
     @Override
     public void draw(Graphics2D g) {
         Graphics2D g2d = (Graphics2D) g;
+        if (holeDest != null) {
+            g2d.setColor(Color.RED);
+            g2d.setStroke(new BasicStroke(2));
+            g2d.drawLine(this.x + this.width / 2, this.y + this.height / 2, (int)holeDest.getTarget(0, 0).getX(), (int)holeDest.getTarget(0, 0).getY());
+        }
         g2d.setColor(ACTIVE_COLOR);
         g2d.setFont(scanner.deriveFont(12.0F));
         FontMetrics fm = g2d.getFontMetrics();
@@ -38,6 +45,7 @@ public class CodeNode extends Node {
         g2d.setStroke(new BasicStroke(1));
         g2d.draw(rect);
         g2d.drawString(label, (int)this.x + TEXT_PADDING, (int)this.y + (int)this.height - TEXT_PADDING);
+
     }
 
     @Override

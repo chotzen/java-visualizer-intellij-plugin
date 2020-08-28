@@ -15,6 +15,7 @@ public class Value {
 	public long reference;
 	public String referenceType;
 	public Frame holeDest;
+	public String holeString;
 	public long hashCode;
 
 	@Override

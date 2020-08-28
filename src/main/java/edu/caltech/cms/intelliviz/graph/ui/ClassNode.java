@@ -17,8 +17,6 @@ public class ClassNode extends Node {
     public ArrayList<GraphEdge> pointers;
     private Set<String> highlightedFields = new HashSet<>();
 
-    private Rectangle2D upper, lower;
-
     private static final int MIN_WIDTH = 60;
     private static final int TEXT_PADDING = 2;
 
@@ -29,48 +27,40 @@ public class ClassNode extends Node {
         this.name = name;
         this.fields = fields;
         this.pointers = new ArrayList<>();
-        upper = new Rectangle2D.Double(x, y, HEADER_HEIGHT, MIN_WIDTH);
-        lower = new Rectangle2D.Double(x, y + HEADER_HEIGHT, HEADER_HEIGHT, MIN_WIDTH);
-    }
-
-    private void updateRectangles(Graphics2D g) {
-        Graphics2D g2d = (Graphics2D) g.create();
         String[] pieces = this.name.split("\\.");
         this.displayName = pieces[pieces.length - 1];
-
-        g2d.setFont(boldFont);
-        Double[] widths = new Double[1 + fields.size()];
-        widths[0] = (double)g2d.getFontMetrics().stringWidth(this.displayName);
-
-        Object[] keys = fields.keySet().toArray();
-        for (int i = 1; i <= fields.size(); i++) {
-            g2d.setFont(normal);
-            widths[i] = (double)g2d.getFontMetrics().stringWidth(keys[i - 1].toString() + ": ");
-            g2d.setFont(boldItalic);
-            widths[i] += g2d.getFontMetrics().stringWidth(fields.get(keys[i - 1].toString()) + "\"\"");
-        }
-
-        int maxWidth = (int)Math.round(Collections.max(Arrays.asList(widths)) + 2 * TEXT_PADDING);
-        this.width = Math.max(MIN_WIDTH, maxWidth);
-        this.height = (1 + this.fields.size()) * HEADER_HEIGHT;
-        upper.setFrame(x, y, this.width, HEADER_HEIGHT);
-        lower.setFrame(x, y + HEADER_HEIGHT, this.width, this.fields.size() * HEADER_HEIGHT);
     }
 
-    protected void init() {
-        this.height = (1 + this.fields.size()) * HEADER_HEIGHT;
+    int maxWidth(Graphics2D g2D) {
+       g2D.setFont(boldFont);
+       int topWidth = g2D.getFontMetrics().stringWidth(this.displayName);
+
+       OptionalInt maxOtherWidth = this.fields.entrySet().stream().mapToInt((entry) -> {
+           g2D.setFont(normal);
+           int width = g2D.getFontMetrics().stringWidth(entry.getKey() + ": ");
+           g2D.setFont(boldItalic);
+           width += g2D.getFontMetrics().stringWidth(entry.getValue() + "\"\"");
+           return width;
+       }).max();
+       if (maxOtherWidth.isPresent()) {
+           return Math.max(Math.max(maxOtherWidth.getAsInt(), topWidth), MIN_WIDTH) + 2 * TEXT_PADDING;
+       }
+       return Math.max(topWidth, MIN_WIDTH) + 2 * TEXT_PADDING;
     }
+
 
     @Override
     public void draw(Graphics2D g) {
         Graphics2D g2d = (Graphics2D) g.create();
+        this.width = maxWidth(g2d);
+        this.height = (1 + this.fields.size()) * HEADER_HEIGHT;
 
         // Draw Rectangles
-        updateRectangles(g2d);
         g2d.setColor(YELLOW);
-        g2d.fill(upper);
+        g2d.fillRect(this.x, this.y, this.width, HEADER_HEIGHT);
+
         g2d.setColor(GREEN);
-        g2d.fill(lower);
+        g2d.fillRect(this.x, this.y + HEADER_HEIGHT, this.width, this.fields.size() * HEADER_HEIGHT);
 
         // highlight squares
         int offset = 1;
@@ -84,8 +74,11 @@ public class ClassNode extends Node {
 
         g2d.setColor(Color.BLACK);
         g2d.setStroke(new BasicStroke(2));
-        g2d.draw(upper);
-        g2d.draw(lower);
+        // draw borders
+        g2d.drawRect(this.x, this.y, this.width, HEADER_HEIGHT);
+        g2d.drawRect(this.x, this.y + HEADER_HEIGHT, this.width, this.fields.size() * HEADER_HEIGHT);
+
+
 
         // Draw header
         g2d.setFont(boldFont);
@@ -107,7 +100,7 @@ public class ClassNode extends Node {
 
     @Override
     public boolean contains(double x, double y) {
-        return upper.contains(x, y) || lower.contains(x, y);
+        return new Rectangle2D.Double(this.x, this.y, this.width, this.height).contains(x, y);
     }
 
     @Override

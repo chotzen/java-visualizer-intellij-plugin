@@ -10,6 +10,7 @@ public class Frame {
 	public String name;
 	public boolean internal;
 	public Map<String, Value> locals = new TreeMap<>();
+	public Map<String, Value> statics = new TreeMap<>();
 	public int lineNumber;
 
 	JSONObject toJson() {

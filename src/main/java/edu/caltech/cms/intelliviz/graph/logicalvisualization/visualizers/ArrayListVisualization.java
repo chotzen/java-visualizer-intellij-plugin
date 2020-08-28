@@ -42,6 +42,7 @@ public class ArrayListVisualization extends LogicalVisualization {
             }
             if (arrRef instanceof PrimitiveArrayNode) {
                 PrimitiveArrayNode pan = (PrimitiveArrayNode) arrRef;
+                System.out.println(pan.values.length);
                 String[] newValues = Arrays.stream(pan.values).filter(val -> !val.equals("null")).toArray(String[]::new);
                 cRef.pointers.get(0).dest = new PrimitiveArrayNode((int)pan.getX(), (int)pan.getY(), newValues);
                 nodes.put(getID(nodes, pan), cRef.pointers.get(0).dest);
