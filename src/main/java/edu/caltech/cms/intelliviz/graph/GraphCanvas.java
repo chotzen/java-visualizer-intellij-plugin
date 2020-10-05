@@ -494,7 +494,7 @@ public class GraphCanvas extends JPanel {
                         }
                     } else if (obj.fields.get(key).type == Value.Type.SCANNER_BLOB) {
                         Value v = obj.fields.get(key);
-                        ScannerNode scNode = new ScannerNode(v.stringValue, v.scannerPos);
+                        ScannerNode scNode = new ScannerNode(v.stringValue, v.scannerPos, v.booleanValue);
                         edge = new GraphEdge(ret, scNode, key, "*SCANNER INTERNAL*");
                         this.edges.add(edge);
                         this.nodes.put(getUniqueNegKey(), scNode);

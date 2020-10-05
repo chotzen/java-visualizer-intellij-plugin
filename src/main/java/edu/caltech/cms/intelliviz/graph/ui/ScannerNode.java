@@ -14,14 +14,16 @@ public class ScannerNode extends Node {
 
     private String contents;
     private int position;
+    private boolean closed;
 
     private static final int PADDING = 3;
 
     private static final char POSITION_CHAR = '\u2588'; // I think this is a solid rectangle. we'll see.
 
-    public ScannerNode(String contents, int position) {
+    public ScannerNode(String contents, int position, boolean closed) {
         this.contents = contents;
         this.position = position;
+        this.closed = closed;
     }
 
     @Override
@@ -34,10 +36,16 @@ public class ScannerNode extends Node {
             this.height = 2 * PADDING + g2d.getFontMetrics().getAscent() * convert().split("\n").length;
             this.width = 2 * PADDING + (int)maxWidth.getAsDouble();
 
-            g2d.setColor(Color.WHITE);
+            if (closed)
+                g2d.setColor(Color.LIGHT_GRAY);
+            else
+                g2d.setColor(Color.WHITE);
             g2d.fillRect(this.x, this.y, this.width, this.height);
             g2d.setColor(Color.BLACK);
             g2d.drawRect(this.x, this.y, this.width, this.height);
+
+            if (closed)
+                g2d.setColor(Color.DARK_GRAY);
 
             int offset = 0;
             for (String s : rows) {

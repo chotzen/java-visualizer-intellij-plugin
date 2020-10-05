@@ -3,16 +3,10 @@ package edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers;
 import com.aegamesi.java_visualizer.backend.Tracer;
 import com.aegamesi.java_visualizer.model.*;
 import com.aegamesi.java_visualizer.model.Value;
-import com.intellij.openapi.editor.ex.util.LexerEditorHighlighter;
-import com.intellij.util.io.CharSequenceBackedByChars;
 import com.sun.jdi.*;
-import edu.caltech.cms.intelliviz.graph.GraphCanvas;
 import edu.caltech.cms.intelliviz.graph.GraphEdge;
 import edu.caltech.cms.intelliviz.graph.Node;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.LogicalVisualization;
-import edu.caltech.cms.intelliviz.graph.ui.ClassNode;
-import edu.caltech.cms.intelliviz.graph.ui.PrimitiveArrayNode;
-import edu.caltech.cms.intelliviz.graph.ui.ScannerNode;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -28,6 +22,9 @@ public class ScannerVisualization extends LogicalVisualization {
         while (sc.hasNext()) {
             System.out.println(sc.next());
         }
+
+        sc.close();
+        System.out.println("stop here");
     }
 
     @Override
@@ -43,6 +40,8 @@ public class ScannerVisualization extends LogicalVisualization {
         - has field called `buf`
         - has char array called `hb`
         - read it
+
+        - grey out based on scanner.sourceClosed
          */
 
         HeapObject obj = new HeapObject();
@@ -52,6 +51,9 @@ public class ScannerVisualization extends LogicalVisualization {
         // calculate position
         Field position = ref.referenceType().fieldByName("position");
         obj.fields.put("position", tracer.convertValue(ref.getValue(position)));
+        Field sourceClosed = ref.referenceType().fieldByName("sourceClosed");
+        Value closedVal = tracer.convertValue(ref.getValue(sourceClosed));
+
 
         // follow other paths or something
         Field bufField = ref.referenceType().fieldByName("buf");
@@ -67,6 +69,7 @@ public class ScannerVisualization extends LogicalVisualization {
         out.type = Value.Type.SCANNER_BLOB;
         out.stringValue = blob;
         out.scannerPos = Integer.valueOf(tracer.convertValue(ref.getValue(position)).toString());
+        out.booleanValue = closedVal.booleanValue;
 
         obj.fields.put("data", out);
 
