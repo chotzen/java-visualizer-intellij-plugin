@@ -7,13 +7,14 @@ import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ClassNode extends Node {
 
     public String name;
     public Set<String> implementedInterfaces = new HashSet<>();
     private String displayName;
-    public HashMap<String, String> fields;
+    public ConcurrentHashMap<String, String> fields;
     public ArrayList<GraphEdge> pointers;
     private Set<String> highlightedFields = new HashSet<>();
 
@@ -21,7 +22,7 @@ public class ClassNode extends Node {
     private static final int TEXT_PADDING = 2;
 
 
-    public ClassNode(int x, int y, String name, HashMap<String, String> fields) {
+    public ClassNode(int x, int y, String name, ConcurrentHashMap<String, String> fields) {
         this.x = x;
         this.y = y;
         this.name = name;
@@ -31,11 +32,11 @@ public class ClassNode extends Node {
         this.displayName = pieces[pieces.length - 1];
     }
 
-    int maxWidth(Graphics2D g2D) {
+    int maxWidth(Graphics2D g2D, Map<String, String> se) {
        g2D.setFont(boldFont);
        int topWidth = g2D.getFontMetrics().stringWidth(this.displayName);
 
-       OptionalInt maxOtherWidth = this.fields.entrySet().stream().mapToInt((entry) -> {
+       OptionalInt maxOtherWidth = se.entrySet().stream().mapToInt((entry) -> {
            g2D.setFont(normal);
            int width = g2D.getFontMetrics().stringWidth(entry.getKey() + ": ");
            g2D.setFont(boldItalic);
@@ -51,21 +52,22 @@ public class ClassNode extends Node {
 
     @Override
     public void draw(Graphics2D g) {
+        Map<String, String> se = new TreeMap<>(fields);
         Graphics2D g2d = (Graphics2D) g.create();
-        this.width = maxWidth(g2d);
-        this.height = (1 + this.fields.size()) * HEADER_HEIGHT;
+        this.width = maxWidth(g2d, se);
+        this.height = (1 + se.size()) * HEADER_HEIGHT;
 
         // Draw Rectangles
         g2d.setColor(YELLOW);
         g2d.fillRect(this.x, this.y, this.width, HEADER_HEIGHT);
 
         g2d.setColor(GREEN);
-        g2d.fillRect(this.x, this.y + HEADER_HEIGHT, this.width, this.fields.size() * HEADER_HEIGHT);
+        g2d.fillRect(this.x, this.y + HEADER_HEIGHT, this.width, se.size() * HEADER_HEIGHT);
 
         // highlight squares
         int offset = 1;
         g2d.setColor(HIGHLIGHTED_COLOR);
-        for (String k : fields.keySet()) {
+        for (String k : se.keySet()) {
             if (highlightedFields.contains(k)) {
                 g2d.fillRect((int)x, (int)y + HEADER_HEIGHT * offset, (int)this.width, HEADER_HEIGHT);
             }
@@ -76,7 +78,7 @@ public class ClassNode extends Node {
         g2d.setStroke(new BasicStroke(2));
         // draw borders
         g2d.drawRect(this.x, this.y, this.width, HEADER_HEIGHT);
-        g2d.drawRect(this.x, this.y + HEADER_HEIGHT, this.width, this.fields.size() * HEADER_HEIGHT);
+        g2d.drawRect(this.x, this.y + HEADER_HEIGHT, this.width, se.size() * HEADER_HEIGHT);
 
 
 
@@ -86,13 +88,13 @@ public class ClassNode extends Node {
         g2d.drawString(this.displayName, (int)(x + TEXT_PADDING), (int)(y + TEXT_PADDING + vertOffset));
 
         int count = 1;
-        for (String k : fields.keySet()) {
+        for (String k : se.keySet()) {
             g2d.setFont(normal);
             String in = k + ": ";
             int keyWidth = g2d.getFontMetrics().stringWidth(in);
             g2d.drawString(in, (int)(x + TEXT_PADDING), (int)(y + TEXT_PADDING + count * HEADER_HEIGHT + vertOffset));
             g2d.setFont(boldItalic);
-            g2d.drawString(fields.get(k),  (int)(x + TEXT_PADDING + keyWidth), (int)(y + TEXT_PADDING + count * HEADER_HEIGHT + vertOffset));
+            g2d.drawString(se.get(k),  (int)(x + TEXT_PADDING + keyWidth), (int)(y + TEXT_PADDING + count * HEADER_HEIGHT + vertOffset));
             count++;
         }
 
