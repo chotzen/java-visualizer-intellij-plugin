@@ -151,7 +151,10 @@ public class GraphCanvas extends JPanel {
                                                         .collect(Collectors.toSet())) {
             StackFrame convert = frameMap.get(fr);
             for (String v : fr.locals.keySet()) {
-                this.variables.get(convert).add(buildVariable(fr, v, oldLocals, false));
+                VariableNode vNode = buildVariable(fr, v, oldLocals, false);
+                if (vNode != null) {
+                    this.variables.get(convert).add(vNode);
+                }
             }
         }
 
@@ -159,14 +162,18 @@ public class GraphCanvas extends JPanel {
         StackFrame conv = frameMap.get(last);
         if (last.locals.containsKey("this")) {
             VariableNode var = new VariableNode(0, 0, "this", renderNode(trace.heap.get(last.locals.get("this").reference)), last.locals.get("this").referenceType);
-            this.variables.get(conv).add(var);
-            thisNode = var;
+            if (var != null) {
+                this.variables.get(conv).add(var);
+                thisNode = var;
+            }
         }
 
         for (String key : last.statics.keySet()) {
             VariableNode vNode = buildVariable(last, key, oldLocals, true);
-            otherVariables.add(vNode);
-            this.variables.get(conv).add(vNode);
+            if (vNode != null) {
+                otherVariables.add(vNode);
+                this.variables.get(conv).add(vNode);
+            }
         }
 
         init = false;
@@ -182,13 +189,17 @@ public class GraphCanvas extends JPanel {
             // this works because LinkedHashMap iterates based on insertion order, and
             // this.variables is a LinkedHashMap, probably.
             VariableNode finalThisNode1 = thisNode;
-            downstreams.put(ent.getKey(), new HashSet<>(
-                    ent.getValue().stream()
-                            .filter(node -> !node.name.equals("this"))
-                            .flatMap(vNode -> findDownstreamNodes(vNode.reference).stream())
-                            .filter(node -> !allDownstream.contains(node) && !(finalThisNode1 != null && node.equals(finalThisNode1.reference)))
-                            .collect(Collectors.toSet())
-            ));
+            try {
+                downstreams.put(ent.getKey(), new HashSet<>(
+                        ent.getValue().stream()
+                                .filter(node -> !node.name.equals("this"))
+                                .flatMap(vNode -> findDownstreamNodes(vNode.reference).stream())
+                                .filter(node -> !allDownstream.contains(node) && !(finalThisNode1 != null && node.equals(finalThisNode1.reference)))
+                                .collect(Collectors.toSet())
+                ));
+            } catch (Exception e) {
+                System.out.println("here");
+            }
 
             allDownstream.addAll(downstreams.get(ent.getKey()));
         }

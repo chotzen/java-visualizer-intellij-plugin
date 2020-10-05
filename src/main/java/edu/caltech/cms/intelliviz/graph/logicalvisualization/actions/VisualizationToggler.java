@@ -1,6 +1,8 @@
 package edu.caltech.cms.intelliviz.graph.logicalvisualization.actions;
 
 import com.aegamesi.java_visualizer.plugin.MainPane;
+import com.intellij.debugger.engine.DebuggerManagerThreadImpl;
+import com.intellij.debugger.engine.managerThread.DebuggerManagerThread;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
 import com.intellij.openapi.actionSystem.ToggleAction;
