@@ -3,7 +3,7 @@
   <name>Intelliviz</name>
   <vendor email="dchotzen@caltech.edu" url="https://github.com/chotzen">Devin Hartzell</vendor>
 
-  <depends>com.intellij.modules.lang</depends>
+  <!--depends>com.intellij.modules.lang</depends-->
 
   <description><![CDATA[
       A tool to visualize data structures and objects on the heap, to aid

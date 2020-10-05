@@ -49,7 +49,7 @@ public class GraphEdge {
                         other.styleChecked = true;
                         this.styleChecked = true;
                         this.arcOffset = 1 + count * 0.3;
-                        other.arcOffset = -1 - count * 0.3;
+                        other.arcOffset = 1 + count * 0.3;
                         otherEdge = other;
                     }
                 }
@@ -67,11 +67,9 @@ public class GraphEdge {
                 }
             } else {
                 Point2D newOrigin = GraphEdge.getCenterTargetingProjection(this.source, destPt.getX(), destPt.getY());
-                drawArc(g, newOrigin, destPt, arcOffset);
-                drawArc(g, destPt, newOrigin, arcOffset);
+                drawArc(g, newOrigin, destPt, arcOffset, this.label);
+                //drawArc(g, destPt, newOrigin, -arcOffset, otherEdge.label);
             }
-
-
 
             // Render Arrow Head
             Graphics2D g2 = (Graphics2D) g.create();
@@ -123,7 +121,7 @@ public class GraphEdge {
         
     }
 
-    private void drawArc(Graphics2D g2d, Point2D newOrigin, Point2D destPt, double arcOffset) {
+    private void drawArc(Graphics2D g2d, Point2D newOrigin, Point2D destPt, double arcOffset, TextLabel label) {
         double dy = destPt.getY() - newOrigin.getY();
         double dx = destPt.getX() - newOrigin.getX();
         double dist = Math.sqrt(dx * dx + dy * dy);
@@ -139,6 +137,7 @@ public class GraphEdge {
         double startAngle = (Math.atan2(centerY - newOrigin.getY(), newOrigin.getX() - centerX) * 180 / Math.PI);
         double stopAngle = (Math.atan2(centerY - destPt.getY(), destPt.getX() - centerX) * 180 / Math.PI);
 
+        // put the angles in the right order (stop > start)
         int startAngle2 = (int)Math.floor(Math.min(startAngle, stopAngle));
         int stopAngle2 = (int)Math.ceil(Math.max(startAngle, stopAngle));
 
@@ -153,6 +152,11 @@ public class GraphEdge {
 
         g2d.drawArc((int)(centerX - circleRadius), (int)(centerY - circleRadius), 2 * (int)circleRadius, 2 * (int)circleRadius,
                 startAngle2, sweep);
+
+        double middleAngle = (startAngle2 + stopAngle2) / 2.0 + 180;
+        int label_x = (int)(centerX - circleRadius * Math.cos(middleAngle * Math.PI / 180.0));
+        int label_y = (int)(centerY + circleRadius * Math.sin(middleAngle * Math.PI / 180.0));
+        label.draw(g2d, label_x, label_y);
     }
 
 }
