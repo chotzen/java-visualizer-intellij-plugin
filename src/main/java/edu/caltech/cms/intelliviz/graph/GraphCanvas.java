@@ -260,9 +260,6 @@ public class GraphCanvas extends JPanel {
 
     }
 
-
-
-
     private Node renderNode(HeapEntity ent) {
         return renderNode(ent, 200);
     }
@@ -481,6 +478,12 @@ public class GraphCanvas extends JPanel {
                             this.edges.add(edge);
                             this.nodes.put(getUniqueNegKey(), nn);
                         }
+                    } else if (obj.fields.get(key).type == Value.Type.SCANNER_BLOB) {
+                        Value v = obj.fields.get(key);
+                        ScannerNode scNode = new ScannerNode(v.stringValue, v.scannerPos);
+                        edge = new GraphEdge(ret, scNode, key, "*SCANNER INTERNAL*");
+                        this.edges.add(edge);
+                        this.nodes.put(getUniqueNegKey(), scNode);
                     } else {
                         fields.put(key, obj.fields.get(key).toString());
                     }

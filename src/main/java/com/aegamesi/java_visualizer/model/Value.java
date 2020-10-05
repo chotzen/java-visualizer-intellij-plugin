@@ -17,6 +17,7 @@ public class Value {
 	public Frame holeDest;
 	public String holeString;
 	public long hashCode;
+	public int scannerPos;
 
 	@Override
 	public String toString() {
@@ -25,6 +26,10 @@ public class Value {
 				return "null";
 			case STRING:
 				return "\"" + stringValue + "\"";
+			case CODE:
+				return codeValue;
+			case SCANNER_BLOB:
+				return stringValue;
 			case LONG:
 				return Long.toString(longValue);
 			case DOUBLE:
@@ -43,7 +48,7 @@ public class Value {
 	}
 
 	public enum Type {
-		NULL, VOID, LONG, DOUBLE, BOOLEAN, STRING, CHAR, REFERENCE, HOLE, CODE;
+		NULL, VOID, LONG, DOUBLE, BOOLEAN, STRING, CHAR, REFERENCE, HOLE, CODE, SCANNER_BLOB;
 	}
 
 	JSONArray toJson() {

@@ -54,6 +54,8 @@ public class Tracer {
 	public ThreadReference thread;
 	public ExecutionTrace model;
 
+	public static final int CLIP_LENGTH = 200; // never display anything longer than this value
+
 	/*
 	Converting actual heap objects requires running code on the suspended VM thread.
 	However, once we start running code on the thread, we can no longer read frame locals.

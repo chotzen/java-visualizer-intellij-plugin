@@ -1,10 +1,11 @@
 package edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers;
 
 import com.aegamesi.java_visualizer.backend.Tracer;
-import com.aegamesi.java_visualizer.model.ExecutionTrace;
-import com.aegamesi.java_visualizer.model.HeapEntity;
-import com.sun.jdi.ObjectReference;
-import com.sun.jdi.ThreadReference;
+import com.aegamesi.java_visualizer.model.*;
+import com.aegamesi.java_visualizer.model.Value;
+import com.intellij.openapi.editor.ex.util.LexerEditorHighlighter;
+import com.intellij.util.io.CharSequenceBackedByChars;
+import com.sun.jdi.*;
 import edu.caltech.cms.intelliviz.graph.GraphCanvas;
 import edu.caltech.cms.intelliviz.graph.GraphEdge;
 import edu.caltech.cms.intelliviz.graph.Node;
@@ -22,6 +23,13 @@ public class ScannerVisualization extends LogicalVisualization {
         super(classParams, interfaceParams);
     }
 
+    public static void main(String[] args) {
+        Scanner sc = new Scanner("abcdefghijklmnopqrstuvwxyz");
+        while (sc.hasNext()) {
+            System.out.println(sc.next());
+        }
+    }
+
     @Override
     protected String getDisplayName() {
         return "Scanner";
@@ -29,11 +37,45 @@ public class ScannerVisualization extends LogicalVisualization {
 
     @Override
     protected HeapEntity applyOnTrace(ObjectReference ref, Tracer tracer, Map<String, String> params) {
-        return null;
+        /*
+        plan for doing this
+        - scanner class
+        - has field called `buf`
+        - has char array called `hb`
+        - read it
+         */
+
+        HeapObject obj = new HeapObject();
+        obj.label = "java.util.Scanner";
+        obj.id = ref.uniqueID();
+        obj.type = HeapEntity.Type.OBJECT;
+        // calculate position
+        Field position = ref.referenceType().fieldByName("position");
+        obj.fields.put("position", tracer.convertValue(ref.getValue(position)));
+
+        // follow other paths or something
+        Field bufField = ref.referenceType().fieldByName("buf");
+        ObjectReference bufRef = (ObjectReference)ref.getValue(bufField);
+        Field hbField = bufRef.referenceType().fieldByName("hb");
+        ArrayReference ar = (ArrayReference)bufRef.getValue(hbField);
+        String blob = ar.getValues().stream().map(v -> ((CharValue)v).value())
+                .filter(c -> (32 <= c && c <= 126) || c == 10 || c == 13)
+                .map(String::valueOf)
+                .collect(Collectors.joining());
+
+        Value out = new Value();
+        out.type = Value.Type.SCANNER_BLOB;
+        out.stringValue = blob;
+        out.scannerPos = Integer.valueOf(tracer.convertValue(ref.getValue(position)).toString());
+
+        obj.fields.put("data", out);
+
+        return obj;
     }
 
     @Override
     protected Node applyOnBuild(Node ref, Map<Long, Node> nodes, List<GraphEdge> edges, Map<String, String> params) {
+        /*
         // no need for params, since this only acts on java.util.Scanner
         if (ref instanceof ClassNode) {
             ClassNode scanner = (ClassNode) ref;
@@ -70,7 +112,9 @@ public class ScannerVisualization extends LogicalVisualization {
 
             return scanner;
         }
-        return null; // shouldn't happen
+
+         */
+        return null;
     }
 
     private void prune(Node root, Map<Long, Node> nodes, List<GraphEdge> edges) {

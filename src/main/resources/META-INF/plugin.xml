@@ -3,13 +3,15 @@
   <name>Intelliviz</name>
   <vendor email="dchotzen@caltech.edu" url="https://github.com/chotzen">Devin Hartzell</vendor>
 
+  <depends>com.intellij.modules.lang</depends>
+
   <description><![CDATA[
-      A tool to visualize the call stack and objects on the heap (as a box and
-      pointer diagram) while debugging Java applications.
+      A tool to visualize data structures and objects on the heap, to aid
+      in debugging projects in Caltech's CS 2 course.
     ]]></description>
 
   <change-notes><![CDATA[
-      Add buttons to increase and decrease the zoom of the visualizer.
+      Initial Release. This needs more characters.
     ]]>
   </change-notes>
 
