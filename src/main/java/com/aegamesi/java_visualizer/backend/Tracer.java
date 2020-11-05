@@ -211,6 +211,7 @@ public class Tracer {
 
 				try {
 				    Value v = convertValue(sf.getValue(lv));
+				    // HERE
 				    v.isArg = true;
 					output.locals.put(lv.name(), v);
 				} catch (IllegalArgumentException exc) {
@@ -229,6 +230,7 @@ public class Tracer {
 				for (int i = 0; i < anon_args.size(); i++) {
 					String name = "param#" + i;
 					Value v = convertValue(anon_args.get(i));
+					// AND ALSO HERE
 					v.isArg = true;
 					output.locals.put(name, v);
 				}

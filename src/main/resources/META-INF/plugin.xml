@@ -1,9 +1,10 @@
 <idea-plugin>
   <id>edu.caltech.cms.intelliviz</id>
   <name>Intelliviz</name>
-  <vendor email="dchotzen@caltech.edu" url="https://github.com/chotzen">Devin Hartzell</vendor>
+  <vendor email="dchotzen@caltech.edu" url="https://github.com/chotzen">Devin Chotzen-Hartzell</vendor>
 
-  <!--depends>com.intellij.modules.lang</depends-->
+  <depends>com.intellij.modules.java</depends>
+
 
   <description><![CDATA[
       A tool to visualize data structures and objects on the heap, to aid
@@ -36,21 +37,21 @@
               class="edu.caltech.cms.intelliviz.graph.logicalvisualization.actions.ToggleCollectionsAction"
               text="Toggle Collection Visualization"
               description="Switch between implementation and abstract representations of collections"
-              icon="/icons/magnify-plus.svg"
+              icon="/icons/collection_icon.png"
       />
       <action
               id="JavaVisualizer.ToggleMapsAction"
               class="edu.caltech.cms.intelliviz.graph.logicalvisualization.actions.ToggleMapsAction"
               text="Toggle Map Visualization"
               description="Switch between implementation and abstract representations of maps"
-              icon="/icons/magnify-minus.svg"
+              icon="/icons/map_icon.png"
       />
       <action
               id="JavaVisualizer.ToggleTrieAction"
               class="edu.caltech.cms.intelliviz.graph.logicalvisualization.actions.ToggleTrieAction"
               text="Toggle Trie Visualization"
               description="Switch between two abstract representations of TrieNodes"
-              icon="/icons/magnify-minus.svg"
+              icon="/icons/trie_icon.png"
       />
     </group>
   </actions>

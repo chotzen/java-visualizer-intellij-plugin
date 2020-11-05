@@ -46,7 +46,12 @@ public class StackFrame extends Node {
                 this.displayString += heap.get(ref).label;
             } else {
                 String[] s = value.toString().split("\\.");
-                this.displayString += s[s.length - 1];
+                if (value.type != Value.Type.DOUBLE) {
+                    this.displayString += s[s.length - 1];
+                } else {
+                    // assume that doubles will have a split at the decimal, which we want to account for
+                    this.displayString += s[s.length - 2] + '.' + s[s.length - 1];
+                }
             }
 
             if (iter.hasNext()) {

@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'com.aegamesi'
-version '2.1.0'
+version '2.1.0.1'
 
 sourceCompatibility = 1.8
 
@@ -30,6 +30,10 @@ intellij {
 
 runIde {
     jvmArgs '--add-exports', 'java.base/jdk.internal.vm=ALL-UNNAMED'
+}
+
+buildPlugin {
+    //jvmArgs = ['--add-exports java.base/jdk.internal.vm=ALL-UNNAMED']
 }
 
 patchPluginXml {

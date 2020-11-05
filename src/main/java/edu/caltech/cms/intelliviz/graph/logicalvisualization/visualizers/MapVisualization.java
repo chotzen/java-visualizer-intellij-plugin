@@ -6,10 +6,7 @@ import com.aegamesi.java_visualizer.model.ExecutionTrace;
 import com.aegamesi.java_visualizer.model.HeapEntity;
 import com.aegamesi.java_visualizer.model.HeapMap;
 import com.aegamesi.java_visualizer.model.HeapObject;
-import com.sun.jdi.ObjectReference;
-import com.sun.jdi.StringReference;
-import com.sun.jdi.ThreadReference;
-import com.sun.jdi.Value;
+import com.sun.jdi.*;
 import edu.caltech.cms.intelliviz.graph.GraphEdge;
 import edu.caltech.cms.intelliviz.graph.Node;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.LogicalVisualization;
@@ -45,7 +42,7 @@ public class MapVisualization extends LogicalVisualization {
             HeapMap.Pair pair = new HeapMap.Pair();
             pair.key = tracer.convertValue(key);
             pair.val = tracer.convertValue(invokeGet(tracer.thread, ref, params.get("getMethod"), key));
-            pair.id = ((StringReference)TracerUtils.invokeSimple(tracer.thread, key, "toString")).value();
+            pair.id = ((IntegerValue)TracerUtils.invokeSimple(tracer.thread, key, "hashCode")).value();
             child.pairs.add(pair);
         }
 

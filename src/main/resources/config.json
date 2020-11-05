@@ -51,6 +51,15 @@
           }
         },
         {
+          "name": "java.util.SortedMap",
+          "params": {
+            "keySetMethod": "keySet",
+            "getMethod": "get",
+            "keySetIteratorMethod": "iterator",
+            "sizeMethod": "size"
+          }
+        },
+        {
           "name": "edu.caltech.cs2.interfaces.IDictionary",
           "params": {
             "keySetMethod": "keySet",
