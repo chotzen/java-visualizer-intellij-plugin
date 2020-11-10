@@ -94,25 +94,25 @@ public class GraphCanvas extends JPanel {
         Value val = isStatic ? fr.statics.get(v) : fr.locals.get(v);
         if (val.type == Value.Type.REFERENCE) {
             if (!v.equals("this")) {
-                VariableNode var = new VariableNode(0, 0, v, renderNode(trace.heap.get(val.reference)), val.referenceType);
+                VariableNode var = new VariableNode(0, 0, v, renderNode(trace.heap.get(val.reference)), val.referenceType, isStatic);
                 return var;
             }
         } else if (val.type == Value.Type.HOLE) {
             StackFrame dest = this.frameMap.get(val.holeDest);
             CodeNode cn = new CodeNode(0, 0, val.holeString);
             cn.holeDest = dest;
-            VariableNode var = new VariableNode(0, 0, v, cn, val.type.toString());
+            VariableNode var = new VariableNode(0, 0, v, cn, val.type.toString(), isStatic);
             this.nodes.put(getUniqueNegKey(), cn);
             dest.targeted = true;
             return var;
         } else if (val.type == Value.Type.CODE) {
             CodeNode dest = new CodeNode(0, 0, val.codeValue);
-            VariableNode var = new VariableNode(0, 0, v, dest, val.type.toString());
+            VariableNode var = new VariableNode(0, 0, v, dest, val.type.toString(), isStatic);
             this.nodes.put(getUniqueNegKey(), dest);
             return var;
         } else {
             PrimitiveNode node = new PrimitiveNode(0, 0, val.toString());
-            VariableNode var = new VariableNode(0, 0, v, node, val.type.toString());
+            VariableNode var = new VariableNode(0, 0, v, node, val.type.toString(), isStatic);
             this.nodes.put(getUniqueNegKey(), node);
             this.locals.put(val.hashCode, var);
 
@@ -162,7 +162,7 @@ public class GraphCanvas extends JPanel {
         Frame last = this.trace.frames.get(this.trace.frames.size() - 1);
         StackFrame conv = frameMap.get(last);
         if (last.locals.containsKey("this")) {
-            VariableNode var = new VariableNode(0, 0, "this", renderNode(trace.heap.get(last.locals.get("this").reference)), last.locals.get("this").referenceType);
+            VariableNode var = new VariableNode(0, 0, "this", renderNode(trace.heap.get(last.locals.get("this").reference)), last.locals.get("this").referenceType, false);
             if (var != null) {
                 this.variables.get(conv).add(var);
                 thisNode = var;
@@ -192,7 +192,7 @@ public class GraphCanvas extends JPanel {
             VariableNode finalThisNode1 = thisNode;
             downstreams.put(ent.getKey(), new HashSet<>(
                     ent.getValue().stream()
-                            .filter(node -> node != null && !node.name.equals("this"))
+                            .filter(node -> node != null && !node.name.equals("this") && !node.isStatic)
                             .flatMap(vNode -> findDownstreamNodes(vNode.reference).stream())
                             .filter(node -> !allDownstream.contains(node) && !(finalThisNode1 != null && node.equals(finalThisNode1.reference)))
                             .collect(Collectors.toSet())

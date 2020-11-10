@@ -14,19 +14,21 @@ public class VariableNode extends Node {
     public String name;
     public String declaringType;
     private String label;
+    public boolean isStatic;
     private static final Font font = new Font("Monospaced", Font.BOLD, 13);
     private static final float dash1[] = {5.0f};
     private static final BasicStroke stroke = new BasicStroke(2.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash1, 0.0f);
     private static final int DD_PADDING = 5;
 
 
-    public VariableNode(int x, int y, String label, Node reference, String declaringType) {
+    public VariableNode(int x, int y, String label, Node reference, String declaringType, boolean isStatic) {
         this.x = x;
         this.y = y;
         this.label = label + " =";
         this.name = label;
         this.reference = reference;
         this.declaringType = declaringType;
+        this.isStatic = isStatic;
 
         // Guess height/width before first display tick
         this.width = 40;

@@ -192,11 +192,11 @@ public class Tracer {
 				// expect JDWP error 35
 				JDWPerror = true;
 			} else {
-				throw e;
-			}
-		}
+		throw e;
+	}
+}
 
-		List<LocalVariable> frame_vars, frame_args;
+	List<LocalVariable> frame_vars, frame_args;
 		boolean completed_args = false;
 		try {
 			// args make sense to show first
