@@ -104,7 +104,7 @@ public class Tracer {
 			if (heapDone.contains(id))
 				continue;
 			heapDone.add(id);
-			HeapEntity converted = convertObject(obj);
+			HeapEntity converted = convertObject(frameMap.values(), obj);
 			converted.id = id;
 			model.heap.put(id, converted);
 		}
@@ -314,7 +314,7 @@ public class Tracer {
 		return out;
 	}
 
-	private HeapEntity convertObject(ObjectReference obj) {
+	private HeapEntity convertObject(Collection<StackFrame> frames, ObjectReference obj) {
 		if (obj instanceof ArrayReference) {
 			ArrayReference ao = (ArrayReference) obj;
 			int length = ao.length();
@@ -341,8 +341,9 @@ public class Tracer {
 
 		boolean appliedViz = false;
 
+
 		for (LogicalVisualization viz : LogicalVisualization.getEnabledVisualizations()) {
-			HeapEntity he = viz.applyTrace(obj, this);
+			HeapEntity he = viz.applyTrace(frames, obj, this);
 			if (he != null) {
 			    // avoid index conflicts with generation
                 // TODO HERE

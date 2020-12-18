@@ -8,6 +8,7 @@ import com.aegamesi.java_visualizer.model.HeapObject;
 import com.aegamesi.java_visualizer.model.Value;
 import com.intellij.openapi.actionSystem.ex.ActionManagerEx;
 import com.sun.jdi.ObjectReference;
+import com.sun.jdi.StackFrame;
 import edu.caltech.cms.intelliviz.graph.GraphEdge;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers.ScannerVisualization;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers.TrieMapVisualization;
@@ -140,8 +141,14 @@ public abstract class LogicalVisualization {
      * @param tracer the tracer to search
      * @return a small "heap" to be merged with the heap model
      */
-    public HeapEntity applyTrace(ObjectReference ref, Tracer tracer) {
+    public HeapEntity applyTrace(Collection<StackFrame> frames, ObjectReference ref, Tracer tracer) {
         if (this.classes.containsKey(ref.type().name()) && enabledVisualizations.contains(this)) {
+            for (StackFrame fr : frames) {
+                if (fr.location().declaringType().name().equals(ref.type().name())) {
+                    return null;
+                }
+            }
+            //if (frames.stream().anyMatch(frame -> frame.location().declaringType().name))
             return this.applyOnTrace(ref, tracer, this.classes.get(TracerUtils.displayNameForType(ref)));
         }
 
@@ -149,7 +156,14 @@ public abstract class LogicalVisualization {
 
         if (matched.isPresent()) {
             String iface = matched.get();
+            for (StackFrame fr : frames) {
+                if (TracerUtils.doesImplementInterface(fr.thisObject(), iface)) {
+                    return null;
+                }
+            }
             try {
+
+//                TracerUtils.doesImplementInterface(List.copyOf(frames).get(1).thisObject(), "edu.caltech.cs2.interfaces.IStack");
                 return this.applyOnTrace(ref, tracer, this.interfaces.get(iface));
             } catch (NullPointerException npe) {
                 System.out.println("Error: Failed to visualize");

@@ -3,6 +3,7 @@ import edu.caltech.cms.intelliviz.graph.ui.*;
 
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class GraphLayoutAlgorithm {
 
@@ -60,6 +61,9 @@ public class GraphLayoutAlgorithm {
     }
 
     private boolean validateDoublyLinked(Node node, Node traceUntil) {
+        if (node.equals(traceUntil)) {
+            return false;
+        }
         Node curr = node;
         Set<Node> visited = new HashSet<>();
         while (curr.getChildren().stream().anyMatch(edge -> edge.dest instanceof ClassNode && edge.label.label.contains("next")) && !curr.equals(traceUntil)) {
@@ -88,9 +92,10 @@ public class GraphLayoutAlgorithm {
             Predicate<String> p = s -> node.getChildren().stream().anyMatch(edge -> edge.label.toString().contains(s));
 
             Optional<GraphEdge> tail = upstream.getChildren().stream().filter(edge -> Arrays.stream(tailHeuristics).anyMatch(h -> h.matches(edge.label.label))).findFirst();
+            boolean dllHeuristics = Arrays.stream(prevHeuristics).anyMatch(p) && Arrays.stream(nextHeuristics).anyMatch(p);
 
-            if (Arrays.stream(prevHeuristics).anyMatch(p) && Arrays.stream(nextHeuristics).anyMatch(p) && getChildrenOfSameType(node) == 2 &&
-                    (tail.isPresent() && layout != LayoutBehavior.DOUBLY_LINKED && !declaringTypes.get(upstream).equals(declaringTypes.get(node)) /* && validateDoublyLinked(node, tail.get().dest) */)) {
+            if (dllHeuristics && getChildrenOfSameType(node) == 2 && (tail.isPresent() && layout != LayoutBehavior.DOUBLY_LINKED
+                    && !declaringTypes.get(upstream).equals(declaringTypes.get(node)) && validateDoublyLinked(node, tail.get().dest) )) {
                 // drop everything, it's a doubly linked list!
                 if (layout != LayoutBehavior.DOUBLY_LINKED) {
 
@@ -106,7 +111,8 @@ public class GraphLayoutAlgorithm {
                 }
                 System.out.println("DOUBLY LINKED!");
                 layout = LayoutBehavior.DOUBLY_LINKED;
-            } else {
+
+            } else if (childrenOfSameTypeLeft(node).size() >= 2 && !dllHeuristics) { // this tries to capture the directionality of trees
                 if (layout != LayoutBehavior.TREE) {
                     prevBehavior = layout;
                 }
@@ -170,7 +176,7 @@ public class GraphLayoutAlgorithm {
                 if (stepIn) {
                     node.setPos(last_x, last_y + upstream.getHeight() + vSpace);
                 } else {
-                    node.setPos(last_x + nodeSpace + upstream.getWidth(), last_y + upstream.getWidth() / 2 - node.getWidth() / 2);
+                    node.setPos(last_x + nodeSpace + upstream.getWidth(), last_y + upstream.getHeight() / 2 - node.getHeight() / 2);
                 }
             }
         }
@@ -312,6 +318,14 @@ public class GraphLayoutAlgorithm {
                 .filter(edge -> edge.declaringType.equals(declaringTypes.get(node))
                                 /*&& !(edge.dest instanceof StackFrame)*/)
                 .count();
+    }
+
+    private List<Node> childrenOfSameTypeLeft(Node node) {
+        return node.getChildren().stream()
+                .filter(edge -> edge.declaringType.equals(declaringTypes.get(node)))
+                .filter(edge -> !beingHandled.contains(edge.dest))
+                .map(edge -> edge.dest)
+                .collect(Collectors.toList());
     }
 
     private double getSubgraphHeight(Node node) {
