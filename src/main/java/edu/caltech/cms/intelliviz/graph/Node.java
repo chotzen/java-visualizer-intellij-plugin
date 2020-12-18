@@ -28,6 +28,7 @@ public abstract class Node {
 
     public static final Color HIGHLIGHTED_COLOR = Color.decode("#00FAD8");
     protected static final Color YELLOW = Color.decode("#FAF1C8");
+    protected static final Color LIGHT_YELLOW = Color.decode("#FFFCED");
     protected static final Color GREEN = Color.decode("#C8FAD8");
     protected static final Color NULLGREY = Color.decode("#DDDDDD");
 
@@ -41,7 +42,7 @@ public abstract class Node {
         AFTER_EDGES
     }
 
-    protected static final int HEADER_HEIGHT = 20;
+    public static final int HEADER_HEIGHT = 20;
 
     public abstract void draw(Graphics2D g);
 

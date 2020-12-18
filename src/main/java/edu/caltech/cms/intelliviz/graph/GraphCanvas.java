@@ -43,6 +43,8 @@ public class GraphCanvas extends JPanel {
     private double x1, y1;
     private boolean init = false;
 
+    private double graphWidth;
+
     static final NotificationGroup VIZ_NOTIFICATIONS = new NotificationGroup("Java Visualization",
             NotificationDisplayType.TOOL_WINDOW, true);
 
@@ -126,6 +128,7 @@ public class GraphCanvas extends JPanel {
 
     public void buildUI() {
         Map<Long, VariableNode> oldLocals = this.locals;
+        this.graphWidth = 0;
         this.locals = new ConcurrentHashMap<>();
         this.lastNodes = this.nodes;
         this.nodes = new ConcurrentHashMap<>();
@@ -228,6 +231,7 @@ public class GraphCanvas extends JPanel {
                 }
                 tree.putAll(upperLayout.tree);
                 vertOffset = upperLayout.getMaxY() + spacing;
+                this.graphWidth = Math.max(this.graphWidth, upperLayout.getMaxX());
             }
 
             for (Map.Entry<StackFrame, List<VariableNode>> ent : this.variables.entrySet()) {
@@ -263,6 +267,7 @@ public class GraphCanvas extends JPanel {
 
                 tree.putAll(lowerLayout.tree);
                 vertOffset = lowerLayout.getMaxY() + (ent.getValue().size() > 0 ? spacing : 0);
+                this.graphWidth = Math.max(this.graphWidth, lowerLayout.getMaxX());
             }
 
             this.layoutTree = tree;
@@ -572,7 +577,7 @@ public class GraphCanvas extends JPanel {
         }
 
         for (StackFrame sf : variables.keySet()) {
-            sf.draw(g2D, 1000); // TODO: fix width
+            sf.draw(g2D, (int)Math.max(1000, this.graphWidth + 300));
         }
 
         for (GraphEdge edge : edgesCopy) {

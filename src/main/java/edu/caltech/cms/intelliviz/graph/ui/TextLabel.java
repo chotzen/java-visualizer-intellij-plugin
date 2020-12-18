@@ -4,7 +4,7 @@ import java.awt.*;
 
 public class TextLabel {
 
-    private String label;
+    public String label;
     private static Font labelFont = new Font("SanSerif", Font.PLAIN, 10);
 
     public TextLabel(String label) {

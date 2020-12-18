@@ -18,7 +18,7 @@ public class GraphEdge {
     boolean styleChecked = false;
     double arcOffset = 0;
 
-    //private Line2D line;
+    private static double LENGTH_LABEL_THRESHOLD = 30;
 
     GraphEdge(Node from, Node to, String label) {
         this.source = from;
@@ -58,12 +58,14 @@ public class GraphEdge {
             g.setColor(Color.black);
             if (arcOffset == 0) {
                 g.drawLine((int) origin.getX(), (int) origin.getY(), (int) destPt.getX(), (int) destPt.getY());
-                if (this.source instanceof ClassNode) {
-                    Point2D originProj = getCenterTargetingProjection(this.source, destPt.getX(), destPt.getY());
-                    label.draw(g, (originProj.getX() + destPt.getX()) / 2, (originProj.getY() + destPt.getY()) / 2);
+                if (calcDist(origin, destPt) > LENGTH_LABEL_THRESHOLD) {
+                    if (this.source instanceof ClassNode) {
+                        Point2D originProj = getCenterTargetingProjection(this.source, destPt.getX(), destPt.getY());
+                        label.draw(g, (originProj.getX() + destPt.getX()) / 2, (originProj.getY() + destPt.getY()) / 2);
 
-                } else {
-                    label.draw(g, (origin.getX() + destPt.getX()) / 2, (origin.getY() + destPt.getY()) / 2);
+                    } else {
+                        label.draw(g, (origin.getX() + destPt.getX()) / 2, (origin.getY() + destPt.getY()) / 2);
+                    }
                 }
             } else {
                 Point2D newOrigin = GraphEdge.getCenterTargetingProjection(this.source, destPt.getX(), destPt.getY());
@@ -154,9 +156,18 @@ public class GraphEdge {
                 startAngle2, sweep);
 
         double middleAngle = (startAngle2 + stopAngle2) / 2.0 + 180;
-        int label_x = (int)(centerX - circleRadius * Math.cos(middleAngle * Math.PI / 180.0));
-        int label_y = (int)(centerY + circleRadius * Math.sin(middleAngle * Math.PI / 180.0));
-        label.draw(g2d, label_x, label_y);
+        if (calcDist(newOrigin, destPt) > LENGTH_LABEL_THRESHOLD) {
+            int label_x = (int)(centerX - circleRadius * Math.cos(middleAngle * Math.PI / 180.0));
+            int label_y = (int)(centerY + circleRadius * Math.sin(middleAngle * Math.PI / 180.0));
+
+            label.draw(g2d, label_x, label_y);
+        }
+    }
+
+    private double calcDist(Point2D x1, Point2D x2) {
+        double dx = x1.getX() - x2.getX();
+        double dy = x1.getY() - x2.getY();
+        return Math.sqrt(dx * dx + dy * dy);
     }
 
 }

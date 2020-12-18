@@ -112,10 +112,13 @@ public class Tracer {
 		// Deal with holes
 		for (int i = model.frames.size() - 1; i > 0; i--) {
 		    try {
+
 				Frame fr = model.frames.get(i);
 				StackFrame frame = frameMap.get(fr);
 				String line = getCurrentLine(frame);
 				String[] pieces = line.split("=");
+				String trimmed = line.replaceAll(" ", "");
+
 				if (pieces.length == 2) {
 					// it's an assignment. probably.
 					// for now, ignore it if the left side has any parens, we don't want to deal with that
@@ -192,11 +195,12 @@ public class Tracer {
 				// expect JDWP error 35
 				JDWPerror = true;
 			} else {
-		throw e;
-	}
-}
+				throw e;
+			}
+		}
 
-	List<LocalVariable> frame_vars, frame_args;
+
+		List<LocalVariable> frame_vars, frame_args;
 		boolean completed_args = false;
 		try {
 			// args make sense to show first
@@ -265,9 +269,14 @@ public class Tracer {
 						output.locals.get(lv.name()).hashCode = lv.hashCode();
 					} catch (IllegalArgumentException exc) {
 						// variable not yet defined. heuristics time
-						String[] pieces = getCurrentLine(sf).split("[^=]=[^=]");
-						if (pieces.length >= 2) { // suppose, hypothetically, for the sake of argument, that we have assignment
-						    // want to make sure that we're actually assigning the right variable
+						String curLine = getCurrentLine(sf);
+						String[] pieces = curLine.split("[^=]=[^=]");
+						String stripped = curLine.replaceAll(" ", "");
+
+						String[] KEYWORDS_TO_IGNORE = {"if", "while", "for", "else"};
+
+						if (!Arrays.stream(KEYWORDS_TO_IGNORE).anyMatch(kw -> stripped.matches("^" + kw)) &&
+								pieces.length >= 2) {
 							if (pieces[0].contains(" " + me.getValue().name() + " ")) {
 							    String rightSide = String.join("", Arrays.copyOfRange(pieces, 1, pieces.length));
 							    rightSide = rightSide.split(";")[0];

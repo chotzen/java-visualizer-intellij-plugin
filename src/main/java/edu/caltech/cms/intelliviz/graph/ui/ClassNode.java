@@ -17,6 +17,7 @@ public class ClassNode extends Node {
     public ConcurrentHashMap<String, String> fields;
     public ArrayList<GraphEdge> pointers;
     private Set<String> highlightedFields = new HashSet<>();
+    public boolean lightMode = false;
 
     private static final int MIN_WIDTH = 60;
     private static final int TEXT_PADDING = 2;
@@ -49,7 +50,6 @@ public class ClassNode extends Node {
        return Math.max(topWidth, MIN_WIDTH) + 2 * TEXT_PADDING;
     }
 
-
     @Override
     public void draw(Graphics2D g) {
         Map<String, String> se = new TreeMap<>(fields);
@@ -58,7 +58,11 @@ public class ClassNode extends Node {
         this.height = (1 + se.size()) * HEADER_HEIGHT;
 
         // Draw Rectangles
-        g2d.setColor(YELLOW);
+        if (lightMode) {
+            g2d.setColor(LIGHT_YELLOW);
+        } else {
+            g2d.setColor(YELLOW);
+        }
         g2d.fillRect(this.x, this.y, this.width, HEADER_HEIGHT);
 
         g2d.setColor(GREEN);

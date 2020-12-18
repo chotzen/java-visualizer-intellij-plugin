@@ -10,7 +10,8 @@ public class GraphLayoutAlgorithm {
         HORIZONTAL,
         DOUBLY_LINKED,
         VERTICAL,
-        TREE
+        TREE,
+        COLLAPSE
     }
 
     private ArrayList<Node> beingHandled;
@@ -58,6 +59,15 @@ public class GraphLayoutAlgorithm {
         }
     }
 
+    private boolean validateDoublyLinked(Node node, Node traceUntil) {
+        Node curr = node;
+        Set<Node> visited = new HashSet<>();
+        while (curr.getChildren().stream().anyMatch(edge -> edge.dest instanceof ClassNode && edge.label.label.contains("next")) && !curr.equals(traceUntil)) {
+            curr = curr.getChildren().stream().filter(edge -> edge.label.label.contains("next")).map(edge -> edge.dest).findFirst().get();
+        }
+        return curr.equals(traceUntil);
+    }
+
 
     private boolean layoutNode(Node upstream, Node node, LayoutBehavior layout, double offset) {
 
@@ -73,15 +83,19 @@ public class GraphLayoutAlgorithm {
         if ((node instanceof ClassNode || node instanceof HorizontalClassMapNode) && getChildrenOfSameType(node) >= 2)  {
             String[] prevHeuristics = {"prev", "pre", "last"};
             String[] nextHeuristics = {"next"}; // TODO: think of better things to put here
+            String[] tailHeuristics = {"tail", "end", "last"};
 
             Predicate<String> p = s -> node.getChildren().stream().anyMatch(edge -> edge.label.toString().contains(s));
-            if (Arrays.stream(prevHeuristics).anyMatch(p) && Arrays.stream(nextHeuristics).anyMatch(p) && getChildrenOfSameType(node) == 2) {
+
+            Optional<GraphEdge> tail = upstream.getChildren().stream().filter(edge -> Arrays.stream(tailHeuristics).anyMatch(h -> h.matches(edge.label.label))).findFirst();
+
+            if (Arrays.stream(prevHeuristics).anyMatch(p) && Arrays.stream(nextHeuristics).anyMatch(p) && getChildrenOfSameType(node) == 2 &&
+                    (tail.isPresent() && layout != LayoutBehavior.DOUBLY_LINKED && !declaringTypes.get(upstream).equals(declaringTypes.get(node)) /* && validateDoublyLinked(node, tail.get().dest) */)) {
                 // drop everything, it's a doubly linked list!
                 if (layout != LayoutBehavior.DOUBLY_LINKED) {
 
                     // if we're in a doubly linked list and are somehow starting from the tail, don't.
                     GraphEdge edge = upstream.getChildren().stream().filter(e -> e.dest.equals(node)).findFirst().get();
-                    String[] tailHeuristics = {"tail", "end", "last"};
                     String e = edge.label.toString();
                     if (Arrays.stream(tailHeuristics).anyMatch(s -> e.contains(s))) {
                         return false;
@@ -124,8 +138,18 @@ public class GraphLayoutAlgorithm {
                 } else {
                     node.setPos(last_x + offset, last_y + nodeSpace + upstream.getHeight());
                 }
+            } else if (layout == LayoutBehavior.COLLAPSE) {
+                node.setPos(last_x + upstream.getWidth() - node.getWidth(), last_y + upstream.getHeight());
+                layout = LayoutBehavior.HORIZONTAL;
+                if (upstream instanceof ClassNode) {
+                    ((ClassNode)upstream).lightMode = true;
+                }
             } else if (layout == LayoutBehavior.HORIZONTAL) {
-                node.setPos(last_x + nodeSpace + upstream.getWidth(), last_y + offset);
+                if (upstream instanceof ObjectMapNode) {
+                    node.setPos(last_x + nodeSpace + upstream.getWidth(), upstream.getY() + offset);
+                } else {
+                    node.setPos(last_x + nodeSpace + upstream.getWidth(), last_y + offset);
+                }
             } else if (layout == LayoutBehavior.TREE) {
                 // position is not set from here. it is calculated after the leaves are positioned.
                 // this is temporary to pass position data down to the next level
@@ -178,58 +202,64 @@ public class GraphLayoutAlgorithm {
             bound = 0;
         }
 
-        for (GraphEdge downstream : children) {
-            if (downstream.label.toString().contains("overallRoot")) {
-                System.out.println("break");
-            }
-            if (node instanceof ObjectArrayNode) { // force vertical layout for children of arrays
-                layoutNode(downstream, LayoutBehavior.VERTICAL, bound);
-                bound += getSubgraphWidth(downstream.dest) + vSpace;
-            } else if (node instanceof ObjectSetNode) {
-                layoutNode(downstream, LayoutBehavior.VERTICAL, bound);
-                bound += getSubgraphWidth(downstream.dest) + vSpace;
-            } else if (node instanceof ObjectMapNode) { // force horizontal layout for children of maps
-                layoutNode(downstream, LayoutBehavior.HORIZONTAL, bound);
-                bound += getSubgraphHeight(downstream.dest) + vSpace;
-            } else {
-                if (layout == LayoutBehavior.HORIZONTAL) {
-                    layoutNode(downstream, layout, bound);
-                    bound += getSubgraphHeight(downstream.dest) + vSpace;
-                } else if (layout == LayoutBehavior.VERTICAL) {
-                    layoutNode(downstream, layout, bound);
+        // collapse layout if only one field &
+        if (children.size() == 1 && node instanceof ClassNode && children.get(0).dest instanceof ClassNode && ((ClassNode)node).fields.size() == 0 ) {
+            layoutNode(children.get(0), LayoutBehavior.COLLAPSE, bound);
+        } else {
+            for (GraphEdge downstream : children) {
+                if (downstream.label.toString().contains("overallRoot")) {
+                    System.out.println("break");
+                }
+                if (node instanceof ObjectArrayNode) { // force vertical layout for children of arrays
+                    layoutNode(downstream, LayoutBehavior.VERTICAL, bound);
                     bound += getSubgraphWidth(downstream.dest) + vSpace;
-                } else if (layout == LayoutBehavior.TREE) {
-                    if (declaringTypes.get(node).equals(downstream.declaringType)) {
-                        // this is where subgraphs get calculated. trust the process.
-                        // calculates the structure, NOT POSITION of subgraphs
-                        layoutNode(downstream, LayoutBehavior.TREE, 0);
-                        handleLater.add(downstream.dest);
-                    } else {
-                        handleMuchLater.add(downstream);
-                    }
-                } else if (layout == LayoutBehavior.DOUBLY_LINKED) {
-                    if (declaringTypes.get(node).equals(downstream.declaringType)) {
-                        // if the previous node is null, i.e. we're at the head of the list
-                        if ((downstream.label.toString().contains("pre") || downstream.label.toString().contains("last"))
-                                && downstream.dest instanceof NullNode) {
-                            // layout right and move over a bit too
-                            downstream.dest.setPos(node.getX(), node.getY() + node.getHeight() / 2 - downstream.dest.getHeight() / 2);
-                            beingHandled.add(downstream.dest);
-                            declaringTypes.put(downstream.dest, downstream.declaringType);
-                            translateSubgraph(node, downstream.dest.getWidth() + nodeSpace, 0);
-                            tree.get(node).add(downstream);
+                } else if (node instanceof ObjectSetNode) {
+                    layoutNode(downstream, LayoutBehavior.VERTICAL, bound);
+                    bound += getSubgraphWidth(downstream.dest) + vSpace;
+                } else if (node instanceof ObjectMapNode) { // force horizontal layout for children of maps
+                    layoutNode(downstream, LayoutBehavior.HORIZONTAL, bound);
+                    bound += getSubgraphHeight(downstream.dest) + vSpace;
+                } else {
+                    if (layout == LayoutBehavior.HORIZONTAL) {
+                        layoutNode(downstream, layout, bound);
+                        bound += getSubgraphHeight(downstream.dest) + vSpace;
+                    } else if (layout == LayoutBehavior.VERTICAL) {
+                        layoutNode(downstream, layout, bound);
+                        bound += getSubgraphWidth(downstream.dest) + vSpace;
+                    } else if (layout == LayoutBehavior.TREE) {
+                        if (declaringTypes.get(node).equals(downstream.declaringType)) {
+                            // this is where subgraphs get calculated. trust the process.
+                            // calculates the structure, NOT POSITION of subgraphs
+                            layoutNode(downstream, LayoutBehavior.TREE, 0);
+                            handleLater.add(downstream.dest);
                         } else {
-                            layoutNode(downstream, LayoutBehavior.DOUBLY_LINKED, 0);
+                            handleMuchLater.add(downstream);
                         }
-                    } else {
-                        // force vertical for non-same-type children of doubly linked lists
-                        layoutNode(downstream, LayoutBehavior.VERTICAL, bound);
-                        bound += getSubgraphWidth(downstream.dest) + nodeSpace;
+                    } else if (layout == LayoutBehavior.DOUBLY_LINKED) {
+                        if (declaringTypes.get(node).equals(downstream.declaringType)) {
+                            // if the previous node is null, i.e. we're at the head of the list
+                            if ((downstream.label.toString().contains("pre") || downstream.label.toString().contains("last"))
+                                    && downstream.dest instanceof NullNode) {
+                                // layout right and move over a bit too
+                                downstream.dest.setPos(node.getX(), node.getY() + node.getHeight() / 2 - downstream.dest.getHeight() / 2);
+                                beingHandled.add(downstream.dest);
+                                declaringTypes.put(downstream.dest, downstream.declaringType);
+                                translateSubgraph(node, downstream.dest.getWidth() + nodeSpace, 0);
+                                tree.computeIfAbsent(node, k -> new ArrayList<>());
+                                tree.get(node).add(downstream);
+                            } else {
+                                layoutNode(downstream, LayoutBehavior.DOUBLY_LINKED, 0);
+                            }
+                        } else {
+                            // force vertical for non-same-type children of doubly linked lists
+                            layoutNode(downstream, LayoutBehavior.VERTICAL, bound);
+                            bound += getSubgraphWidth(downstream.dest) + nodeSpace;
+                        }
                     }
                 }
             }
-
         }
+
 
         if (layout == LayoutBehavior.TREE) {
             double coveredWidth = 0;
@@ -312,7 +342,9 @@ public class GraphLayoutAlgorithm {
         if (node instanceof StackFrame) {
             throw new IllegalArgumentException("Cannot get width of subgraph involving stackframes!");
         }
-        return getSubgraphMaxX(node) - getSubgraphMinX(node);
+        double max_x = getSubgraphMaxX(node);
+        this.max_x = Math.max(max_x, this.max_x);
+        return max_x - getSubgraphMinX(node);
     }
 
     private double getSubgraphMaxX(Node node) {
@@ -338,5 +370,9 @@ public class GraphLayoutAlgorithm {
 
     double getMaxY() {
         return this.max_y;
+    }
+
+    double getMaxX() {
+        return this.max_x;
     }
 }

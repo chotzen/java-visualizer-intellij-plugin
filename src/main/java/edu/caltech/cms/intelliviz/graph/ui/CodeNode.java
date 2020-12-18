@@ -27,7 +27,7 @@ public class CodeNode extends Node {
 
     @Override
     public void draw(Graphics2D g) {
-        Graphics2D g2d = (Graphics2D) g;
+        Graphics2D g2d = (Graphics2D) g.create();
         if (holeDest != null) {
             g2d.setColor(Color.RED);
             g2d.setStroke(new BasicStroke(2));

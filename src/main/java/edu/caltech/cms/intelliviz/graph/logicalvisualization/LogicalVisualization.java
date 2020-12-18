@@ -149,7 +149,11 @@ public abstract class LogicalVisualization {
 
         if (matched.isPresent()) {
             String iface = matched.get();
-            return this.applyOnTrace(ref, tracer, this.interfaces.get(iface));
+            try {
+                return this.applyOnTrace(ref, tracer, this.interfaces.get(iface));
+            } catch (NullPointerException npe) {
+                System.out.println("Error: Failed to visualize");
+            }
         }
 
         return null;

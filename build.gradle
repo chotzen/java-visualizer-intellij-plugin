@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'com.aegamesi'
-version '2.1.0.1'
+version '2.1.0.2'
 
 sourceCompatibility = 1.8
 
@@ -34,6 +34,10 @@ runIde {
 
 buildPlugin {
     //jvmArgs = ['--add-exports java.base/jdk.internal.vm=ALL-UNNAMED']
+}
+
+publishPlugin {
+    token = System.getenv("ORG_GRADLE_PROJECT_intellijPublishToken")
 }
 
 patchPluginXml {
