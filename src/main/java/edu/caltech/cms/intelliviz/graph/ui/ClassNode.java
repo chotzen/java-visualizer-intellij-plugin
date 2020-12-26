@@ -29,7 +29,7 @@ public class ClassNode extends Node {
         this.name = name;
         this.fields = fields;
         this.pointers = new ArrayList<>();
-        String[] pieces = this.name.split("\\.");
+        String[] pieces = this.name.split("[\\.\\$]");
         this.displayName = pieces[pieces.length - 1];
     }
 

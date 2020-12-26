@@ -13,6 +13,7 @@ import edu.caltech.cms.intelliviz.graph.GraphEdge;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers.ScannerVisualization;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers.TrieMapVisualization;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.actions.VisualizationToggler;
+import edu.caltech.cms.intelliviz.graph.logicalvisualization.visualizers.TupleVisualization;
 import edu.caltech.cms.intelliviz.graph.ui.ClassNode;
 import edu.caltech.cms.intelliviz.graph.Node;
 import org.json.simple.JSONArray;
@@ -206,7 +207,8 @@ public abstract class LogicalVisualization {
 
         Class[] ALWAYS_ENABLED = new Class[] {
                 ScannerVisualization.class,
-                TrieMapVisualization.class
+                TrieMapVisualization.class,
+                TupleVisualization.class
         };
 
         List<LogicalVisualization> result = new ArrayList<>();

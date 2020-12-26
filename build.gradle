@@ -3,8 +3,8 @@ plugins {
     id 'org.jetbrains.intellij' version '0.4.21'
 }
 
-group 'com.aegamesi'
-version '2.1.0.2'
+group 'edu.caltech'
+version '2.1.0.4'
 
 sourceCompatibility = 1.8
 

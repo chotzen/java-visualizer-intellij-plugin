@@ -105,6 +105,14 @@
           "params": {}
         }
       ]
+    },
+    "TupleVisualization": {
+      "classes": [
+        {
+          "name": "edu.caltech.cs2.libraries.Pixel",
+          "params": {}
+        }
+      ]
     }
   }
 }
