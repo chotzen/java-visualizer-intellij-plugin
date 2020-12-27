@@ -158,7 +158,7 @@ public abstract class LogicalVisualization {
         if (matched.isPresent()) {
             String iface = matched.get();
             for (StackFrame fr : frames) {
-                if (TracerUtils.doesImplementInterface(fr.thisObject(), iface)) {
+                if (fr.thisObject() != null && TracerUtils.doesImplementInterface(fr.thisObject(), iface)) {
                     return null;
                 }
             }
