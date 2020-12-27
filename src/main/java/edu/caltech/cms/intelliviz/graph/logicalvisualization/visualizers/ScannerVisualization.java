@@ -50,9 +50,9 @@ public class ScannerVisualization extends LogicalVisualization {
         obj.type = HeapEntity.Type.OBJECT;
         // calculate position
         Field position = ref.referenceType().fieldByName("position");
-        obj.fields.put("position", tracer.convertValue(ref.getValue(position)));
+        obj.fields.put("position", tracer.convertValue("", ref.getValue(position)));
         Field sourceClosed = ref.referenceType().fieldByName("sourceClosed");
-        Value closedVal = tracer.convertValue(ref.getValue(sourceClosed));
+        Value closedVal = tracer.convertValue("", ref.getValue(sourceClosed));
 
 
         // follow other paths or something
@@ -68,7 +68,7 @@ public class ScannerVisualization extends LogicalVisualization {
         Value out = new Value();
         out.type = Value.Type.SCANNER_BLOB;
         out.stringValue = blob;
-        out.scannerPos = Integer.valueOf(tracer.convertValue(ref.getValue(position)).toString());
+        out.scannerPos = Integer.valueOf(tracer.convertValue("", ref.getValue(position)).toString());
         out.booleanValue = closedVal.booleanValue;
 
         obj.fields.put("data", out);

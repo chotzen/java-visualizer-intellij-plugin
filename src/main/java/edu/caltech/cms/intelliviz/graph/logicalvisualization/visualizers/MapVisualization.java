@@ -40,8 +40,8 @@ public class MapVisualization extends LogicalVisualization {
         while (i.hasNext()) {
             ObjectReference key = (ObjectReference) i.next();
             HeapMap.Pair pair = new HeapMap.Pair();
-            pair.key = tracer.convertValue(key);
-            pair.val = tracer.convertValue(invokeGet(tracer.thread, ref, params.get("getMethod"), key));
+            pair.key = tracer.convertValue("", key);
+            pair.val = tracer.convertValue("", invokeGet(tracer.thread, ref, params.get("getMethod"), key));
             pair.id = ((IntegerValue)TracerUtils.invokeSimple(tracer.thread, key, "hashCode")).value();
             child.pairs.add(pair);
         }

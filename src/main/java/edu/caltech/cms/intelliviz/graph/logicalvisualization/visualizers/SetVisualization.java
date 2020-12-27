@@ -31,7 +31,7 @@ public class SetVisualization extends LogicalVisualization {
         Iterator<com.sun.jdi.Value> i = TracerUtils.getIterator(tracer.thread, ref, params.get("iteratorMethod"));
         data.label = "INTERNAL SET";
         while (i.hasNext()) {
-            data.items.add(tracer.convertValue(i.next()));
+            data.items.add(tracer.convertValue("", i.next()));
         }
 
         // link two things with a reference

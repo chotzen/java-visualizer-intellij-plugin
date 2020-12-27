@@ -1,5 +1,8 @@
 package com.aegamesi.java_visualizer.model;
 
+import com.aegamesi.java_visualizer.backend.Tracer;
+import com.sun.jdi.IncompatibleThreadStateException;
+import com.sun.jdi.ThreadReference;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -11,6 +14,11 @@ public class ExecutionTrace {
 	public List<Frame> frames = new ArrayList<>();
 	public Map<Long, HeapEntity> heap = new TreeMap<>();
 	public Map<String, Value> statics = new TreeMap<>();
+	private ThreadReference thread;
+
+	public ExecutionTrace(ThreadReference tr) {
+		this.thread = tr;
+	}
 
 	public String toJsonString() {
 		JSONObject obj = new JSONObject();
@@ -66,7 +74,7 @@ public class ExecutionTrace {
 
 	public static ExecutionTrace fromJsonString(String str) {
 		JSONObject o = new JSONObject(str);
-		ExecutionTrace trace = new ExecutionTrace();
+		ExecutionTrace trace = new ExecutionTrace(null);
 		for (Object s : o.getJSONArray("frames")) {
 			trace.frames.add(Frame.fromJson((JSONObject) s));
 		}
@@ -75,5 +83,10 @@ public class ExecutionTrace {
 			trace.heap.put(e.id, e);
 		}
 		return trace;
+	}
+
+	public ExecutionTrace retrace() throws IncompatibleThreadStateException {
+		Tracer t = new Tracer(this.thread);
+		return t.getModel();
 	}
 }

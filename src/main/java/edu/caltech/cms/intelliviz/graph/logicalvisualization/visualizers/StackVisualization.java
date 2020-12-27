@@ -39,7 +39,7 @@ public class StackVisualization extends LogicalVisualization {
         Iterator<Value> i = TracerUtils.getIterator(tracer.thread, ref, params.get("iteratorMethod"));
         data.label = "INTERNAL STACK";
         while (i.hasNext()) {
-            data.items.add(tracer.convertValue(i.next()));
+            data.items.add(tracer.convertValue("", i.next()));
         }
 
         // link two things with a reference, while abusing the heck out of large numbers/longs...

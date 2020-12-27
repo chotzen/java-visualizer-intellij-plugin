@@ -12,7 +12,8 @@ public class GraphLayoutAlgorithm {
         DOUBLY_LINKED,
         VERTICAL,
         TREE,
-        COLLAPSE
+        COLLAPSE,
+        STACKED_UNDERNEATH
     }
 
     private ArrayList<Node> beingHandled;
@@ -156,6 +157,9 @@ public class GraphLayoutAlgorithm {
                 } else {
                     node.setPos(last_x + nodeSpace + upstream.getWidth(), last_y + offset);
                 }
+            } else if (layout == LayoutBehavior.STACKED_UNDERNEATH) { // same as horizontal but starting from a point
+                                                                      // under left side of node
+                node.setPos(last_x, upstream.getY() + upstream.getHeight() + offset);
             } else if (layout == LayoutBehavior.TREE) {
                 // position is not set from here. it is calculated after the leaves are positioned.
                 // this is temporary to pass position data down to the next level
@@ -216,9 +220,14 @@ public class GraphLayoutAlgorithm {
                 if (downstream.label.toString().contains("overallRoot")) {
                     System.out.println("break");
                 }
-                if (node instanceof ObjectArrayNode) { // force vertical layout for children of arrays
-                    layoutNode(downstream, LayoutBehavior.VERTICAL, bound);
-                    bound += getSubgraphWidth(downstream.dest) + vSpace;
+                if (node instanceof ObjectArrayNode) {
+                    if (downstream.dest.getWidth() > node.width / 3.0) {
+                        layoutNode(downstream, LayoutBehavior.STACKED_UNDERNEATH, bound);
+                        bound += getSubgraphHeight(downstream.dest) + vSpace;
+                    } else {
+                        layoutNode(downstream, LayoutBehavior.VERTICAL, bound);
+                        bound += getSubgraphWidth(downstream.dest) + vSpace;
+                    }
                 } else if (node instanceof ObjectSetNode) {
                     layoutNode(downstream, LayoutBehavior.VERTICAL, bound);
                     bound += getSubgraphWidth(downstream.dest) + vSpace;

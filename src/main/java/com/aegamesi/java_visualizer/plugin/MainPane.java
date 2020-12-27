@@ -42,7 +42,7 @@ public class MainPane extends JPanel {
 			add(scrollPane);
 			revalidate();
 		}
-		viz.setTrace(trace);
+		viz.setTrace(trace, mgr);
 
 	}
 

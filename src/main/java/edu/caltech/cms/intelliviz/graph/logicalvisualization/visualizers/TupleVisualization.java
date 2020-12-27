@@ -36,7 +36,7 @@ public class TupleVisualization extends LogicalVisualization {
             if (ref.getValue(f) instanceof ObjectReference) {
                 return null;
             }
-            data += tracer.convertValue(ref.getValue(f)).toString();
+            data += tracer.convertValue("", ref.getValue(f)).toString();
             if (iter.hasNext()) {
                 data += ", ";
             }

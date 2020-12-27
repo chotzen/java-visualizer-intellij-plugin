@@ -49,7 +49,7 @@ public abstract class TrieVisualization extends LogicalVisualization {
                     nullVal.referenceType = "*INTERNAL*";
                     nodeObj.fields.put("value", nullVal);
                 } else {
-                    nodeObj.fields.put("value", tracer.convertValue(entry.getValue()));
+                    nodeObj.fields.put("value", tracer.convertValue("", entry.getValue()));
                 }
             }
         }
@@ -70,10 +70,10 @@ public abstract class TrieVisualization extends LogicalVisualization {
         while (iter.hasNext()) {
             ObjectReference entr = (ObjectReference)iter.next();
             Value keyVal = TracerUtils.invokeSimple(tracer.thread, entr, "getKey");
-            String key = tracer.convertValue(keyVal).toString();
+            String key = tracer.convertValue("", keyVal).toString();
 
             Value valVal = TracerUtils.invokeSimple(tracer.thread, entr, "getValue");
-            com.aegamesi.java_visualizer.model.Value newRef =  tracer.convertValue(valVal); // next TrieNode
+            com.aegamesi.java_visualizer.model.Value newRef =  tracer.convertValue("", valVal); // next TrieNode
 
             addField(nodeObj, key, newRef);
             //

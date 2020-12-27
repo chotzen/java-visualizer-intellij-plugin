@@ -11,6 +11,7 @@ import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.sun.jdi.*;
+import edu.caltech.cms.intelliviz.graph.Node;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.LogicalVisualization;
 
 import java.io.File;
@@ -24,6 +25,16 @@ import static com.aegamesi.java_visualizer.backend.TracerUtils.*;
  * Some code from traceprinter, written by David Pritchard (daveagp@gmail.com)
  */
 public class Tracer {
+
+	private class VariableReference {
+		public String variableName;
+		public ObjectReference ref;
+
+		public VariableReference(String variableName, ObjectReference ref) {
+			this.variableName = variableName;
+			this.ref = ref;
+		}
+	}
 
 	private static final String[] INTERNAL_PACKAGES = {
 			"java.",
@@ -55,20 +66,24 @@ public class Tracer {
 	public ExecutionTrace model;
 
 	public static final int CLIP_LENGTH = 200; // never display anything longer than this value
+	public static int MAX_ENTITIES = 200;
+	public static int ARRAY_LENGTH = 100;
+	private int lastHeapSize = 0;
 
 	/*
 	Converting actual heap objects requires running code on the suspended VM thread.
 	However, once we start running code on the thread, we can no longer read frame locals.
 	Therefore, we have to convert all heap objects at the very end.
 	*/
-	private TreeMap<Long, ObjectReference> pendingConversion = new TreeMap<>();
+	private TreeMap<Long, VariableReference> pendingConversion = new TreeMap<>();
+	private Map<String, Integer> conversionCounts = new HashMap<>();
 
 	public Tracer(ThreadReference thread) {
 		this.thread = thread;
 	}
 
 	public ExecutionTrace getModel() throws IncompatibleThreadStateException {
-		model = new ExecutionTrace();
+		model = new ExecutionTrace(this.thread);
 
 		Map<Frame, StackFrame> frameMap = new HashMap<>();
 
@@ -85,7 +100,6 @@ public class Tracer {
         /*
 		if (rt.isInitialized() && !isInternalPackage(rt.name())) {
 			for (Field f : rt.visibleFields()) {
-				if (f.isStatic()) {
 					String name = rt.name() + "." + f.name();
 					model.statics.put(name, convertValue(rt.getValue(f)));
 				}
@@ -97,15 +111,30 @@ public class Tracer {
 		// Convert heap
 		Set<Long> heapDone = new HashSet<>();
 		while (!pendingConversion.isEmpty()) {
-			Map.Entry<Long, ObjectReference> first = pendingConversion.firstEntry();
+			Map.Entry<Long, VariableReference> first = pendingConversion.firstEntry();
 			long id = first.getKey();
-			ObjectReference obj = first.getValue();
+			ObjectReference obj = first.getValue().ref;
+			String varID = first.getValue().variableName;
 			pendingConversion.remove(id);
 			if (heapDone.contains(id))
 				continue;
 			heapDone.add(id);
-			HeapEntity converted = convertObject(frameMap.values(), obj);
-			converted.id = id;
+			HeapEntity converted = null;
+//			if (!(conversionCounts.get(varID) != null && conversionCounts.get(varID) > MAX_ENTITIES)) {
+//				HeapPrimitive out = new HeapPrimitive();
+//				out.type = HeapEntity.Type.PRIMITIVE;
+//				Value v = new Value();
+//				v.type = Value.Type.END_OF_VISUALIZATION;
+//				out.type = HeapEntity.Type.PRIMITIVE;
+//				out.id = -1669L;
+//				out.value = v;
+//
+//				converted = out;
+//			} else {
+				converted = convertObject(first.getValue().variableName, frameMap.values(), obj);
+				conversionCounts.put(varID, conversionCounts.getOrDefault(varID, 0) + 1);
+				converted.id = id;
+//			}
 			model.heap.put(id, converted);
 		}
 
@@ -163,6 +192,10 @@ public class Tracer {
 		return model;
 	}
 
+	private String varID(StackFrame sf, String mName) {
+		return sf.toString() + ":" + mName;
+	}
+
 	// TODO clean this up
 	private Frame convertFrame(StackFrame sf) {
 		Frame output = new Frame();
@@ -170,7 +203,7 @@ public class Tracer {
 		output.lineNumber = sf.location().lineNumber();
 
 		if (sf.thisObject() != null) {
-			output.locals.put("this", convertValue(sf.thisObject()));
+			output.locals.put("this", convertValue(sf.toString() + ":this", sf.thisObject()));
 		}
 
 		// list args first
@@ -184,7 +217,7 @@ public class Tracer {
 		// Try to convert statics.
 		List<Field> fieldList = sf.location().method().declaringType().allFields().stream().filter(TypeComponent::isStatic).collect(Collectors.toList());
 		for (Field f : fieldList) {
-			output.statics.put(f.name(), convertValue(sf.location().method().declaringType().getValue(f)));
+			output.statics.put(f.name(), convertValue(varID(sf, f.name()) + "_static", sf.location().method().declaringType().getValue(f)));
 		}
 
 		boolean JDWPerror = false;
@@ -207,6 +240,7 @@ public class Tracer {
 			frame_args = sf.location().method().arguments(); //throwing statement
 			completed_args = !JDWPerror && frame_args.size() == sf.getArgumentValues().size();
 			for (LocalVariable lv : frame_args) {
+				this.lastHeapSize = model.heap.size();
 				if (lv.name().equals("args")) {
 					com.sun.jdi.Value v = sf.getValue(lv);
 					if (v instanceof ArrayReference && ((ArrayReference) v).length() == 0)
@@ -214,7 +248,7 @@ public class Tracer {
 				}
 
 				try {
-				    Value v = convertValue(sf.getValue(lv));
+				    Value v = convertValue(varID(sf, lv.name()), sf.getValue(lv));
 				    // HERE
 				    v.isArg = true;
 					output.locals.put(lv.name(), v);
@@ -232,8 +266,9 @@ public class Tracer {
 			try {
 				List<com.sun.jdi.Value> anon_args = sf.getArgumentValues();
 				for (int i = 0; i < anon_args.size(); i++) {
+					this.lastHeapSize = model.heap.size();
 					String name = "param#" + i;
-					Value v = convertValue(anon_args.get(i));
+					Value v = convertValue(varID(sf, name), anon_args.get(i));
 					// AND ALSO HERE
 					v.isArg = true;
 					output.locals.put(name, v);
@@ -265,7 +300,7 @@ public class Tracer {
 				for (Map.Entry<Integer, LocalVariable> me : orderByHash.entrySet()) {
 					try {
 						LocalVariable lv = me.getValue();
-						output.locals.put(lv.name(), convertValue(sf.getValue(lv)));
+						output.locals.put(lv.name(), convertValue(varID(sf, lv.name()), sf.getValue(lv)));
 						output.locals.get(lv.name()).hashCode = lv.hashCode();
 					} catch (IllegalArgumentException exc) {
 						// variable not yet defined. heuristics time
@@ -293,18 +328,19 @@ public class Tracer {
 			// ok.
 		}
 
+
 		return output;
 	}
 
-	public Value convertReference(ObjectReference obj) {
+	public Value convertReference(String variableID, ObjectReference obj) {
 		// Special handling for boxed types
 		if (obj.referenceType().name().startsWith("java.lang.")
 				&& BOXED_TYPES.contains(obj.referenceType().name().substring(10))) {
-			return convertValue(obj.getValue(obj.referenceType().fieldByName("value")));
+			return convertValue(variableID, obj.getValue(obj.referenceType().fieldByName("value")));
 		}
 
 		long key = obj.uniqueID();
-		pendingConversion.put(key, obj);
+		pendingConversion.put(key, new VariableReference(variableID, obj));
 
 		// Actually create and return the reference
 		Value out = new Value();
@@ -314,17 +350,16 @@ public class Tracer {
 		return out;
 	}
 
-	private HeapEntity convertObject(Collection<StackFrame> frames, ObjectReference obj) {
+	private HeapEntity convertObject(String variableID, Collection<StackFrame> frames, ObjectReference obj) {
 		if (obj instanceof ArrayReference) {
 			ArrayReference ao = (ArrayReference) obj;
 			int length = ao.length();
-
 			HeapCollection out = new HeapCollection();
 			out.type = HeapEntity.Type.LIST;
 			out.label = ao.type().name();
 			for (int i = 0; i < length; i++) {
 				// TODO: optional feature, skip runs of zeros
-				out.items.add(convertValue(ao.getValue(i)));
+				out.items.add(convertValue(variableID, ao.getValue(i)));
 			}
 			return out;
 		} else if (obj instanceof StringReference) {
@@ -369,7 +404,7 @@ public class Tracer {
 				  if (!me.getKey().isStatic() && (SHOW_ALL_FIELDS || !me.getKey().isSynthetic())) {
 					  String name = SHOW_ALL_FIELDS ? me.getKey().declaringType().name() + "." : "";
 					  name += me.getKey().name();
-					  Value value = convertValue(me.getValue());
+					  Value value = convertValue(variableID, me.getValue());
 					  value.referenceType = me.getKey().typeName();
 					  out.fields.put(name, value);
 				  }
@@ -380,7 +415,7 @@ public class Tracer {
 		return out;
 	}
 
-	public Value convertValue(com.sun.jdi.Value v) {
+	public Value convertValue(String variableID, com.sun.jdi.Value v) {
 		Value out = new Value();
 		if (v instanceof BooleanValue) {
 			out.type = Value.Type.BOOLEAN;
@@ -415,15 +450,18 @@ public class Tracer {
 			out.stringValue = ((StringReference) v).value();
 		} else {
 			ObjectReference obj = (ObjectReference) v;
-			out = convertReference(obj);
+			out = convertReference(variableID, obj);
 		}
 		return out;
 	}
 
 	public String getCurrentLine(StackFrame frame) {
 		int lineNumber = frame.location().lineNumber();
-		String cPath = ModuleRootManager.getInstance(ModuleManager.getInstance(ProjectManager.getInstance().getOpenProjects()[0])
-				.getModules()[0]).getContentRoots()[0].toString();
+//		String cPath = ModuleRootManager.getInstance(ModuleManager.getInstance(ProjectManager.getInstance().getOpenProjects()[0])
+//				.getModules()[0]).getContentRoots()[0].toString();
+
+		String[] paths = ModuleRootManager.getInstance(ModuleManager.getInstance(ProjectManager.getInstance().getOpenProjects()[0])
+				.getModules()[0]).getSourceRootUrls();
 		int lnN = 0;
 		String line = null;
 		Scanner in = null;
@@ -431,12 +469,19 @@ public class Tracer {
 			// for some reason we get backslashes here.
 			String fPath = frame.location().sourcePath().replaceAll("\\\\", "/");
 
-			// Assume (incorrectly?) that we're working in src/ and if it fails, look in tests/
-			try {
-				in = new Scanner(new File(cPath.substring(7) + "/src/" + fPath));
-			} catch (FileNotFoundException e) {
-				in = new Scanner(new File(cPath.substring(7) + "/tests/" + fPath));
+			for (String cPath : paths) {
+			    try {
+			    	in = new Scanner(new File(cPath.substring(7) + '/' + fPath));
+				} catch (FileNotFoundException e) {
+//					System.err.println("Tried `" + cPath + "`, file not found there");
+				}
 			}
+
+			if (in == null) {
+				throw new FileNotFoundException();
+			}
+
+			// Assume (incorrectly?) that we're working in src/ and if it fails, look in tests/
 			while (in.hasNextLine() && lnN < lineNumber) {
 				line = in.nextLine();
 				lnN++;

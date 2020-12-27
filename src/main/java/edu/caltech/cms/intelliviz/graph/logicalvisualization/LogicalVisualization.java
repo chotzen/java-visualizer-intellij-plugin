@@ -188,7 +188,7 @@ public abstract class LogicalVisualization {
         HeapObject parent = new HeapObject();
         parent.fields = new HashMap<>();
         com.sun.jdi.Value sizeValue = TracerUtils.invokeSimple(tracer.thread, ref, params.get("sizeMethod"));
-        Value convSize = tracer.convertValue(sizeValue);
+        Value convSize = tracer.convertValue("", sizeValue);
         parent.fields.put("size", convSize);
         parent.interfaces = new HashSet<>();
         parent.id = ref.uniqueID();

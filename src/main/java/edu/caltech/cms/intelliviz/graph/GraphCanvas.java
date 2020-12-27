@@ -1,7 +1,9 @@
 package edu.caltech.cms.intelliviz.graph;
 
+import com.aegamesi.java_visualizer.backend.Tracer;
 import com.aegamesi.java_visualizer.model.*;
 import com.aegamesi.java_visualizer.model.Frame;
+import com.aegamesi.java_visualizer.plugin.JavaVisualizerManager;
 import com.intellij.notification.NotificationDisplayType;
 import com.intellij.notification.NotificationGroup;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.LogicalVisualization;
@@ -37,6 +39,7 @@ public class GraphCanvas extends JPanel {
     private Cursor curCursor;
 
     private ExecutionTrace trace;
+    private JavaVisualizerManager mgr;
 
     private Graphics grRef;
 
@@ -66,8 +69,9 @@ public class GraphCanvas extends JPanel {
         addMouseMotionListener(new MyMouseMotionListener());
     }
 
-    public void setTrace(ExecutionTrace t) {
+    public void setTrace(ExecutionTrace t, JavaVisualizerManager mgr) {
         this.trace = t;
+        this.mgr = mgr;
         refreshUI();
     }
 
@@ -280,7 +284,7 @@ public class GraphCanvas extends JPanel {
     }
 
     private Node renderNode(HeapEntity ent) {
-        return renderNode(ent, 200);
+        return renderNode(ent, 100);
     }
 
     private Node renderNode(HeapEntity ent, int clipLength) {
@@ -345,11 +349,15 @@ public class GraphCanvas extends JPanel {
             case LIST:
                 HeapCollection heapList = (HeapCollection)ent;
                 // Reference list (checks for at least one reference)
-                if (heapList.items.size() > 0 && heapList.items.stream().anyMatch(val -> val.type == Value.Type.REFERENCE)) {
-                    ObjectArrayNode oan = new ObjectArrayNode(100, 100, heapList.items.size());
+                if (heapList.items.size() > 0 && (heapList.items.stream().anyMatch(val -> val.type == Value.Type.REFERENCE) ||
+                        heapList.items.stream().allMatch(val -> val.type == Value.Type.NULL))) {
+                    ObjectArrayNode oan = new ObjectArrayNode(100, 100, Math.min(clipLength, heapList.items.size()));
                     this.nodes.put(heapList.id, oan);
+                    if (clipLength < heapList.items.size()) {
+                        Node.warnOnClip(heapList.items.size(), clipLength);
+                    }
                     Map<GraphEdge, Integer> pointers = new HashMap<>();
-                    for (int i = 0; i < heapList.items.size(); i++) {
+                    for (int i = 0; i < Math.min(clipLength, heapList.items.size()); i++) {
                         Node ref;
                         if (heapList.items.get(i).type == Value.Type.REFERENCE) {
                             ref = renderNode(trace.heap.get(heapList.items.get(i).reference));
@@ -364,8 +372,12 @@ public class GraphCanvas extends JPanel {
                     ret = oan;
                     break;
                 } else {
-                    String[] vals = new String[heapList.items.size()];
-                    for (int i = 0; i < heapList.items.size(); i++) {
+                    int size = Math.min(heapList.items.size(), clipLength);
+                    if (size < heapList.items.size()) {
+                        Node.warnOnClip(heapList.items.size(), clipLength);
+                    }
+                    String[] vals = new String[size];
+                    for (int i = 0; i < size; i++) {
                         vals[i] = heapList.items.get(i).toString();
                     }
                     PrimitiveArrayNode pan = new PrimitiveArrayNode(100, 100, vals);
@@ -515,9 +527,15 @@ public class GraphCanvas extends JPanel {
                 break;
             case PRIMITIVE:
                 HeapPrimitive prim = (HeapPrimitive)ent;
-                PrimitiveNode pn = new PrimitiveNode(100, 100, prim.value.toString());
-                this.nodes.put(prim.id, pn);
-                ret = pn;
+                if (prim.value.type == Value.Type.END_OF_VISUALIZATION) {
+                    EndNode endNode = new EndNode(100, 100);
+                    this.nodes.put(getUniqueNegKey(), endNode);
+                    ret = endNode;
+                } else {
+                    PrimitiveNode pn = new PrimitiveNode(100, 100, prim.value.toString());
+                    this.nodes.put(prim.id, pn);
+                    ret = pn;
+                }
                 break;
             default:
                 return null;
@@ -683,9 +701,15 @@ public class GraphCanvas extends JPanel {
 
         @Override
         public void mouseClicked(MouseEvent e) {
-            if (e.getClickCount() == 2) {
-                Set<Node> downstream = getDownstreamNodes(getNodeInCursor(e.getX(), e.getY()));
-                boolean hide = getNodeInCursor(e.getX(), e.getY()).getChildren().stream().map(edge -> edge.dest).noneMatch(Node::isHidden);
+            Node n = getNodeInCursor(e.getX(), e.getY());
+            if (n instanceof EndNode) {
+                Tracer.MAX_ENTITIES *= 2;
+                GraphCanvas.this.mgr.traceAndVisualize();
+                return;
+            }
+            if (e.getClickCount() == 2 && n != null) {
+                Set<Node> downstream = getDownstreamNodes(n);
+                boolean hide = n.getChildren().stream().map(edge -> edge.dest).noneMatch(Node::isHidden);
                 for (Node node : downstream) {
                     node.setHidden(hide);
                 }
