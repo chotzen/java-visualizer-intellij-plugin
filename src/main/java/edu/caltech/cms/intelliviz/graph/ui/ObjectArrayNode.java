@@ -21,7 +21,7 @@ public class ObjectArrayNode extends Node {
     private final int LABEL_VERT_OFFSET = 8;
     private final int LABEL_HORIZ_OFFSET = 2;
 
-    private final int MAX_RENDER_LENGTH = 50;
+    private final int MAX_RENDER_LENGTH = 100;
 
     private Font font = new Font("Monospaced", Font.PLAIN, 11);
 

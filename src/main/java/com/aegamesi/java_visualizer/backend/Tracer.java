@@ -134,7 +134,6 @@ public class Tracer {
 				converted = convertObject(first.getValue().variableName, frameMap.values(), obj);
 				conversionCounts.put(varID, conversionCounts.getOrDefault(varID, 0) + 1);
 				converted.id = id;
-				System.out.println(converted.label);
 //			}
 			model.heap.put(id, converted);
 		}
@@ -356,6 +355,7 @@ public class Tracer {
 			ArrayReference ao = (ArrayReference) obj;
 			int length = ao.length();
 			if (length > ARRAY_LENGTH) {
+				Node.warnOnClip(length, ARRAY_LENGTH);
 				length = ARRAY_LENGTH;
 			}
 			HeapCollection out = new HeapCollection();

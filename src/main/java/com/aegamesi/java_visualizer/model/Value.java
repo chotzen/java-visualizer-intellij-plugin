@@ -28,6 +28,7 @@ public class Value {
 				return "\"" + stringValue + "\"";
 			case CODE:
 				return codeValue;
+			case TUPLE:
 			case SCANNER_BLOB:
 				return stringValue;
 			case LONG:
@@ -48,7 +49,7 @@ public class Value {
 	}
 
 	public enum Type {
-		NULL, VOID, LONG, DOUBLE, BOOLEAN, STRING, CHAR, REFERENCE, HOLE, CODE, SCANNER_BLOB, END_OF_VISUALIZATION;
+		NULL, VOID, LONG, DOUBLE, BOOLEAN, STRING, CHAR, REFERENCE, HOLE, CODE, SCANNER_BLOB, END_OF_VISUALIZATION, TUPLE;
 	}
 
 	JSONArray toJson() {

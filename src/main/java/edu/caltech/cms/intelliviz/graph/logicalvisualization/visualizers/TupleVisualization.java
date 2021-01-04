@@ -6,12 +6,10 @@ import com.aegamesi.java_visualizer.model.HeapPrimitive;
 import com.aegamesi.java_visualizer.model.Value;
 import com.sun.jdi.Field;
 import com.sun.jdi.ObjectReference;
-import com.sun.jdi.StringReference;
 import edu.caltech.cms.intelliviz.graph.GraphEdge;
 import edu.caltech.cms.intelliviz.graph.Node;
 import edu.caltech.cms.intelliviz.graph.logicalvisualization.LogicalVisualization;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +45,7 @@ public class TupleVisualization extends LogicalVisualization {
         out.type = HeapEntity.Type.PRIMITIVE;
         out.label = "String";
         out.value = new Value();
-        out.value.type = Value.Type.STRING;
+        out.value.type = Value.Type.TUPLE;
         out.value.stringValue = data;
         return out;
     }
