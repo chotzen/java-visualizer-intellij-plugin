@@ -66,7 +66,7 @@ public class Tracer {
 	public ExecutionTrace model;
 
 	public static final int CLIP_LENGTH = 200; // never display anything longer than this value
-	public static int MAX_ENTITIES = 200;
+	public static int MAX_ENTITIES = 50;
 	public static int ARRAY_LENGTH = 100;
 	private int lastHeapSize = 0;
 
@@ -75,7 +75,7 @@ public class Tracer {
 	However, once we start running code on the thread, we can no longer read frame locals.
 	Therefore, we have to convert all heap objects at the very end.
 	*/
-	private TreeMap<Long, VariableReference> pendingConversion = new TreeMap<>();
+	private LinkedHashMap<Long, VariableReference> pendingConversion = new LinkedHashMap<>();
 	private Map<String, Integer> conversionCounts = new HashMap<>();
 
 	public Tracer(ThreadReference thread) {
@@ -111,7 +111,7 @@ public class Tracer {
 		// Convert heap
 		Set<Long> heapDone = new HashSet<>();
 		while (!pendingConversion.isEmpty()) {
-			Map.Entry<Long, VariableReference> first = pendingConversion.firstEntry();
+			Map.Entry<Long, VariableReference> first = pendingConversion.entrySet().iterator().next();
 			long id = first.getKey();
 			ObjectReference obj = first.getValue().ref;
 			String varID = first.getValue().variableName;
@@ -120,13 +120,13 @@ public class Tracer {
 				continue;
 			heapDone.add(id);
 			HeapEntity converted = null;
-//			if (!(conversionCounts.get(varID) != null && conversionCounts.get(varID) > MAX_ENTITIES)) {
+//			if (conversionCounts.get(varID) != null && conversionCounts.get(varID) > MAX_ENTITIES) {
 //				HeapPrimitive out = new HeapPrimitive();
 //				out.type = HeapEntity.Type.PRIMITIVE;
 //				Value v = new Value();
 //				v.type = Value.Type.END_OF_VISUALIZATION;
 //				out.type = HeapEntity.Type.PRIMITIVE;
-//				out.id = -1669L;
+//				out.id = id;
 //				out.value = v;
 //
 //				converted = out;
@@ -134,6 +134,7 @@ public class Tracer {
 				converted = convertObject(first.getValue().variableName, frameMap.values(), obj);
 				conversionCounts.put(varID, conversionCounts.getOrDefault(varID, 0) + 1);
 				converted.id = id;
+				System.out.println(converted.label);
 //			}
 			model.heap.put(id, converted);
 		}
@@ -354,6 +355,9 @@ public class Tracer {
 		if (obj instanceof ArrayReference) {
 			ArrayReference ao = (ArrayReference) obj;
 			int length = ao.length();
+			if (length > ARRAY_LENGTH) {
+				length = ARRAY_LENGTH;
+			}
 			HeapCollection out = new HeapCollection();
 			out.type = HeapEntity.Type.LIST;
 			out.label = ao.type().name();

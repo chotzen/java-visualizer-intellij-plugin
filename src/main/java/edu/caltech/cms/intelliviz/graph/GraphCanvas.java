@@ -116,6 +116,11 @@ public class GraphCanvas extends JPanel {
             VariableNode var = new VariableNode(0, 0, v, dest, val.type.toString(), isStatic);
             this.nodes.put(getUniqueNegKey(), dest);
             return var;
+        } else if (val.type == Value.Type.NULL) {
+            NullNode dest = new NullNode();
+            VariableNode var = new VariableNode(0, 0, v, dest, val.type.toString(), isStatic);
+            this.nodes.put(getUniqueNegKey(), dest);
+            return var;
         } else {
             PrimitiveNode node = new PrimitiveNode(0, 0, val.toString());
             VariableNode var = new VariableNode(0, 0, v, node, val.type.toString(), isStatic);
