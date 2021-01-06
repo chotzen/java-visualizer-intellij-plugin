@@ -7,6 +7,7 @@ import com.aegamesi.java_visualizer.model.HeapEntity;
 import com.aegamesi.java_visualizer.model.HeapObject;
 import com.aegamesi.java_visualizer.model.Value;
 import com.intellij.openapi.actionSystem.ex.ActionManagerEx;
+import com.sun.jdi.Location;
 import com.sun.jdi.ObjectReference;
 import com.sun.jdi.StackFrame;
 import edu.caltech.cms.intelliviz.graph.GraphEdge;
@@ -142,10 +143,10 @@ public abstract class LogicalVisualization {
      * @param tracer the tracer to search
      * @return a small "heap" to be merged with the heap model
      */
-    public HeapEntity applyTrace(Collection<StackFrame> frames, ObjectReference ref, Tracer tracer) {
+    public HeapEntity applyTrace(Set<Location> locs, Set<ObjectReference> thisObjects, Collection<StackFrame> frames, ObjectReference ref, Tracer tracer) {
         if (this.classes.containsKey(ref.type().name()) && enabledVisualizations.contains(this)) {
-            for (StackFrame fr : frames) {
-                if (fr.location().declaringType().name().equals(ref.type().name())) {
+            for (Location l : locs) {
+                if (l.declaringType().name().equals(ref.type().name())) {
                     return null;
                 }
             }
@@ -157,8 +158,8 @@ public abstract class LogicalVisualization {
 
         if (matched.isPresent()) {
             String iface = matched.get();
-            for (StackFrame fr : frames) {
-                if (fr.thisObject() != null && TracerUtils.doesImplementInterface(fr.thisObject(), iface)) {
+            for (ObjectReference thisObj : thisObjects) {
+                if (thisObj != null && TracerUtils.doesImplementInterface(thisObj, iface)) {
                     return null;
                 }
             }

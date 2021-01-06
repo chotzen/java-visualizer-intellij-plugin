@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'edu.caltech'
-version '2.1.0.5'
+version '2.1.2'
 
 sourceCompatibility = 1.8
 

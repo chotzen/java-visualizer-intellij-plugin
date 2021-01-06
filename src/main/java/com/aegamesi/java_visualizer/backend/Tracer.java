@@ -84,6 +84,8 @@ public class Tracer {
 
 	public ExecutionTrace getModel() throws IncompatibleThreadStateException {
 		model = new ExecutionTrace(this.thread);
+		Set<Location> locs = this.thread.frames().stream().map(StackFrame::location).collect(Collectors.toSet());
+		Set<ObjectReference> thisObjects = this.thread.frames().stream().map(StackFrame::thisObject).collect(Collectors.toSet());
 
 		Map<Frame, StackFrame> frameMap = new HashMap<>();
 
@@ -131,7 +133,7 @@ public class Tracer {
 //
 //				converted = out;
 //			} else {
-				converted = convertObject(first.getValue().variableName, frameMap.values(), obj);
+				converted = convertObject(locs, thisObjects, first.getValue().variableName, frameMap.values(), obj);
 				conversionCounts.put(varID, conversionCounts.getOrDefault(varID, 0) + 1);
 				converted.id = id;
 //			}
@@ -350,7 +352,7 @@ public class Tracer {
 		return out;
 	}
 
-	private HeapEntity convertObject(String variableID, Collection<StackFrame> frames, ObjectReference obj) {
+	private HeapEntity convertObject(Set<Location> loc, Set<ObjectReference> thisObjects, String variableID, Collection<StackFrame> frames, ObjectReference obj) {
 		if (obj instanceof ArrayReference) {
 			ArrayReference ao = (ArrayReference) obj;
 			int length = ao.length();
@@ -382,7 +384,7 @@ public class Tracer {
 
 
 		for (LogicalVisualization viz : LogicalVisualization.getEnabledVisualizations()) {
-			HeapEntity he = viz.applyTrace(frames, obj, this);
+			HeapEntity he = viz.applyTrace(loc, thisObjects, frames, obj, this);
 			if (he != null) {
 			    // avoid index conflicts with generation
                 // TODO HERE
