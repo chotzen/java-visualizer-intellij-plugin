@@ -54,7 +54,6 @@ public class GraphCanvas extends JPanel {
     public GraphCanvas() {
         super();
         this.grRef = getGraphics();
-
         this.variables = new LinkedHashMap<>();
         this.nodes = new ConcurrentHashMap<>();
         this.edges = new ArrayList<>();
@@ -580,6 +579,9 @@ public class GraphCanvas extends JPanel {
         g.clearRect(0, 0, this.getWidth(), this.getHeight());
         Graphics2D g2D = (Graphics2D) g;
         g2D.scale(scale, scale);
+        g2D.setRenderingHint(
+                RenderingHints.KEY_TEXT_ANTIALIASING,
+                RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
 
         Set<VariableNode> varCopy = variables.values().stream().flatMap(Collection::stream).collect(Collectors.toSet());
         varCopy.addAll(otherVariables);
