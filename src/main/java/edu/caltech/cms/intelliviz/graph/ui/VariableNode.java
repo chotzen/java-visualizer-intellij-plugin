@@ -18,7 +18,7 @@ public class VariableNode extends Node {
     private static final Font font = new Font("Monospaced", Font.BOLD, 13);
     private static final float dash1[] = {5.0f};
     private static final BasicStroke stroke = new BasicStroke(2.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash1, 0.0f);
-    private static final int DD_PADDING = 5;
+    private static final int DD_PADDING = 2;
 
 
     public VariableNode(int x, int y, String label, Node reference, String declaringType, boolean isStatic) {
@@ -44,11 +44,14 @@ public class VariableNode extends Node {
         g2d.setColor(Color.BLACK);
 
         this.height = g.getFontMetrics().getAscent();
-        this.width = g.getFontMetrics().stringWidth(this.label);
+        this.width = g.getFontMetrics(font).stringWidth(this.label);
 
         g2d.drawString(label, (int)x, (int)y);
 
         // Draw dashed line
+        g2d.setRenderingHint(
+                RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.setStroke(stroke);
         g2d.setColor(Color.GRAY);
         Point2D origin = getOrigin(null);

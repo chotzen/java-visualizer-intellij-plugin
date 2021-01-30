@@ -57,6 +57,9 @@ public class GraphEdge {
 
             g.setColor(Color.black);
             if (arcOffset == 0) {
+                g.setRenderingHint(
+                        RenderingHints.KEY_ANTIALIASING,
+                        RenderingHints.VALUE_ANTIALIAS_ON);
                 g.drawLine((int) origin.getX(), (int) origin.getY(), (int) destPt.getX(), (int) destPt.getY());
                 if (calcDist(origin, destPt) > LENGTH_LABEL_THRESHOLD) {
                     if (this.source instanceof ClassNode) {
