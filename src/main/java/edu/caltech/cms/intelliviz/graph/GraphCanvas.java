@@ -498,11 +498,15 @@ public class GraphCanvas extends JPanel {
                         this.edges.add(edge);
                     } else if (obj.fields.get(key).type == Value.Type.HOLE) {
                         StackFrame fr = this.frameMap.get(obj.fields.get(key).holeDest);
-                        CodeNode cn = new CodeNode(0, 0, obj.fields.get(key).holeString);
-                        this.nodes.put(getUniqueNegKey(), cn);
+                        if (obj.fields.get(key).isRecursiveMethod) {
+                            edge = new GraphEdge(ret, fr, key, obj.fields.get(key).referenceType);
+                        } else {
+                            CodeNode cn = new CodeNode(0, 0, obj.fields.get(key).holeString);
+                            this.nodes.put(getUniqueNegKey(), cn);
+                            edge = new GraphEdge(ret, cn, key, obj.fields.get(key).referenceType);
+                            cn.holeDest = fr;
+                        }
                         fr.targeted = true;
-                        edge = new GraphEdge(ret, cn, key, obj.fields.get(key).referenceType);
-                        cn.holeDest = fr;
                         this.edges.add(edge);
                     } else if (obj.fields.get(key).type == Value.Type.NULL) {
                         if (obj.fields.get(key).referenceType.equals("*INTERNAL*")) {

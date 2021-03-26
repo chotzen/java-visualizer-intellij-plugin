@@ -183,6 +183,13 @@ public class Tracer {
 							cur.holeDest = model.frames.get(i - 1); // last frame converted is in position 0
 							cur.holeString = pieces[1].substring(0, pieces[1].length() - 1);
 							cur.holeString = cur.holeString.replaceFirst(" ", "");
+							cur.isRecursiveMethod = false;
+							for (String val : getRecursiveMethods(model.frames, i)) {
+								if (pieces[1].trim().startsWith(val)) {
+									cur.isRecursiveMethod = true;
+									break;
+								}
+							}
 						}
 					}
 				}
@@ -518,5 +525,47 @@ public class Tracer {
 		return !isInternalPackage(type.name()) || type.name().contains("java.nio") || Arrays.stream(EXCLUDE_JAVA_UTIL).anyMatch(name ->
 				type.name().matches("java\\.util\\." + name)
 		);
+	}
+
+	private	static Set<String> getRecursiveMethods(List<Frame> frames, int startPos) {
+		Map<String, Integer> counts = new HashMap<>();
+		Map<String, Integer> minLineNums = new HashMap<>();
+
+		for (int i = startPos - 1; i < frames.size(); i++) {
+			Frame f = frames.get(i);
+			String[] colonSplit = f.name.split(":");
+			if (colonSplit.length == 0) {
+				continue;
+			}
+			String methodName = colonSplit[0];
+			if (!counts.containsKey(methodName)) {
+				counts.put(methodName, 1);
+				minLineNums.put(methodName, f.lineNumber);
+			} else {
+				counts.put(methodName, counts.get(methodName) + 1);
+				minLineNums.put(methodName, Math.min(minLineNums.get(methodName), f.lineNumber));
+			}
+		}
+
+		Map<String, Integer> lastLineOccurences = new HashMap<>();
+		for (int i = frames.size() - 1; i >= startPos - 1; i--) {
+			Frame f = frames.get(i);
+			String[] colonSplit = f.name.split(":");
+			if (colonSplit.length == 0) {
+				continue;
+			}
+			String methodName = colonSplit[0];
+			if (!lastLineOccurences.containsKey(methodName)) {
+				lastLineOccurences.put(methodName, f.lineNumber);
+			}
+		}
+
+		Set<String> recursiveMethods = new HashSet<>();
+		for (String key : lastLineOccurences.keySet()) {
+			if (lastLineOccurences.get(key).equals(minLineNums.get(key)) && counts.get(key) >= 3) {
+				recursiveMethods.add(key);
+			}
+		}
+		return recursiveMethods;
 	}
 }

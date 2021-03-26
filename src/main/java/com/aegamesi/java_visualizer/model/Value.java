@@ -18,6 +18,7 @@ public class Value {
 	public String holeString;
 	public long hashCode;
 	public int scannerPos;
+	public boolean isRecursiveMethod;
 
 	@Override
 	public String toString() {
